@@ -7,3 +7,5 @@ You can find the [documentation here](http://nbviewer.ipython.org/github/tawheel
 
 [![Build Status](https://travis-ci.org/tawheeler/AutoViz.jl.svg?branch=master)](https://travis-ci.org/tawheeler/AutoViz.jl)
 [![Coverage Status](https://coveralls.io/repos/tawheeler/AutoViz.jl/badge.svg)](https://coveralls.io/r/tawheeler/AutoViz.jl)
+
+![AutoViz](readmeimage.png)
