@@ -12,6 +12,25 @@ function render!(
     rendermodel
 end
 
+function render(ctx::CairoContext, scene::Scene, roadway::Roadway;
+    rendermodel::RenderModel=RenderModel(),
+    cam::Camera=SceneFollowCamera(),
+    special_car_colors::Dict{Int,Colorant}=Dict{Int,Colorant}(),
+    )
+
+    canvas_width = Cairo.width(ctx)
+    canvas_height = Cairo.height(ctx)
+
+    clear_setup!(rendermodel)
+
+    render!(rendermodel, roadway)
+    render!(rendermodel, scene, special_car_colors=special_car_colors)
+
+    camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
+
+    render(rendermodel, ctx, canvas_width, canvas_height)
+    ctx
+end
 function render(scene::Scene, roadway::Roadway;
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,

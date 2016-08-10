@@ -72,7 +72,7 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::Sc
         camera_setzoom!(rendermodel, cam.zoom)
     else
         add_instruction!( rendermodel, render_text, ("SceneFollowCamera did not find any vehicles", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height, cam.percent_border)
+        camera_fit_to_content!(rendermodel, canvas_width, canvas_height, 0.1)
     end
 
     rendermodel

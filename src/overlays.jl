@@ -3,7 +3,8 @@ export
         LineToCenterlineOverlay,
         LineToFrontOverlay,
         NeighborsOverlay,
-        CarFollowingStatsOverlay
+        CarFollowingStatsOverlay,
+        MOBILOverlay
 
 abstract SceneOverlay
 
@@ -218,6 +219,173 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
                 (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
         end
     end
+
+    rendermodel
+end
+
+type MOBILOverlay <: SceneOverlay
+    egoid::Int
+    mobil::MOBIL
+    rec::SceneRecord
+    MOBILOverlay(egoid::Int, mobil::MOBIL; rec::SceneRecord=SceneRecord(1, 0.1)) = new(egoid, mobil, rec)
+end
+function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, roadway::Roadway)
+
+    font_size = 12
+    text_x = 275
+    text_y_jump = round(Int, font_size*1.2)
+
+    function drawtext(text, text_y)
+        add_instruction!(rendermodel, render_text, (text, text_x, text_y, font_size, colorant"white"), incameraframe=false)
+    end
+
+    rec = overlay.rec
+    update!(rec, scene)
+
+    mobil = overlay.mobil
+
+    vehicle_index = get_index_of_first_vehicle_with_id(rec, overlay.egoid)
+    veh_ego = scene[vehicle_index]
+    v = veh_ego.state.v
+    egostate_M = veh_ego.state
+
+    drawtext(@sprintf("speed: %10.3f", v), 120)
+
+    left_lane_exists = convert(Float64, get(N_LANE_LEFT, rec, roadway, vehicle_index)) > 0
+    right_lane_exists = convert(Float64, get(N_LANE_RIGHT, rec, roadway, vehicle_index)) > 0
+    fore_M = get_neighbor_fore_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+    rear_M = get_neighbor_rear_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointFront(), VehicleTargetPointRear())
+
+    drawtext(@sprintf("left lane exists: %s", string(left_lane_exists)), 120 +   text_y_jump)
+    drawtext(@sprintf("right lane exists: %s", string(right_lane_exists)), 120 + 2*text_y_jump)
+
+    # accel if we do not make a lane change
+    accel_M_orig = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, overlay.egoid))
+    dir = DIR_MIDDLE
+
+    drawtext(@sprintf("accel M orig: %10.3f", accel_M_orig), 120 + 3*text_y_jump)
+
+    advantage_threshold = mobil.advantage_threshold
+    if right_lane_exists
+
+        rear_R = get_neighbor_rear_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointFront(), VehicleTargetPointRear())
+
+        # candidate position after lane change is over
+        footpoint = get_footpoint(veh_ego)
+        lane = roadway[veh_ego.state.posF.roadind.tag]
+        lane_R = roadway[LaneTag(lane.tag.segment, lane.tag.lane - 1)]
+        roadproj = proj(footpoint, lane_R, roadway)
+        frenet_R = Frenet(RoadIndex(roadproj), roadway)
+        egostate_R = VehicleState(frenet_R, roadway, veh_ego.state.v)
+
+        Δaccel_n = 0.0
+        passes_safety_criterion = true
+        if rear_R.ind != 0
+            id = scene[rear_R.ind].def.id
+            accel_n_orig = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+            veh_ego.state = egostate_R
+            accel_n_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+            veh_ego.state = egostate_M
+            passes_safety_criterion = accel_n_test ≥ -mobil.safe_decel
+            Δaccel_n = accel_n_test - accel_n_orig
+        end
+        drawtext(@sprintf("Δaccel n: %10.3f", Δaccel_n), 120 + 5*text_y_jump)
+
+        if passes_safety_criterion
+
+            Δaccel_o = 0.0
+            if rear_M.ind != 0
+                id = scene[rear_M.ind].def.id
+                accel_o_orig = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+                veh_ego.state = egostate_R
+                accel_o_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+                veh_ego.state = egostate_M
+                Δaccel_o = accel_o_test - accel_o_orig
+            end
+            drawtext(@sprintf("Δaccel o: %10.3f", Δaccel_o), 120 + 6*text_y_jump)
+
+            veh_ego.state = egostate_R
+            accel_M_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, overlay.egoid))
+            veh_ego.state = egostate_M
+            Δaccel_M = accel_M_test - accel_M_orig
+
+            drawtext(@sprintf("Δaccel M: %10.3f", Δaccel_M), 120 + 7*text_y_jump)
+
+            Δaₜₕ = Δaccel_M + mobil.politeness*(Δaccel_n + Δaccel_o)
+            if Δaₜₕ > advantage_threshold
+                dir = DIR_RIGHT
+                advantage_threshold = Δaₜₕ
+            end
+
+            drawtext(@sprintf("Δaₜₕ: %10.3f", Δaₜₕ), 120 + 8*text_y_jump)
+            drawtext(@sprintf("advantage_threshold: %10.3f", advantage_threshold), 120 + 9*text_y_jump)
+        end
+    end
+
+    if left_lane_exists
+        rear_L = get_neighbor_rear_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointFront(), VehicleTargetPointRear())
+
+        # candidate position after lane change is over
+        footpoint = get_footpoint(veh_ego)
+        lane = roadway[veh_ego.state.posF.roadind.tag]
+        lane_L = roadway[LaneTag(lane.tag.segment, lane.tag.lane + 1)]
+        roadproj = proj(footpoint, lane_L, roadway)
+        frenet_L = Frenet(RoadIndex(roadproj), roadway)
+        egostate_L = VehicleState(frenet_L, roadway, veh_ego.state.v)
+
+        Δaccel_n = 0.0
+        passes_safety_criterion = true
+        if rear_L.ind != 0
+            id = scene[rear_L.ind].def.id
+            accel_n_orig = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+            veh_ego.state = egostate_L
+            # render!(rendermodel, veh_ego, RGBA(0.0,0.0,1.0,0.5))
+            accel_n_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+            # accel_n_test = rand(track_longitudinal!(reset_hidden_state!(mobil.mlon), scene, roadway, id, vehicle_index))
+            drawtext(@sprintf("accel n test: %10.3f", accel_n_test), 120 + 10*text_y_jump)
+
+            body = inertial2body(get_rear_center(scene[rear_L.ind]), get_front_center(veh_ego)) # project target to be relative to ego
+            s_gap = body.x
+            drawtext(@sprintf("s_gap L: %10.3f", s_gap), 120 + 9*text_y_jump)
+
+            veh_ego.state = egostate_M
+            passes_safety_criterion = accel_n_test ≥ -mobil.safe_decel
+            Δaccel_n = accel_n_test - accel_n_orig
+        end
+        drawtext(@sprintf("Δaccel n: %10.3f", Δaccel_n), 120 + 11*text_y_jump)
+
+        if passes_safety_criterion
+
+
+            Δaccel_o = 0.0
+            if rear_M.ind != 0
+                id = scene[rear_M.ind].def.id
+                accel_o_orig = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+                veh_ego.state = egostate_L
+                accel_o_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
+                veh_ego.state = egostate_M
+                Δaccel_o = accel_o_test - accel_o_orig
+            end
+            drawtext(@sprintf("Δaccel o: %10.3f", Δaccel_o), 120 + 12*text_y_jump)
+
+            veh_ego.state = egostate_L
+            accel_M_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, overlay.egoid))
+            veh_ego.state = egostate_M
+            Δaccel_M = accel_M_test - accel_M_orig
+            drawtext(@sprintf("Δaccel M: %10.3f", Δaccel_M), 120 + 13*text_y_jump)
+
+            Δaₜₕ = Δaccel_M + mobil.politeness*(Δaccel_n + Δaccel_o)
+            if Δaₜₕ > advantage_threshold
+                dir = DIR_LEFT
+                advantage_threshold = Δaₜₕ
+            end
+
+            drawtext(@sprintf("Δaₜₕ: %10.3f", Δaₜₕ), 120 + 14*text_y_jump)
+            drawtext(@sprintf("advantage_threshold: %10.3f", advantage_threshold), 120 + 15*text_y_jump)
+        end
+    end
+
+    drawtext(@sprintf("dir: %10d", dir), 120 + 17*text_y_jump)
 
     rendermodel
 end
