@@ -18,8 +18,8 @@ function render(ctx::CairoContext, scene::Scene, roadway::Roadway;
     special_car_colors::Dict{Int,Colorant}=Dict{Int,Colorant}(),
     )
 
-    canvas_width = Cairo.width(ctx)
-    canvas_height = Cairo.height(ctx)
+    canvas_width = floor(Int, Cairo.width(ctx))
+    canvas_height = floor(Int, Cairo.height(ctx))
 
     clear_setup!(rendermodel)
 
