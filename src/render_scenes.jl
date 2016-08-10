@@ -40,13 +40,6 @@ function render(scene::Scene, roadway::Roadway;
     )
 
     s, ctx = get_surface_and_context(canvas_width, canvas_height)
-    clear_setup!(rendermodel)
-
-    render!(rendermodel, roadway)
-    render!(rendermodel, scene, special_car_colors=special_car_colors)
-
-    camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
+    render(ctx, scene, roadway, rendermodel=rendermodel, cam=cam, special_car_colors=special_car_colors)
     s
 end
