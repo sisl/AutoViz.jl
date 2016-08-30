@@ -1,6 +1,6 @@
-The Discretizers.jl package is licensed under the MIT "Expat" License:
+The AutoViz.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2015: Tim Wheeler.
+> Copyright (c) 2016: Tim Wheeler.
 >
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the
