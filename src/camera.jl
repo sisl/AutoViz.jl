@@ -13,6 +13,7 @@ type StaticCamera <: Camera
     pos::VecE2
     zoom::Float64 # [pix/meter]
     StaticCamera(pos::VecE2, zoom::Float64=3.0) = new(pos, zoom)
+    StaticCamera(x::Float64, y::Float64, zoom::Float64=3.0) = new(VecE2(x,y), zoom)
 end
 function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::Int, canvas_height::Int)
 
@@ -67,6 +68,8 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::Sc
             C += convert(VecE2, veh.state.posG)
         end
         C = C / length(scene)
+
+        println(C)
 
         camera_set_pos!(rendermodel, C)
         camera_setzoom!(rendermodel, cam.zoom)

@@ -1,12 +1,25 @@
 export
         SceneOverlay,
+        Overwash,
         LineToCenterlineOverlay,
         LineToFrontOverlay,
         NeighborsOverlay,
         CarFollowingStatsOverlay,
-        MOBILOverlay
+        MOBILOverlay,
+        CollisionOverlay,
+        MarkerDistOverlay,
+
+        TextParams
 
 abstract SceneOverlay
+
+type Overwash <: SceneOverlay
+    color::Colorant
+end
+function render!(rendermodel::RenderModel, overlay::Overwash, scene::Scene, roadway::Roadway)
+    add_instruction!(rendermodel, render_paint, (overlay.color,))
+    rendermodel
+end
 
 type LineToCenterlineOverlay <: SceneOverlay
     target_id::Int # if -1 does it for all
@@ -72,6 +85,35 @@ function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::S
     end
 
     rendermodel
+end
+
+type TextParams
+    size::Int
+    color::Colorant
+    x::Int
+    y_start::Int
+    y_jump::Int
+
+    function TextParams(;
+        size::Int=12,
+        color::Colorant=colorant"white",
+        x::Int=20,
+        y_start::Int=20,
+        y_jump::Int=round(Int, size*1.2),
+        )
+
+        retval = new()
+        retval.size = size
+        retval.color = color
+        retval.x = x
+        retval.y_start = y_start
+        retval.y_jump = y_jump
+        retval
+    end
+end
+function drawtext(text::AbstractString, y::Int, rendermodel::RenderModel, t::TextParams; incameraframe::Bool=false)
+    add_instruction!(rendermodel, render_text, (text, t.x, y, t.size, t.color), incameraframe=incameraframe)
+    y + t.y_jump
 end
 
 type CarFollowingStatsOverlay <: SceneOverlay
@@ -144,20 +186,25 @@ type NeighborsOverlay <: SceneOverlay
     color_M::Colorant
     color_R::Colorant
     line_width::Float64
+    textparams::TextParams
     function NeighborsOverlay(target_id::Int;
         color_L::Colorant=colorant"blue",
         color_M::Colorant=colorant"green",
         color_R::Colorant=colorant"red",
         line_width::Float64=0.5, # [m]
+        textparams::TextParams=TextParams(),
         )
 
-        new(target_id, color_L, color_M, color_R, line_width)
+        new(target_id, color_L, color_M, color_R, line_width, textparams)
     end
 end
 function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Scene, roadway::Roadway)
 
-    vehicle_index = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+    textparams = overlay.textparams
+    yₒ = textparams.y_start
+    Δy = textparams.y_jump
 
+    vehicle_index = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
     if vehicle_index != 0
 
         veh_ego = scene[vehicle_index]
@@ -166,57 +213,58 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         v = veh_ego.state.v
         len_ego = veh_ego.def.length
 
-        # line from me to lead
+        fore_L = get_neighbor_fore_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        if fore_L.ind != 0
+            veh_oth = scene[fore_L.ind]
+            A = get_front_center(veh_ego)
+            B = get_rear_center(veh_oth)
+            add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_L, overlay.line_width))
+            drawtext(@sprintf("d fore left:   %10.3f", fore_L.Δs), yₒ + 0*Δy, rendermodel, textparams)
+        end
+
         fore_M = get_neighbor_fore_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
         if fore_M.ind != 0
             veh_oth = scene[fore_M.ind]
-            A = get_footpoint(veh_ego) + polar(veh_ego.def.length/2, veh_ego.state.posG.θ)
-            B = get_footpoint(veh_oth) - polar(veh_oth.def.length/2, veh_oth.state.posG.θ)
-            add_instruction!(rendermodel, render_line_segment,
-                (A.x, A.y, B.x, B.y, overlay.color_M, overlay.line_width))
+            A = get_front_center(veh_ego)
+            B = get_rear_center(veh_oth)
+            add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_M, overlay.line_width))
+            drawtext(@sprintf("d fore middle: %10.3f", fore_M.Δs), yₒ + 1*Δy, rendermodel, textparams)
         end
 
-        fore_L = get_neighbor_fore_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointRear(), VehicleTargetPointFront())
-        if fore_L.ind != 0
-            veh_oth = scene[fore_L.ind]
-            A = get_footpoint(veh_ego) - polar(veh_ego.def.length/2, veh_ego.state.posG.θ)
-            B = get_footpoint(veh_oth) - polar(veh_oth.def.length/2, veh_oth.state.posG.θ)
-            add_instruction!(rendermodel, render_line_segment,
-                (A.x, A.y, B.x, B.y, overlay.color_L, overlay.line_width))
-
-            font_size = 14
-            text_y = font_size
-            text_y_jump = round(Int, font_size*1.2)
-
-            add_instruction!( rendermodel, render_text, (string(fore_L), 10, text_y, font_size, colorant"white"), incameraframe=false)
-        end
-
-        rear_L = get_neighbor_rear_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointFront(), VehicleTargetPointRear())
-        if rear_L.ind != 0
-            veh_oth = scene[rear_L.ind]
-            A = get_footpoint(veh_ego) - polar(veh_ego.def.length/2, veh_ego.state.posG.θ)
-            B = get_footpoint(veh_oth) + polar(veh_oth.def.length/2, veh_oth.state.posG.θ)
-            add_instruction!(rendermodel, render_line_segment,
-                (A.x, A.y, B.x, B.y, overlay.color_L, overlay.line_width))
-        end
-
-
-        fore_R = get_neighbor_fore_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_R = get_neighbor_fore_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
         if fore_R.ind != 0
             veh_oth = scene[fore_R.ind]
-            A = get_footpoint(veh_ego) - polar(veh_ego.def.length/2, veh_ego.state.posG.θ)
-            B = get_footpoint(veh_oth) - polar(veh_oth.def.length/2, veh_oth.state.posG.θ)
-            add_instruction!(rendermodel, render_line_segment,
-                (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
+            A = get_front_center(veh_ego)
+            B = get_rear_center(veh_oth)
+            add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
+            drawtext(@sprintf("d fore right:  %10.3f", fore_R.Δs), yₒ + 2*Δy, rendermodel, textparams)
         end
 
-        rear_R = get_neighbor_rear_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_L = get_neighbor_rear_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        if rear_L.ind != 0
+            veh_oth = scene[rear_L.ind]
+            A = get_rear_center(veh_ego)
+            B = get_front_center(veh_oth)
+            add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_L, overlay.line_width))
+            drawtext(@sprintf("d rear left:   %10.3f", rear_L.Δs), yₒ + 3*Δy, rendermodel, textparams)
+        end
+
+        rear_M = get_neighbor_rear_along_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        if rear_M.ind != 0
+            veh_oth = scene[rear_M.ind]
+            A = get_rear_center(veh_ego)
+            B = get_front_center(veh_oth)
+            add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_M, overlay.line_width))
+            drawtext(@sprintf("d rear middle: %10.3f", rear_M.Δs), yₒ + 4*Δy, rendermodel, textparams)
+        end
+
+        rear_R = get_neighbor_rear_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
         if rear_R.ind != 0
             veh_oth = scene[rear_R.ind]
-            A = get_footpoint(veh_ego) - polar(veh_ego.def.length/2, veh_ego.state.posG.θ)
-            B = get_footpoint(veh_oth) + polar(veh_oth.def.length/2, veh_oth.state.posG.θ)
-            add_instruction!(rendermodel, render_line_segment,
-                (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
+            A = get_rear_center(veh_ego)
+            B = get_front_center(veh_oth)
+            add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
+            drawtext(@sprintf("d rear right:  %10.3f", rear_R.Δs), yₒ + 5*Δy, rendermodel, textparams)
         end
     end
 
@@ -227,43 +275,52 @@ type MOBILOverlay <: SceneOverlay
     egoid::Int
     mobil::MOBIL
     rec::SceneRecord
-    MOBILOverlay(egoid::Int, mobil::MOBIL; rec::SceneRecord=SceneRecord(1, 0.1)) = new(egoid, mobil, rec)
+    textparams::TextParams
+
+    function MOBILOverlay(
+        egoid::Int,
+        mobil::MOBIL;
+        rec::SceneRecord=SceneRecord(1, 0.1),
+        textparams::TextParams = TextParams(x=275, y_start=120),
+        )
+
+        retval = new()
+        retval.egoid = egoid
+        retval.mobil = mobil
+        retval.rec = rec
+        retval.textparams = textparams
+        retval
+    end
 end
 function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, roadway::Roadway)
-
-    font_size = 12
-    text_x = 275
-    text_y_jump = round(Int, font_size*1.2)
-
-    function drawtext(text, text_y)
-        add_instruction!(rendermodel, render_text, (text, text_x, text_y, font_size, colorant"white"), incameraframe=false)
-    end
 
     rec = overlay.rec
     update!(rec, scene)
 
     mobil = overlay.mobil
+    textparams = overlay.textparams
+    yₒ = textparams.y_start
 
     vehicle_index = get_index_of_first_vehicle_with_id(rec, overlay.egoid)
     veh_ego = scene[vehicle_index]
     v = veh_ego.state.v
     egostate_M = veh_ego.state
 
-    drawtext(@sprintf("speed: %10.3f", v), 120)
+    drawtext(@sprintf("speed: %10.3f", v), yₒ, rendermodel, textparams)
 
     left_lane_exists = convert(Float64, get(N_LANE_LEFT, rec, roadway, vehicle_index)) > 0
     right_lane_exists = convert(Float64, get(N_LANE_RIGHT, rec, roadway, vehicle_index)) > 0
     fore_M = get_neighbor_fore_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
     rear_M = get_neighbor_rear_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointFront(), VehicleTargetPointRear())
 
-    drawtext(@sprintf("left lane exists: %s", string(left_lane_exists)), 120 +   text_y_jump)
-    drawtext(@sprintf("right lane exists: %s", string(right_lane_exists)), 120 + 2*text_y_jump)
+    drawtext(@sprintf("left lane exists: %s", string(left_lane_exists)), yₒ +   textparams.y_jump, rendermodel, textparams)
+    drawtext(@sprintf("right lane exists: %s", string(right_lane_exists)), yₒ + 2*textparams.y_jump, rendermodel, textparams)
 
     # accel if we do not make a lane change
     accel_M_orig = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, overlay.egoid))
     dir = DIR_MIDDLE
 
-    drawtext(@sprintf("accel M orig: %10.3f", accel_M_orig), 120 + 3*text_y_jump)
+    drawtext(@sprintf("accel M orig: %10.3f", accel_M_orig), yₒ + 3*textparams.y_jump, rendermodel, textparams)
 
     advantage_threshold = mobil.advantage_threshold
     if right_lane_exists
@@ -289,7 +346,7 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
             passes_safety_criterion = accel_n_test ≥ -mobil.safe_decel
             Δaccel_n = accel_n_test - accel_n_orig
         end
-        drawtext(@sprintf("Δaccel n: %10.3f", Δaccel_n), 120 + 5*text_y_jump)
+        drawtext(@sprintf("Δaccel n: %10.3f", Δaccel_n), yₒ + 5*textparams.y_jump, rendermodel, textparams)
 
         if passes_safety_criterion
 
@@ -302,14 +359,14 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
                 veh_ego.state = egostate_M
                 Δaccel_o = accel_o_test - accel_o_orig
             end
-            drawtext(@sprintf("Δaccel o: %10.3f", Δaccel_o), 120 + 6*text_y_jump)
+            drawtext(@sprintf("Δaccel o: %10.3f", Δaccel_o), yₒ + 6*textparams.y_jump, rendermodel, textparams)
 
             veh_ego.state = egostate_R
             accel_M_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, overlay.egoid))
             veh_ego.state = egostate_M
             Δaccel_M = accel_M_test - accel_M_orig
 
-            drawtext(@sprintf("Δaccel M: %10.3f", Δaccel_M), 120 + 7*text_y_jump)
+            drawtext(@sprintf("Δaccel M: %10.3f", Δaccel_M), yₒ + 7*textparams.y_jump, rendermodel, textparams)
 
             Δaₜₕ = Δaccel_M + mobil.politeness*(Δaccel_n + Δaccel_o)
             if Δaₜₕ > advantage_threshold
@@ -317,8 +374,8 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
                 advantage_threshold = Δaₜₕ
             end
 
-            drawtext(@sprintf("Δaₜₕ: %10.3f", Δaₜₕ), 120 + 8*text_y_jump)
-            drawtext(@sprintf("advantage_threshold: %10.3f", advantage_threshold), 120 + 9*text_y_jump)
+            drawtext(@sprintf("Δaₜₕ: %10.3f", Δaₜₕ), yₒ + 8*textparams.y_jump, rendermodel, textparams)
+            drawtext(@sprintf("advantage_threshold: %10.3f", advantage_threshold), yₒ + 9*textparams.y_jump, rendermodel, textparams)
         end
     end
 
@@ -342,17 +399,17 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
             # render!(rendermodel, veh_ego, RGBA(0.0,0.0,1.0,0.5))
             accel_n_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, id))
             # accel_n_test = rand(track_longitudinal!(reset_hidden_state!(mobil.mlon), scene, roadway, id, vehicle_index))
-            drawtext(@sprintf("accel n test: %10.3f", accel_n_test), 120 + 10*text_y_jump)
+            drawtext(@sprintf("accel n test: %10.3f", accel_n_test), yₒ + 10*textparams.y_jump, rendermodel, textparams)
 
             body = inertial2body(get_rear_center(scene[rear_L.ind]), get_front_center(veh_ego)) # project target to be relative to ego
             s_gap = body.x
-            drawtext(@sprintf("s_gap L: %10.3f", s_gap), 120 + 9*text_y_jump)
+            drawtext(@sprintf("s_gap L: %10.3f", s_gap), yₒ + 9*textparams.y_jump, rendermodel, textparams)
 
             veh_ego.state = egostate_M
             passes_safety_criterion = accel_n_test ≥ -mobil.safe_decel
             Δaccel_n = accel_n_test - accel_n_orig
         end
-        drawtext(@sprintf("Δaccel n: %10.3f", Δaccel_n), 120 + 11*text_y_jump)
+        drawtext(@sprintf("Δaccel n: %10.3f", Δaccel_n), yₒ + 11*textparams.y_jump, rendermodel, textparams)
 
         if passes_safety_criterion
 
@@ -366,13 +423,13 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
                 veh_ego.state = egostate_M
                 Δaccel_o = accel_o_test - accel_o_orig
             end
-            drawtext(@sprintf("Δaccel o: %10.3f", Δaccel_o), 120 + 12*text_y_jump)
+            drawtext(@sprintf("Δaccel o: %10.3f", Δaccel_o), yₒ + 12*textparams.y_jump, rendermodel, textparams)
 
             veh_ego.state = egostate_L
             accel_M_test = rand(observe!(reset_hidden_state!(mobil.mlon), scene, roadway, overlay.egoid))
             veh_ego.state = egostate_M
             Δaccel_M = accel_M_test - accel_M_orig
-            drawtext(@sprintf("Δaccel M: %10.3f", Δaccel_M), 120 + 13*text_y_jump)
+            drawtext(@sprintf("Δaccel M: %10.3f", Δaccel_M), yₒ + 13*textparams.y_jump, rendermodel, textparams)
 
             Δaₜₕ = Δaccel_M + mobil.politeness*(Δaccel_n + Δaccel_o)
             if Δaₜₕ > advantage_threshold
@@ -380,12 +437,68 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
                 advantage_threshold = Δaₜₕ
             end
 
-            drawtext(@sprintf("Δaₜₕ: %10.3f", Δaₜₕ), 120 + 14*text_y_jump)
-            drawtext(@sprintf("advantage_threshold: %10.3f", advantage_threshold), 120 + 15*text_y_jump)
+            drawtext(@sprintf("Δaₜₕ: %10.3f", Δaₜₕ), yₒ + 14*textparams.y_jump, rendermodel, textparams)
+            drawtext(@sprintf("advantage_threshold: %10.3f", advantage_threshold), yₒ + 15*textparams.y_jump, rendermodel, textparams)
         end
     end
 
-    drawtext(@sprintf("dir: %10d", dir), 120 + 17*text_y_jump)
+    drawtext(@sprintf("dir: %10d", dir), yₒ + 17*textparams.y_jump, rendermodel, textparams)
+
+    rendermodel
+end
+
+type CollisionOverlay <: SceneOverlay
+    target_id::Int # if -1 does it for all
+    color::Colorant
+    mem::CPAMemory
+
+    CollisionOverlay(target_id::Int=-1; color::Colorant=RGBA(1.0,0.0,0.0,0.5)) = new(target_id, color, CPAMemory())
+end
+function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Scene, roadway::Roadway)
+
+    if overlay.target_id < 0
+        target_inds = 1:length(scene)
+    else
+        ind = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+        target_inds = ind:ind
+    end
+
+    for ind in target_inds
+        veh = scene[ind]
+        if get_first_collision(scene, ind, overlay.mem).is_colliding
+            render!(rendermodel, scene[ind], overlay.color)
+        end
+    end
+
+    rendermodel
+end
+
+type MarkerDistOverlay <: SceneOverlay
+    target_id::Int
+    textparams::TextParams
+    rec::SceneRecord
+    function MarkerDistOverlay(target_id::Int;
+        textparams::TextParams=TextParams(),
+        )
+
+        new(target_id, textparams, SceneRecord(1, 0.1))
+    end
+end
+function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Scene, roadway::Roadway)
+
+    textparams = overlay.textparams
+    yₒ = textparams.y_start
+    Δy = textparams.y_jump
+
+    update!(overlay.rec, scene)
+
+    vehicle_index = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+    if vehicle_index != 0
+        veh_ego = scene[vehicle_index]
+        drawtext(@sprintf("lane offset:       %10.3f", veh_ego.state.posF.t), yₒ + 0*Δy, rendermodel, textparams)
+        drawtext(@sprintf("markerdist left:   %10.3f", convert(Float64, get(MARKERDIST_LEFT, overlay.rec, roadway, vehicle_index))), yₒ + 1*Δy, rendermodel, textparams)
+        drawtext(@sprintf("markerdist right:  %10.3f", convert(Float64, get(MARKERDIST_RIGHT, overlay.rec, roadway, vehicle_index))), yₒ + 2*Δy, rendermodel, textparams)
+    end
 
     rendermodel
 end

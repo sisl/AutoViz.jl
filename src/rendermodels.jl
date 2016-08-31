@@ -18,6 +18,7 @@ export
         clear_setup!,
         set_background_color!,
 
+        render_paint,
         render_text,
         render_circle,
         render_arc,
@@ -26,6 +27,7 @@ export
         render_vehicle,
         render_point_trail,
         render_line,
+        render_closed_line,
         render_fill_region,
         render_line_segment,
         render_dashed_line,
@@ -48,7 +50,22 @@ end
 # Functions
 # ===================================================
 
-# primitivesposF
+function render_paint(
+    ctx          :: CairoContext,
+    color        :: Colorant,
+    )
+
+    r = convert(Float64, red(color))
+    g = convert(Float64, green(color))
+    b = convert(Float64, blue(color))
+    a = convert(Float64, alpha(color))
+
+    save(ctx)
+    set_source_rgba(ctx, color)
+    paint_with_alpha(ctx, alpha(color))
+    restore(ctx)
+end
+
 function render_text(
     ctx          :: CairoContext,
     text         :: AbstractString,
@@ -57,7 +74,7 @@ function render_text(
     fontsize     :: Real,
     color        :: Colorant,
     align_center :: Bool        = false,
-    fontfamily   :: AbstractString      = "Sans" # ∈ "serif", "sans-serif", "cursive", "fantasy", "monospace"
+    fontfamily   :: AbstractString      = "monospace" # ∈ "serif", "sans-serif", "cursive", "fantasy", "monospace"
     )
 
     save(ctx)
@@ -306,6 +323,37 @@ function render_line{T<:Real}(
         line_to(ctx, pts[1,i], pts[2,i])
     end
     stroke(ctx)
+    restore(ctx)
+end
+function render_closed_line{T<:Real}(
+    ctx        :: CairoContext,
+    pts        :: Matrix{T}, # 2×n
+    color      :: Colorant,
+    line_width :: Real = 1.0,
+    fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
+    )
+
+    line_width = user_to_device_distance!(ctx, [line_width,0])[1]
+
+    save(ctx)
+
+    set_source_rgba(ctx, color)
+    set_line_width(ctx,line_width)
+
+    move_to(ctx, pts[1,1], pts[2,1])
+    for i in 2 : size(pts,2)
+        line_to(ctx, pts[1,i], pts[2,i])
+    end
+    close_path(ctx)
+
+    if alpha(fill_color) > 0.0
+        stroke_preserve(ctx)
+        set_source_rgba(ctx, fill_color)
+        fill(ctx)
+    else
+        stroke(ctx)
+    end
+
     restore(ctx)
 end
 function render_fill_region{T<:Real}(
