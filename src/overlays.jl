@@ -26,7 +26,7 @@ type LineToCenterlineOverlay <: SceneOverlay
     line_width::Float64
     color::Colorant
 
-    function LineToCenterline(target_id::Int=-1;
+    function LineToCenterlineOverlay(target_id::Int=-1;
         line_width::Float64=0.5, #[m]
         color::Colorant=colorant"blue",
         )
