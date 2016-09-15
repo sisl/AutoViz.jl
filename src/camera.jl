@@ -69,8 +69,6 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::Sc
         end
         C = C / length(scene)
 
-        println(C)
-
         camera_set_pos!(rendermodel, C)
         camera_setzoom!(rendermodel, cam.zoom)
     else

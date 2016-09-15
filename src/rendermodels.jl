@@ -34,7 +34,8 @@ export
         render_arrow,
         render_colormesh,
 
-        get_surface_and_context
+        get_surface_and_context,
+        grayscale_transform
 
 # config variables
 type RenderModel
@@ -807,7 +808,20 @@ function render(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integ
     ctx
 end
 
-function Cairo.set_source_rgba(ctx::CairoContext, color::Color)
+function grayscale_transform(color::Colorant)
+    g = 1.0 - gray(convert(Gray, color)) # convert to grayscale and invert
+    if isa(color, TransparentColor)
+        a = alpha(color)
+        GrayA(g, a)
+    else
+        Gray(g)
+    end
+end
+
+function Cairo.set_source_rgba(ctx::CairoContext, color::RGB)
+
+    # g = convert(Float64, gray(grayscale_transform(color)))
+    # r = g = b = g
 
     r = convert(Float64, red(color))
     g = convert(Float64, green(color))
@@ -816,6 +830,11 @@ function Cairo.set_source_rgba(ctx::CairoContext, color::Color)
     set_source_rgba(ctx, r, g, b, 1.0)
 end
 function Cairo.set_source_rgba(ctx::CairoContext, color::TransparentColor)
+
+    # grayscale = grayscale_transform(color)
+    # g = convert(Float64, gray(grayscale))
+    # r = g = b = g
+    # a = convert(Float64, alpha(grayscale))
 
     r = convert(Float64, red(color))
     g = convert(Float64, green(color))
