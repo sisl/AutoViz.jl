@@ -695,7 +695,7 @@ function camera_fit_to_content!(
         elseif f == render_text
             (x,y,flag) = (tup[2][2],tup[2][3],true)
         elseif f == render_point_trail || f == render_line ||
-               f == render_dashed_line
+               f == render_dashed_line || f == render_fill_region
             for xi in tup[2][1][1,:]
                 xmax = maximum([xmax, xi])
                 xmin = minimum([xmin, xi])
