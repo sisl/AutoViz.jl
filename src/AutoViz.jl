@@ -8,6 +8,7 @@ using AutomotiveDrivingModels
 @reexport using Cairo
 
 import Reel
+Reel.set_output_type("gif")
 
 # using Reactive
 # import Gtk
@@ -31,7 +32,7 @@ include(Pkg.dir("AutoViz", "src", "render_scenes.jl"))
 
 include(Pkg.dir("AutoViz", "src", "overlays.jl"))
 
-# include(Pkg.dir("AutomotiveDrivingModels", "src", "viz", "reel_drive.jl"))
-# include(Pkg.dir("AutomotiveDrivingModels", "src", "viz", "gtk.jl"))
+include(Pkg.dir("AutoViz", "src", "reel_drive.jl"))
+# include(Pkg.dir("AutoViz", "src", "gtk.jl"))
 
 end # module
