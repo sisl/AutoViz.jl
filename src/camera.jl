@@ -47,7 +47,7 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene::Scen
         camera_setzoom!(rendermodel, cam.zoom)
     else
         add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height, 0.1)
+        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
     end
 
     rendermodel
