@@ -20,7 +20,7 @@ const MONOKAI = Dict(
             "color3"     => colorant"0xFF007FFF", # red
             "color4"     => colorant"0xF9971FFF", # orange
             "color5"     => colorant"0x79ABFFFF", # cobalt
-        ),
+        )
 
 function Vec.lerp(a::Colorant, b::Colorant, t::Real)
 
