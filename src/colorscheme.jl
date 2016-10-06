@@ -13,13 +13,13 @@ const COLOR_CAR_EGO       = colorant"0x79ABFFFF" # bluish
 const COLOR_CAR_OTHER     = colorant"0xFF007FFF" # reddish
 
 const MONOKAI = Dict(
-            "foreground" => colorant"0xCFBFAD",
-            "background" => colorant"0x272822",
-            "color1"     => colorant"0x52E3F6", # light blue
-            "color2"     => colorant"0xA7EC21", # light green
-            "color3"     => colorant"0xFF007F", # red
-            "color4"     => colorant"0xF9971F", # orange
-            "color5"     => colorant"0x79ABFF", # cobalt
+            "foreground" => colorant"0xCFBFADFF",
+            "background" => colorant"0x272822FF",
+            "color1"     => colorant"0x52E3F6FF", # light blue
+            "color2"     => colorant"0xA7EC21FF", # light green
+            "color3"     => colorant"0xFF007FFF", # red
+            "color4"     => colorant"0xF9971FFF", # orange
+            "color5"     => colorant"0x79ABFFFF", # cobalt
         ),
 
 function Vec.lerp(a::Colorant, b::Colorant, t::Real)
