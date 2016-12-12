@@ -125,8 +125,9 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
                 pts_left[2,i] = p_left.y
             end
             if has_next(lane)
-                pt = next_lane_point(lane, roadway)
-                p_left = pt.pos + polar(halfwidth, pt.pos.θ + π/2)
+                lane2 = next_lane(lane, roadway)
+                pt = lane2.curve[1]
+                p_left = pt.pos + polar(lane2.width/2, pt.pos.θ + π/2)
                 pts_left = hcat(pts_left, [p_left.x, p_left.y])
             end
 
@@ -144,8 +145,9 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
                 end
 
                 if has_next(lane)
-                    pt = next_lane_point(lane, roadway)
-                    p_right = pt.pos - polar(halfwidth, pt.pos.θ + π/2)
+                    lane2 = next_lane(lane, roadway)
+                    pt = lane2.curve[1]
+                    p_right = pt.pos - polar(lane2.width/2, pt.pos.θ + π/2)
                     pts_right = hcat(pts_right, [p_right.x, p_right.y])
                 end
 

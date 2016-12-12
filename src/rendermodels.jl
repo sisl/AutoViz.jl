@@ -357,6 +357,37 @@ function render_closed_line{T<:Real}(
 
     restore(ctx)
 end
+function render_closed_line(
+    ctx        :: CairoContext,
+    pts        :: Vector{VecE2},
+    color      :: Colorant,
+    line_width :: Real = 1.0,
+    fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
+    )
+
+    line_width = user_to_device_distance!(ctx, [line_width,0])[1]
+
+    save(ctx)
+
+    set_source_rgba(ctx, color)
+    set_line_width(ctx,line_width)
+
+    move_to(ctx, pts[1].x, pts[1].y)
+    for i in 2 : length(pts)
+        line_to(ctx, pts[i].x, pts[i].y)
+    end
+    close_path(ctx)
+
+    if alpha(fill_color) > 0.0
+        stroke_preserve(ctx)
+        set_source_rgba(ctx, fill_color)
+        fill(ctx)
+    else
+        stroke(ctx)
+    end
+
+    restore(ctx)
+end
 function render_fill_region{T<:Real}(
     ctx        :: CairoContext,
     pts        :: Matrix{T}, # 2×n
