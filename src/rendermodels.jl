@@ -117,6 +117,17 @@ function render_circle(
 
     restore(ctx)
 end
+function render_circle(
+    ctx          :: CairoContext,
+    P            :: VecE2,
+    radius       :: Real,
+    color_fill   :: Colorant,
+    color_stroke :: Colorant = color_fill,
+    line_width   :: Real = 1.0
+    )
+
+    render_circle(ctx, P.x, P.y, radius, color_fill, color_stroke, line_width)
+end
 function render_arc(
     ctx          :: CairoContext,
     x            :: Real,

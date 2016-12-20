@@ -1,5 +1,6 @@
 export
         SceneOverlay,
+        TextOverlay,
         Overwash,
         LineToCenterlineOverlay,
         LineToFrontOverlay,
@@ -114,6 +115,25 @@ end
 function drawtext(text::AbstractString, y::Int, rendermodel::RenderModel, t::TextParams; incameraframe::Bool=false)
     add_instruction!(rendermodel, render_text, (text, t.x, y, t.size, t.color), incameraframe=incameraframe)
     y + t.y_jump
+end
+
+@with_kw type TextOverlay <: SceneOverlay
+    text::Vector{String}
+    color::Colorant = colorant"white"
+    font_size::Int = 10 # [pix]
+    pos::VecE2 = VecE2(10, font_size)
+    line_spacing::Float64 = 1.5 # multiple of font_size
+    incameraframe=false
+end
+function render!(rendermodel::RenderModel, overlay::TextOverlay, scene::Scene, roadway::Roadway)
+    x = overlay.pos.x
+    y = overlay.pos.y
+    y_jump = overlay.line_spacing*overlay.font_size
+    for line in overlay.text
+        add_instruction!(rendermodel, render_text, (line, x, y, overlay.font_size, overlay.color), incameraframe=overlay.incameraframe)
+        y += y_jump
+    end
+    rendermodel
 end
 
 type CarFollowingStatsOverlay <: SceneOverlay

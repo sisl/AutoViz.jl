@@ -1,7 +1,7 @@
 module AutoViz
 
 using Reexport
-
+using Parameters
 using AutomotiveDrivingModels
 
 @reexport using Colors
