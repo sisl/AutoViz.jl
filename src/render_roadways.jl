@@ -176,3 +176,5 @@ function render(roadway::Roadway;
     render(rendermodel, ctx, canvas_width, canvas_height)
     s
 end
+
+Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))
