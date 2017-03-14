@@ -43,3 +43,14 @@ function render(scene::Scene, roadway::Roadway;
     render(ctx, scene, roadway, rendermodel=rendermodel, cam=cam, car_colors=car_colors)
     s
 end
+
+###
+
+function get_pastel_car_colors(scene::Scene)
+    retval = Dict{Int,Colorant}()
+    n = length(scene)
+    for i in 1 : n
+        retval[i] = convert(RGB, HSV(180*(i-1)/(n-1), 0.85, 0.85))
+    end
+    return retval
+end

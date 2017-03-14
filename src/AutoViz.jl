@@ -17,7 +17,8 @@ Reel.set_output_type("gif")
 export
         DEFAULT_CANVAS_WIDTH,
         DEFAULT_CANVAS_HEIGHT,
-        render!
+        render!,
+        get_pastel_car_colors
 
 const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
