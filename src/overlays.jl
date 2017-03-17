@@ -79,7 +79,6 @@ function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::S
         veh_ind_front = get_neighbor_fore_along_lane(scene, ind, roadway).ind
         if veh_ind_front != 0
             v2 = scene[veh_ind_front]
-            println((veh.state.posG.x, veh.state.posG.y, v2.state.posG.x, v2.state.posG.y, overlay.color, overlay.line_width))
             add_instruction!(rendermodel, render_line_segment,
                 (veh.state.posG.x, veh.state.posG.y, v2.state.posG.x, v2.state.posG.y, overlay.color, overlay.line_width))
         end
