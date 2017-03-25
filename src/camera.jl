@@ -7,7 +7,7 @@ export
 
 abstract Camera
 
-camera_set!(::RenderModel, cam::Camera, ::Scene, ::Roadway, canvas_width::Int, canvas_height::Int) = error("camera_set! not implemented for Camera $cam")
+camera_set!(::RenderModel, cam::Camera, ::Frame, ::Any, canvas_width::Int, canvas_height::Int) = error("camera_set! not implemented for Camera $cam")
 
 type StaticCamera <: Camera
     pos::VecE2
@@ -22,7 +22,7 @@ function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::
 
     rendermodel
 end
-camera_set!(rendermodel::RenderModel, cam::StaticCamera, scene::Scene, roadway::Roadway, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+camera_set!(rendermodel::RenderModel, cam::StaticCamera, scene::Frame, roadway::Any, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 type FitToContentCamera <: Camera
     percent_border::Float64
@@ -32,16 +32,16 @@ function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_w
     camera_fit_to_content!(rendermodel, canvas_width, canvas_height, percent_border=cam.percent_border)
     rendermodel
 end
-camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::Scene, roadway::Roadway, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::Frame, roadway::Any, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 type CarFollowCamera <: Camera
     targetid::Int
     zoom::Float64 # [pix/meter]
     CarFollowCamera(targetid::Int, zoom::Float64=3.0) = new(targetid, zoom)
 end
-function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene::Scene, roadway::Roadway, canvas_width::Int, canvas_height::Int)
+function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene::Scene, roadway::Any, canvas_width::Int, canvas_height::Int)
 
-    veh_index = get_index_of_first_vehicle_with_id(scene, cam.targetid)
+    veh_index = findfirst(scene, cam.targetid)
     if veh_index != 0
         camera_set_pos!(rendermodel, scene[veh_index].state.posG)
         camera_setzoom!(rendermodel, cam.zoom)
@@ -57,7 +57,7 @@ type SceneFollowCamera <: Camera
     zoom::Float64 # [pix/meter]
     SceneFollowCamera(zoom::Float64=3.0) = new(zoom)
 end
-function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::Scene, roadway::Roadway, canvas_width::Int, canvas_height::Int)
+function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::Scene, roadway::Any, canvas_width::Int, canvas_height::Int)
 
 
     if length(scene) > 0

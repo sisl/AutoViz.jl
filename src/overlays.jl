@@ -17,7 +17,7 @@ abstract SceneOverlay
 type Overwash <: SceneOverlay
     color::Colorant
 end
-function render!(rendermodel::RenderModel, overlay::Overwash, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::Overwash, scene::Scene, roadway::Any)
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
 end
@@ -35,7 +35,7 @@ type LineToCenterlineOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Scene, roadway::Any)
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -66,7 +66,7 @@ type LineToFrontOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Scene, roadway::Any)
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -124,7 +124,7 @@ end
     line_spacing::Float64 = 1.5 # multiple of font_size
     incameraframe=false
 end
-function render!(rendermodel::RenderModel, overlay::TextOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::TextOverlay, scene::Scene, roadway::Any)
     x = overlay.pos.x
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
@@ -158,7 +158,7 @@ function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, sc
     add_instruction!( rendermodel, render_text, (@sprintf("id = %d", overlay.target_id), 10, text_y, font_size, overlay.color), incameraframe=false)
         text_y += text_y_jump
 
-    veh_index = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+    veh_index = findfirst(scene, overlay.target_id)
     if veh_index != 0
         veh = scene[veh_index]
 
@@ -223,7 +223,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
     yₒ = textparams.y_start
     Δy = textparams.y_jump
 
-    vehicle_index = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+    vehicle_index = findfirst(scene, overlay.target_id)
     if vehicle_index != 0
 
         veh_ego = scene[vehicle_index]
@@ -320,7 +320,7 @@ function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, 
     textparams = overlay.textparams
     yₒ = textparams.y_start
 
-    vehicle_index = get_index_of_first_vehicle_with_id(rec, overlay.egoid)
+    vehicle_index = findfirst(rec, overlay.egoid)
     veh_ego = scene[vehicle_index]
     v = veh_ego.state.v
     egostate_M = veh_ego.state
@@ -478,7 +478,7 @@ function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Sce
     if overlay.target_id < 0
         target_inds = 1:length(scene)
     else
-        ind = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+        ind = findfirst(scene, overlay.target_id)
         target_inds = ind:ind
     end
 
@@ -511,7 +511,7 @@ function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Sc
 
     update!(overlay.rec, scene)
 
-    vehicle_index = get_index_of_first_vehicle_with_id(scene, overlay.target_id)
+    vehicle_index = findfirst(scene, overlay.target_id)
     if vehicle_index != 0
         veh_ego = scene[vehicle_index]
         drawtext(@sprintf("lane offset:       %10.3f", veh_ego.state.posF.t), yₒ + 0*Δy, rendermodel, textparams)
@@ -523,12 +523,12 @@ function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Sc
 end
 
 
-function render{O<:SceneOverlay}(scene::Scene, roadway::Roadway, overlays::AbstractVector{O};
+function render{S,D,I,O<:SceneOverlay}(scene::Frame{Entity{S,D,I}}, roadway::Any, overlays::AbstractVector{O};
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{Int,Colorant}=Dict{Int,Colorant}(),
+    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(),
     )
 
     s = CairoRGBSurface(canvas_width, canvas_height)

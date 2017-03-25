@@ -48,6 +48,9 @@ type RenderModel
     RenderModel() = new(Array(Tuple,0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
 end
 
+Cairo.move_to(ctx::CairoContext, P::VecE2) = move_to(ctx, P.x, P.y)
+Cairo.line_to(ctx::CairoContext, P::VecE2) = line_to(ctx, P.x, P.y)
+
 # Functions
 # ===================================================
 
@@ -337,6 +340,28 @@ function render_line{T<:Real}(
     stroke(ctx)
     restore(ctx)
 end
+function render_line(
+    ctx        :: CairoContext,
+    pts        :: Vector{VecE2}, # 2×n
+    color      :: Colorant,
+    line_width :: Real = 1.0,
+    line_cap   :: Integer=Cairo.CAIRO_LINE_CAP_ROUND, # CAIRO_LINE_CAP_BUTT, CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE
+    )
+
+    line_width = user_to_device_distance!(ctx, [line_width,0])[1]
+
+    save(ctx)
+    set_source_rgba(ctx,color)
+    set_line_width(ctx,line_width)
+    set_line_cap(ctx, line_cap)
+
+    move_to(ctx, pts[1])
+    for i in 2 : length(pts)
+        line_to(ctx, pts[i])
+    end
+    stroke(ctx)
+    restore(ctx)
+end
 function render_closed_line{T<:Real}(
     ctx        :: CairoContext,
     pts        :: Matrix{T}, # 2×n
@@ -383,9 +408,9 @@ function render_closed_line(
     set_source_rgba(ctx, color)
     set_line_width(ctx,line_width)
 
-    move_to(ctx, pts[1].x, pts[1].y)
+    move_to(ctx, pts[1])
     for i in 2 : length(pts)
-        line_to(ctx, pts[i].x, pts[i].y)
+        line_to(ctx, pts[i])
     end
     close_path(ctx)
 
@@ -738,13 +763,22 @@ function camera_fit_to_content!(
             (x,y,flag) = (tup[2][2],tup[2][3],true)
         elseif f == render_point_trail || f == render_line ||
                f == render_dashed_line || f == render_fill_region
-            for xi in tup[2][1][1,:]
-                xmax = maximum([xmax, xi])
-                xmin = minimum([xmin, xi])
-            end
-            for yi in tup[2][1][2,:]
-                ymax = maximum([ymax, yi])
-                ymin = minimum([ymin, yi])
+
+            pts = tup[2][1]
+            if isa(pts, Matrix{Float64})
+                for i in 1 : size(pts, 2)
+                    xmax = max(xmax, pts[1,i])
+                    xmin = min(xmin, pts[1,i])
+                    ymax = max(ymax, pts[2,i])
+                    ymin = min(ymin, pts[2,i])
+                end
+            elseif isa(pts, Vector{VecE2})
+                for P in pts
+                    xmax = max(xmax, P.x)
+                    xmin = min(xmin, P.x)
+                    ymax = max(ymax, P.y)
+                    ymin = min(ymin, P.y)
+                end
             end
         end
 
