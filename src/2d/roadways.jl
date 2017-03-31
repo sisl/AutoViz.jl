@@ -14,7 +14,7 @@ function render!(
     else
         add_instruction!(rendermodel, render_line, (pts, marker_color, lane_marking_width))
     end
-    rendermodel
+    return rendermodel
 end
 
 function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
@@ -34,7 +34,7 @@ function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     end
 
     add_instruction!(rendermodel, render_line, (pts, color_asphalt, lane.width))
-    rendermodel
+    return rendermodel
 end
 
 function render!(rendermodel::RenderModel, roadway::Roadway;
@@ -156,7 +156,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
         end
     end
 
-    rendermodel
+    return rendermodel
 end
 
 function render(roadway::Roadway;
@@ -174,7 +174,7 @@ function render(roadway::Roadway;
 
     camera_set!(rendermodel, cam, canvas_width, canvas_height)
     render(rendermodel, ctx, canvas_width, canvas_height)
-    s
+    return s
 end
 
 Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))

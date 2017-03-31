@@ -96,6 +96,7 @@ function render_text(
     show_text(ctx, text)
     restore(ctx)
 end
+
 function render_circle(
     ctx          :: CairoContext,
     x            :: Real,
