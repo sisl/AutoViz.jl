@@ -31,7 +31,7 @@ function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_w
     camera_fit_to_content!(rendermodel, canvas_width, canvas_height, percent_border=cam.percent_border)
     rendermodel
 end
-camera_set!{R}(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 type CarFollowCamera{I} <: Camera
     targetid::I
