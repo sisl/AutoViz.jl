@@ -159,22 +159,4 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
     return rendermodel
 end
 
-function render(roadway::Roadway;
-    canvas_width::Int=DEFAULT_CANVAS_WIDTH,
-    canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
-    rendermodel = RenderModel(),
-    cam::Camera = FitToContentCamera(),
-    )
-
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
-    clear_setup!(rendermodel)
-
-    render!(rendermodel, roadway)
-
-    camera_set!(rendermodel, cam, canvas_width, canvas_height)
-    render(rendermodel, ctx, canvas_width, canvas_height)
-    return s
-end
-
 Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))

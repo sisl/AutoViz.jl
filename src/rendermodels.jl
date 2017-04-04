@@ -481,7 +481,8 @@ function render_dashed_line{T<:Real}(
     line_width_in   :: Real = 1.0,
     dash_length_in  :: Real = 1.0,
     dash_spacing_in :: Real = 1.0,
-    dash_offset_in  :: Real = 0.0
+    dash_offset_in  :: Real = 0.0,
+    line_cap :: Integer = Cairo.CAIRO_LINE_CAP_ROUND,
     )
 
     line_width   = user_to_device_distance!(ctx, [line_width_in,  0])[1]
@@ -493,7 +494,7 @@ function render_dashed_line{T<:Real}(
     save(ctx)
     set_source_rgba(ctx,color)
     set_line_width(ctx,line_width)
-    set_line_cap(ctx, Cairo.CAIRO_LINE_CAP_ROUND)
+    set_line_cap(ctx, convert(Int32, line_cap))
     set_dash(ctx, dashes, dash_offset)
 
     move_to(ctx, pts[1,1], pts[2,1])

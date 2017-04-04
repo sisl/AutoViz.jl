@@ -12,6 +12,24 @@ function render!{S,D,I}(
     rendermodel
 end
 
+function render{R}(roadway::R;
+    canvas_width::Int=DEFAULT_CANVAS_WIDTH,
+    canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
+    rendermodel = RenderModel(),
+    cam::Camera = FitToContentCamera(),
+    )
+
+    s = CairoRGBSurface(canvas_width, canvas_height)
+    ctx = creategc(s)
+    clear_setup!(rendermodel)
+
+    render!(rendermodel, roadway)
+
+    camera_set!(rendermodel, cam, canvas_width, canvas_height)
+    render(rendermodel, ctx, canvas_width, canvas_height)
+    return s
+end
+
 function render{S,D,I,R}(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
