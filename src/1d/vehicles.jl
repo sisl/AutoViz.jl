@@ -1,6 +1,6 @@
 function render!(
     rendermodel::RenderModel,
-    veh::MobiusVehicle,
+    veh::Vehicle1D,
     color::Colorant=RGB(rand(), rand(), rand())
     )
 
