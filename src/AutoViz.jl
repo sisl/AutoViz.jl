@@ -23,17 +23,17 @@ export
 const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
 
-include(Pkg.dir("AutoViz", "src", "colorscheme.jl"))
-include(Pkg.dir("AutoViz", "src", "rendermodels.jl"))
-include(Pkg.dir("AutoViz", "src", "camera.jl"))
+include("colorscheme.jl")
+include("rendermodels.jl")
 
-include(Pkg.dir("AutoViz", "src", "render_roadways.jl"))
-include(Pkg.dir("AutoViz", "src", "render_vehicles.jl"))
-include(Pkg.dir("AutoViz", "src", "render_scenes.jl"))
+include("cameras.jl")
+include("interface.jl")
+include("overlays.jl")
+include("reel_drive.jl")
 
-include(Pkg.dir("AutoViz", "src", "overlays.jl"))
+include("1d/main.jl")
+include("2d/main.jl")
 
-include(Pkg.dir("AutoViz", "src", "reel_drive.jl"))
-# include(Pkg.dir("AutoViz", "src", "gtk.jl"))
+
 
 end # module
