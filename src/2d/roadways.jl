@@ -159,4 +159,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
     return rendermodel
 end
 
+# for case when there is no roadway
+render!(rendermodel::RenderModel, roadway::Void) = rendermodel
+
 Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))
