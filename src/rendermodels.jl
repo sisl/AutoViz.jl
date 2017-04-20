@@ -782,6 +782,18 @@ function camera_fit_to_content!(
                     ymin = min(ymin, P.y)
                 end
             end
+
+        # vehicles - center + sqrt((width/2)^2 + (height/2)^2)
+        elseif f == render_vehicle
+            x = tup[2][1]
+            y = tup[2][2]
+            width = tup[2][5]
+            height = tup[2][4]
+            bounding_radius = sqrt((width/2)^2 + (height/2)^2)
+            xmax = max(xmax, x + bounding_radius)
+            xmin = min(xmin, x - bounding_radius)
+            ymax = max(ymax, y + bounding_radius)
+            ymin = min(ymin, y - bounding_radius)
         end
 
         if flag
