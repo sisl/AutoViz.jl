@@ -36,8 +36,10 @@ camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::FitToContentCamera, scene::E
 type CarFollowCamera{I} <: Camera
     targetid::I
     zoom::Float64 # [pix/meter]
+
     CarFollowCamera(targetid::I, zoom::Float64=3.0) = new(targetid, zoom)
 end
+
 function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
     veh_index = findfirst(scene, cam.targetid)
