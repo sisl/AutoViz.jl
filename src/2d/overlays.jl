@@ -172,8 +172,8 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         fore_L = get_neighbor_fore_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
         if fore_L.ind != 0
             veh_oth = scene[fore_L.ind]
-            A = get_front_center(veh_ego)
-            B = get_rear_center(veh_oth)
+            A = get_front(veh_ego)
+            B = get_rear(veh_oth)
             add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_L, overlay.line_width))
             drawtext(@sprintf("d fore left:   %10.3f", fore_L.Δs), yₒ + 0*Δy, rendermodel, textparams)
         end
@@ -181,8 +181,8 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         fore_M = get_neighbor_fore_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
         if fore_M.ind != 0
             veh_oth = scene[fore_M.ind]
-            A = get_front_center(veh_ego)
-            B = get_rear_center(veh_oth)
+            A = get_front(veh_ego)
+            B = get_rear(veh_oth)
             add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_M, overlay.line_width))
             drawtext(@sprintf("d fore middle: %10.3f", fore_M.Δs), yₒ + 1*Δy, rendermodel, textparams)
         end
@@ -190,8 +190,8 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         fore_R = get_neighbor_fore_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
         if fore_R.ind != 0
             veh_oth = scene[fore_R.ind]
-            A = get_front_center(veh_ego)
-            B = get_rear_center(veh_oth)
+            A = get_front(veh_ego)
+            B = get_rear(veh_oth)
             add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
             drawtext(@sprintf("d fore right:  %10.3f", fore_R.Δs), yₒ + 2*Δy, rendermodel, textparams)
         end
@@ -199,8 +199,8 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         rear_L = get_neighbor_rear_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
         if rear_L.ind != 0
             veh_oth = scene[rear_L.ind]
-            A = get_rear_center(veh_ego)
-            B = get_front_center(veh_oth)
+            A = get_rear(veh_ego)
+            B = get_front(veh_oth)
             add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_L, overlay.line_width))
             drawtext(@sprintf("d rear left:   %10.3f", rear_L.Δs), yₒ + 3*Δy, rendermodel, textparams)
         end
@@ -208,8 +208,8 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         rear_M = get_neighbor_rear_along_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
         if rear_M.ind != 0
             veh_oth = scene[rear_M.ind]
-            A = get_rear_center(veh_ego)
-            B = get_front_center(veh_oth)
+            A = get_rear(veh_ego)
+            B = get_front(veh_oth)
             add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_M, overlay.line_width))
             drawtext(@sprintf("d rear middle: %10.3f", rear_M.Δs), yₒ + 4*Δy, rendermodel, textparams)
         end
@@ -217,8 +217,8 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         rear_R = get_neighbor_rear_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
         if rear_R.ind != 0
             veh_oth = scene[rear_R.ind]
-            A = get_rear_center(veh_ego)
-            B = get_front_center(veh_oth)
+            A = get_rear(veh_ego)
+            B = get_front(veh_oth)
             add_instruction!(rendermodel, render_line_segment, (A.x, A.y, B.x, B.y, overlay.color_R, overlay.line_width))
             drawtext(@sprintf("d rear right:  %10.3f", rear_R.Δs), yₒ + 5*Δy, rendermodel, textparams)
         end
@@ -357,7 +357,7 @@ end
 #             # accel_n_test = rand(track_longitudinal!(reset_hidden_state!(mobil.mlon), scene, roadway, id, vehicle_index))
 #             drawtext(@sprintf("accel n test: %10.3f", accel_n_test), yₒ + 10*textparams.y_jump, rendermodel, textparams)
 
-#             body = inertial2body(get_rear_center(scene[rear_L.ind]), get_front_center(veh_ego)) # project target to be relative to ego
+#             body = inertial2body(get_rear(scene[rear_L.ind]), get_front(veh_ego)) # project target to be relative to ego
 #             s_gap = body.x
 #             drawtext(@sprintf("s_gap L: %10.3f", s_gap), yₒ + 9*textparams.y_jump, rendermodel, textparams)
 
