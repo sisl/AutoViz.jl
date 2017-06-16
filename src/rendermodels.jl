@@ -474,6 +474,26 @@ function render_line_segment(
     stroke(ctx)
     restore(ctx)
 end
+function render_line_segment(
+    ctx        :: CairoContext,
+    A          :: VecE2,
+    B          :: VecE2,
+    color      :: Colorant,
+    line_width :: Real = 1.0
+    )
+
+    line_width = user_to_device_distance!(ctx, [line_width,0])[1]
+
+    save(ctx)
+    set_source_rgba(ctx,color)
+    set_line_width(ctx,line_width)
+    set_line_cap(ctx, Cairo.CAIRO_LINE_CAP_ROUND)
+
+    move_to(ctx, A)
+    line_to(ctx, B)
+    stroke(ctx)
+    restore(ctx)
+end
 function render_dashed_line{T<:Real}(
     ctx          :: CairoContext,
     pts          :: Matrix{T}, # 2×n
