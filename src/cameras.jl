@@ -40,7 +40,7 @@ type CarFollowCamera{I} <: Camera
     CarFollowCamera(targetid::I, zoom::Float64=3.0) = new(targetid, zoom)
 end
 
-function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!{S<:PosSpeed1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
     veh_index = findfirst(scene, cam.targetid)
     if veh_index != 0
@@ -71,7 +71,7 @@ type SceneFollowCamera <: Camera
     zoom::Float64 # [pix/meter]
     SceneFollowCamera(zoom::Float64=3.0) = new(zoom)
 end
-function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!{S<:PosSpeed1D,D,I,R}(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
 
     if length(scene) > 0

@@ -19,7 +19,7 @@ type LineToCenterlineOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Scene, roadway::Any)
+function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Any)
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -51,7 +51,7 @@ type LineToFrontOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Roadway)
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -86,7 +86,7 @@ type CarFollowingStatsOverlay <: SceneOverlay
         new(target_id, verbosity, color,font_size)
     end
 end
-function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Roadway)
 
     font_size = overlay.font_size
     text_y = font_size
@@ -154,7 +154,7 @@ type NeighborsOverlay <: SceneOverlay
         new(target_id, color_L, color_M, color_R, line_width, textparams)
     end
 end
-function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Roadway)
 
     textparams = overlay.textparams
     yₒ = textparams.y_start
@@ -167,7 +167,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         t = veh_ego.state.posF.t
         ϕ = veh_ego.state.posF.ϕ
         v = veh_ego.state.v
-        len_ego = veh_ego.def.length
+        len_ego = veh_ego.def.len
 
         fore_L = get_neighbor_fore_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
         if fore_L.ind != 0
@@ -230,13 +230,13 @@ end
 # type MOBILOverlay <: SceneOverlay
 #     egoid::Int
 #     mobil::MOBIL
-#     rec::SceneRecord
+#     rec::EntityQueueRecord{VehicleState, BoundingBoxDef, Int}
 #     textparams::TextParams
 
 #     function MOBILOverlay(
 #         egoid::Int,
 #         mobil::MOBIL;
-#         rec::SceneRecord=SceneRecord(1, 0.1),
+#         rec::EntityQueueRecord{VehicleState, BoundingBoxDef, Int}=SceneRecord(1, 0.1),
 #         textparams::TextParams = TextParams(x=275, y_start=120),
 #         )
 
@@ -248,7 +248,7 @@ end
 #         retval
 #     end
 # end
-# function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, roadway::Roadway)
+# function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Roadway)
 
 #     rec = overlay.rec
 #     update!(rec, scene)
@@ -410,7 +410,7 @@ end
 
 #     CollisionOverlay(target_id::Int=-1; color::Colorant=RGBA(1.0,0.0,0.0,0.5)) = new(target_id, color, CPAMemory())
 # end
-# function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Scene, roadway::Roadway)
+# function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Roadway)
 
 #     if overlay.target_id < 0
 #         target_inds = 1:length(scene)
@@ -432,7 +432,7 @@ end
 type MarkerDistOverlay <: SceneOverlay
     target_id::Int
     textparams::TextParams
-    rec::SceneRecord
+    rec::EntityQueueRecord{VehicleState, BoundingBoxDef, Int}
     function MarkerDistOverlay(target_id::Int;
         textparams::TextParams=TextParams(),
         )
@@ -440,7 +440,7 @@ type MarkerDistOverlay <: SceneOverlay
         new(target_id, textparams, SceneRecord(1, 0.1))
     end
 end
-function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::EntityFrame{VehicleState, BoundingBoxDef, Int}, roadway::Roadway)
 
     textparams = overlay.textparams
     yₒ = textparams.y_start
