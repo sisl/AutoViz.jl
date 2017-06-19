@@ -1,3 +1,25 @@
+typealias _ROADWAY_TYPES Union{Curve,Straight1DRoadway,Wraparound{Straight1DRoadway},Wraparound{Curve},Roadway}
+Base.show(io::IO, ::MIME"image/png", roadway::_ROADWAY_TYPES) = show(io, MIME"image/png"(), render(roadway))
+function render(roadway::_ROADWAY_TYPES;
+    canvas_width::Int=DEFAULT_CANVAS_WIDTH,
+    canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
+    rendermodel = RenderModel(),
+    cam::Camera = FitToContentCamera(),
+    )
+
+    s = CairoRGBSurface(canvas_width, canvas_height)
+    ctx = creategc(s)
+    clear_setup!(rendermodel)
+
+    render!(rendermodel, roadway)
+
+    camera_set!(rendermodel, cam, canvas_width, canvas_height)
+    render(rendermodel, ctx, canvas_width, canvas_height)
+    return s
+end
+
+render!(rendermodel::RenderModel, roadway::Void) = rendermodel
+
 function render!(
     rendermodel::RenderModel,
     boundary::LaneBoundary,
@@ -16,6 +38,87 @@ function render!(
     end
     return rendermodel
 end
+
+function render_asphalt!(rendermodel::RenderModel, curve::Curve;
+    color::Colorant=COLOR_ASPHALT,
+    width::Float64=DEFAULT_LANE_WIDTH,
+    )
+
+    n = length(curve)
+    pts = Array(Float64, 2, n)
+    for (i,pt) in enumerate(lane.curve)
+        pts[1,i] = pt.pos.x
+        pts[2,i] = pt.pos.y
+    end
+
+    add_instruction!(rendermodel, render_line, (pts, color, width))
+    return rendermodel
+end
+function render_lanemarking_left!(rendermodel::RenderModel, curve::Curve;
+    boundary::LaneBoundary=LaneBoundary(:solid, :white),
+    width::Float64=DEFAULT_LANE_WIDTH,
+    )
+
+    n = length(curve)
+    pts_left = Array(Float64, 2, n)
+    for (i,pt) in enumerate(curve)
+        p_left = pt.pos + polar(width/2, pt.pos.θ + π/2)
+
+        pts_left[1,i] = p_left.x
+        pts_left[2,i] = p_left.y
+    end
+
+    render!(rendermodel, lane.boundary_left, pts_left)
+    return rendermodel
+end
+function render_lanemarking_right!(rendermodel::RenderModel, curve::Curve;
+    boundary::LaneBoundary=LaneBoundary(:solid, :white),
+    width::Float64=DEFAULT_LANE_WIDTH,
+    )
+
+    n = length(curve)
+    pts_right = Array(Float64, 2, n)
+    for (i,pt) in enumerate(curve)
+        p_right = pt.pos - polar(width/2, pt.pos.θ + π/2)
+
+        pts_right[1,i] = p_right.x
+        pts_right[2,i] = p_right.y
+    end
+    render!(rendermodel, lane.boundary_right, pts_right)
+
+    return rendermodel
+end
+function render!(rendermodel::RenderModel, curve::Curve;
+    color_asphalt::Colorant=COLOR_ASPHALT,
+    lane_width::Float64=DEFAULT_LANE_WIDTH,
+    boundary_left::LaneBoundary=LaneBoundary(:solid, :white),
+    boundary_right::LaneBoundary=LaneBoundary(:solid, :white),
+    )
+
+    render_asphalt!(rendermodel, curve, roadway, color=color_asphalt, width=lane_width)
+    render_lanemarking_left!(rendermodel, curve, roadway, boundary=boundary_left, width=lane_width)
+    render_lanemarking_right!(rendermodel, curve, roadway, boundary=boundary_right, width=lane_width)
+    return rendermodel
+end
+
+function render!(rendermodel::RenderModel, roadway::Straight1DRoadway;
+    color_asphalt::Colorant=COLOR_ASPHALT,
+    lane_width::Float64 = DEFAULT_LANE_WIDTH,
+    extra_length::Float64 = 50.0, # [m]
+    lane_marking_width::Float64 = 0.15, # [m]
+    )
+
+    pts = Array(VecE2, 2)
+    pts[1] = VecE2(-extra_length, 0)
+    pts[2] = VecE2( extra_length + roadway.len, 0)
+
+    add_instruction!(rendermodel, render_line, (pts, color_asphalt, lane_width))
+    add_instruction!(rendermodel, render_line, ([p + VecE2(0, -lane_width/2) for p in pts], COLOR_LANE_MARKINGS_WHITE, lane_marking_width))
+    add_instruction!(rendermodel, render_line, ([p + VecE2(0,  lane_width/2) for p in pts], COLOR_LANE_MARKINGS_WHITE, lane_marking_width))
+    return rendermodel
+end
+
+render!(rendermodel::RenderModel, roadway::Wraparound; kwargs...) = render!(rendermodel, roadway.road; kwargs...)
 
 function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     color_asphalt       :: Colorant=COLOR_ASPHALT,
@@ -36,7 +139,6 @@ function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     add_instruction!(rendermodel, render_line, (pts, color_asphalt, lane.width))
     return rendermodel
 end
-
 function render!(rendermodel::RenderModel, roadway::Roadway;
     color_asphalt       :: Colorant=COLOR_ASPHALT,
     lane_marking_width  :: Real=0.15, # [m]
@@ -159,7 +261,3 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
     return rendermodel
 end
 
-# for case when there is no roadway
-render!(rendermodel::RenderModel, roadway::Void) = rendermodel
-
-Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))
