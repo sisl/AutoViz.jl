@@ -104,7 +104,7 @@ end
 function render!(rendermodel::RenderModel, roadway::Straight1DRoadway;
     color_asphalt::Colorant=COLOR_ASPHALT,
     lane_width::Float64 = DEFAULT_LANE_WIDTH,
-    extra_length::Float64 = 50.0, # [m]
+    extra_length::Float64 = 0.0, # [m]
     lane_marking_width::Float64 = 0.15, # [m]
     )
 
@@ -118,7 +118,7 @@ function render!(rendermodel::RenderModel, roadway::Straight1DRoadway;
     return rendermodel
 end
 
-render!(rendermodel::RenderModel, roadway::Wraparound; kwargs...) = render!(rendermodel, roadway.road; kwargs...)
+render!(rendermodel::RenderModel, roadway::Wraparound; kwargs...) = render!(rendermodel, roadway.road; kwargs..., extra_length=50.0)
 
 function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     color_asphalt       :: Colorant=COLOR_ASPHALT,
