@@ -5,7 +5,7 @@ function render!(rendermodel::RenderModel, roadway::StraightRoadway;
     lane_marking_width::Float64 = 0.15, # [m]
     )
 
-    pts = Array(VecE2, 2)
+    pts = Array{VecE2}(2)
     pts[1] = VecE2(-extra_length, 0)
     pts[2] = VecE2( extra_length + roadway.length, 0)
 

@@ -6,7 +6,7 @@ export
     MOBILOverlay,
     MarkerDistOverlay
 
-type LineToCenterlineOverlay <: SceneOverlay
+mutable struct LineToCenterlineOverlay <: SceneOverlay
     target_id::Int # if -1 does it for all
     line_width::Float64
     color::Colorant
@@ -38,7 +38,7 @@ function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, sce
 end
 
 
-type LineToFrontOverlay <: SceneOverlay
+mutable struct LineToFrontOverlay <: SceneOverlay
     target_id::Int # if -1 does it for all
     line_width::Float64
     color::Colorant
@@ -72,7 +72,7 @@ function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::S
     rendermodel
 end
 
-type CarFollowingStatsOverlay <: SceneOverlay
+mutable struct CarFollowingStatsOverlay <: SceneOverlay
     target_id::Int
     verbosity::Int
     color::Colorant
@@ -136,7 +136,7 @@ function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, sc
     rendermodel
 end
 
-type NeighborsOverlay <: SceneOverlay
+mutable struct NeighborsOverlay <: SceneOverlay
     target_id::Int
     color_L::Colorant
     color_M::Colorant
@@ -429,7 +429,7 @@ end
 #     rendermodel
 # end
 
-type MarkerDistOverlay <: SceneOverlay
+mutable struct MarkerDistOverlay <: SceneOverlay
     target_id::Int
     textparams::TextParams
     rec::SceneRecord

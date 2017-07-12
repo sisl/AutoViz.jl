@@ -3,7 +3,7 @@ os:
   - linux
   # - osx
 julia:
-  - 0.5
+  - 0.6
   - nightly
 matrix:
   allow_failures:
@@ -12,6 +12,6 @@ notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone("https://github.com/tawheeler/Vec.jl.git"); Pkg.clone("https://github.com/tawheeler/Records.jl.git"); Pkg.add("Reel"); Pkg.checkout("Reel"); Pkg.clone("https://github.com/tawheeler/AutomotiveDrivingModels.jl.git"); Pkg.clone(pwd()); Pkg.test("AutoViz"; coverage=true)'
+  - julia --check-bounds=yes -e 'Pkg.clone("https://github.com/tawheeler/Vec.jl.git"); Pkg.clone("https://github.com/tawheeler/Records.jl.git"); Pkg.clone("https://github.com/tawheeler/AutomotiveDrivingModels.jl.git"); Pkg.clone(pwd()); Pkg.test("AutoViz"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("AutoViz")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

@@ -38,14 +38,14 @@ export
         grayscale_transform
 
 # config variables
-type RenderModel
+mutable struct RenderModel
     instruction_set  :: Vector{Tuple}  # set of render instructions (function, array of inputs sans ctx, incameraframe)
     camera_center    :: VecE2          # position of camera in [N,E] relative to the mean point. meters
     camera_zoom      :: Float64        # [pix/m]
     camera_rotation  :: Float64        # [rad]
     background_color :: RGB
 
-    RenderModel() = new(Array(Tuple,0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
+    RenderModel() = new(Array{Tuple}(0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
 end
 
 Cairo.move_to(ctx::CairoContext, P::VecE2) = move_to(ctx, P.x, P.y)
@@ -879,7 +879,7 @@ function render(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integ
     # reset the transform
     reset_transform(ctx)
     translate(ctx, canvas_width/2, canvas_height/2)                              # translate to image center
-    scale(ctx, rendermodel.camera_zoom, -rendermodel.camera_zoom )               # [pix -> m]
+    Cairo.scale(ctx, rendermodel.camera_zoom, -rendermodel.camera_zoom )               # [pix -> m]
     rotate(ctx, rendermodel.camera_rotation)
     translate(ctx, -rendermodel.camera_center.x, -rendermodel.camera_center.y) # translate to camera location
 
