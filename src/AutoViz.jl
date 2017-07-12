@@ -12,10 +12,6 @@ using AutomotiveDrivingModels
 import Reel
 Reel.set_output_type("gif")
 
-# using Reactive
-# import Gtk
-# using PGFPlots
-
 export
         DEFAULT_CANVAS_WIDTH,
         DEFAULT_CANVAS_HEIGHT,

@@ -5,10 +5,10 @@ export
     CarFollowCamera,
     SceneFollowCamera
 
-abstract Camera
+abstract type Camera end
 camera_set!{S,D,I,R}(::RenderModel, cam::Camera, ::EntityFrame{S,D,I}, ::R, canvas_width::Int, canvas_height::Int) = error("camera_set! not implemented for Camera $cam")
 
-type StaticCamera <: Camera
+mutable struct StaticCamera <: Camera
     pos::VecE2
     zoom::Float64 # [pix/meter]
     StaticCamera(pos::VecE2, zoom::Float64=3.0) = new(pos, zoom)
@@ -23,7 +23,7 @@ function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::
 end
 camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
-type FitToContentCamera <: Camera
+mutable struct FitToContentCamera <: Camera
     percent_border::Float64
     FitToContentCamera(percent_border::Float64=0.1) = new(percent_border)
 end
@@ -33,11 +33,11 @@ function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_w
 end
 camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
-type CarFollowCamera{I} <: Camera
+mutable struct CarFollowCamera{I} <: Camera
     targetid::I
     zoom::Float64 # [pix/meter]
 
-    CarFollowCamera(targetid::I, zoom::Float64=3.0) = new(targetid, zoom)
+    CarFollowCamera{I}(targetid::I, zoom::Float64=3.0) where {I} = new(targetid, zoom)
 end
 
 function camera_set!{S<:PosSpeed1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
@@ -67,7 +67,7 @@ function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::CarFo
     rendermodel
 end
 
-type SceneFollowCamera <: Camera
+mutable struct SceneFollowCamera <: Camera
     zoom::Float64 # [pix/meter]
     SceneFollowCamera(zoom::Float64=3.0) = new(zoom)
 end

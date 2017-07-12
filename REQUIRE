@@ -1,11 +1,9 @@
-julia 0.5
+julia 0.6
+
 Cairo
-PGFPlots
-AutomotiveDrivingModels
 Colors
 Cairo
 Reel
-Reactive
 Interact
 NBInclude
 Parameters

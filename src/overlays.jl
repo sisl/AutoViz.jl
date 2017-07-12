@@ -12,7 +12,7 @@ export
         TextParams,
         drawtext
 
-abstract SceneOverlay
+abstract type SceneOverlay end
 
 function render{S,D,I,O<:SceneOverlay,R}(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{O};
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
@@ -39,7 +39,7 @@ function render{S,D,I,O<:SceneOverlay,R}(scene::EntityFrame{S,D,I}, roadway::R, 
     s
 end
 
-type TextParams
+mutable struct TextParams
     size::Int
     color::Colorant
     x::Int
@@ -68,7 +68,7 @@ function drawtext(text::AbstractString, y::Int, rendermodel::RenderModel, t::Tex
     y + t.y_jump
 end
 
-@with_kw type TextOverlay <: SceneOverlay
+@with_kw mutable struct TextOverlay <: SceneOverlay
     text::Vector{String}
     color::Colorant = colorant"white"
     font_size::Int = 10 # [pix]
@@ -87,7 +87,7 @@ function render!{S,D,I,R}(rendermodel::RenderModel, overlay::TextOverlay, scene:
     rendermodel
 end
 
-type Overwash <: SceneOverlay
+mutable struct Overwash <: SceneOverlay
     color::Colorant
 end
 function render!{S,D,I,R}(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R)

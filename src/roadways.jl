@@ -1,4 +1,4 @@
-typealias _ROADWAY_TYPES Union{Curve,Straight1DRoadway,Wraparound{Straight1DRoadway},Wraparound{Curve},Roadway}
+const _ROADWAY_TYPES = Union{Curve,Straight1DRoadway,Wraparound{Straight1DRoadway},Wraparound{Curve},Roadway}
 Base.show(io::IO, ::MIME"image/png", roadway::_ROADWAY_TYPES) = show(io, MIME"image/png"(), render(roadway))
 function render(roadway::_ROADWAY_TYPES;
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
@@ -45,7 +45,7 @@ function render_asphalt!(rendermodel::RenderModel, curve::Curve;
     )
 
     n = length(curve)
-    pts = Array(Float64, 2, n)
+    pts = Array{Float64}(2, n)
     for (i,pt) in enumerate(lane.curve)
         pts[1,i] = pt.pos.x
         pts[2,i] = pt.pos.y
@@ -60,7 +60,7 @@ function render_lanemarking_left!(rendermodel::RenderModel, curve::Curve;
     )
 
     n = length(curve)
-    pts_left = Array(Float64, 2, n)
+    pts_left = Array{Float64}(2, n)
     for (i,pt) in enumerate(curve)
         p_left = pt.pos + polar(width/2, pt.pos.θ + π/2)
 
@@ -77,7 +77,7 @@ function render_lanemarking_right!(rendermodel::RenderModel, curve::Curve;
     )
 
     n = length(curve)
-    pts_right = Array(Float64, 2, n)
+    pts_right = Array{Float64}(2, n)
     for (i,pt) in enumerate(curve)
         p_right = pt.pos - polar(width/2, pt.pos.θ + π/2)
 
@@ -108,7 +108,7 @@ function render!(rendermodel::RenderModel, roadway::Straight1DRoadway;
     lane_marking_width::Float64 = 0.15, # [m]
     )
 
-    pts = Array(VecE2, 2)
+    pts = Array{VecE2}(2)
     pts[1] = VecE2(-extra_length, 0)
     pts[2] = VecE2( extra_length + roadway.len, 0)
 
@@ -125,7 +125,7 @@ function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     )
 
     n = length(lane.curve)
-    pts = Array(Float64, 2, n + has_next(lane))
+    pts = Array{Float64}(2, n + has_next(lane))
     for (i,pt) in enumerate(lane.curve)
         pts[1,i] = pt.pos.x
         pts[2,i] = pt.pos.y
@@ -153,7 +153,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
             laneR = seg.lanes[1]
             laneL = seg.lanes[end]
 
-            pts = Array(Float64, 2, length(laneL.curve) + has_next(laneL) +
+            pts = Array{Float64}(2, length(laneL.curve) + has_next(laneL) +
                                         length(laneR.curve) + has_next(laneR) +
                                         2*length(seg.lanes))
             pts_index = 0
@@ -219,7 +219,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
             halfwidth = lane.width/2
 
             # always render the left lane marking
-            pts_left = Array(Float64, 2, N)
+            pts_left = Array{Float64}(2, N)
             for (i,pt) in enumerate(lane.curve)
                 p_left = pt.pos + polar(halfwidth, pt.pos.θ + π/2)
 
@@ -237,7 +237,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
 
             # only render the right lane marking if this is the first lane
             if lane.tag.lane == 1
-                pts_right = Array(Float64, 2, N)
+                pts_right = Array{Float64}(2, N)
 
                 for (i,pt) in enumerate(lane.curve)
                     p_right = pt.pos - polar(halfwidth, pt.pos.θ + π/2)
