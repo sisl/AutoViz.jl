@@ -19,8 +19,11 @@ function render{R}(roadway::R;
     cam::Camera = FitToContentCamera(),
     )
 
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
+    image = Array(UInt32, canvas_width,canvas_height)
+    s = CairoImageSurface(image, Cairo.FORMAT_ARGB32, flipxy=false)
+    ctx = CairoContext(s)
+    # s = CairoRGBSurface(canvas_width, canvas_height)
+    # ctx = creategc(s)
     clear_setup!(rendermodel)
 
     render!(rendermodel, roadway)

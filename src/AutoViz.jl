@@ -18,8 +18,8 @@ export
         render!,
         get_pastel_car_colors
 
-const DEFAULT_CANVAS_WIDTH = 1000
-const DEFAULT_CANVAS_HEIGHT = 600
+const DEFAULT_CANVAS_WIDTH = 100
+const DEFAULT_CANVAS_HEIGHT = 60
 
 include("colorscheme.jl")
 include("rendermodels.jl")

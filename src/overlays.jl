@@ -22,8 +22,9 @@ function render{S,D,I,O<:SceneOverlay,R}(scene::EntityFrame{S,D,I}, roadway::R, 
     car_colors::Dict{I,Colorant}=Dict{I,Colorant}(),
     )
 
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
+    image = Array(UInt32, canvas_width,canvas_height)
+    s = CairoImageSurface(image, Cairo.FORMAT_ARGB32, flipxy=false)
+    ctx = CairoContext(s)
     clear_setup!(rendermodel)
 
     render!(rendermodel, roadway)
@@ -94,4 +95,3 @@ function render!{S,D,I,R}(rendermodel::RenderModel, overlay::Overwash, scene::En
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
 end
-

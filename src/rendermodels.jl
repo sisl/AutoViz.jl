@@ -258,7 +258,7 @@ function render_vehicle(
     length        :: Real, # vehicle length
     width         :: Real, # vehicle width
     color_fill    :: Colorant,
-    color_stroke  :: Colorant = color_fill;
+    color_stroke  :: Colorant = color_fill,
 
     color_arrow   :: Colorant = RGB(1.0,1.0,1.0),
     corner_radius :: Float64 = 0.5,
@@ -973,7 +973,10 @@ function Cairo.set_source_rgba(ctx::CairoContext, color₀::Colorant, color₁::
 end
 
 function get_surface_and_context(canvas_width::Int, canvas_height::Int)
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
+    image = Array(UInt32, canvas_width,canvas_height)
+    s = CairoImageSurface(image, Cairo.FORMAT_ARGB32, flipxy=false)
+    ctx = CairoContext(s)
+    # s = CairoRGBSurface(canvas_width, canvas_height)
+    # ctx = creategc(s)
     (s, ctx)
 end
