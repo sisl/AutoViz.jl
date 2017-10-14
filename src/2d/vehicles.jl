@@ -1,6 +1,6 @@
 function render!{I}(
     rendermodel::RenderModel,
-    veh::Entity{VehicleState, BoundingBoxDef, I},
+    veh::Entity{RoadwayState, BoundingBoxDef, I},
     color::Colorant=RGB(rand(), rand(), rand())
     )
 

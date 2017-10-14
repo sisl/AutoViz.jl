@@ -53,7 +53,7 @@ function camera_set!{S<:PosSpeed1D,D,I,R}(rendermodel::RenderModel, cam::CarFoll
 
     rendermodel
 end
-function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!{S<:RoadwayState,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
     veh_index = findfirst(scene, cam.targetid)
     if veh_index != 0
@@ -92,7 +92,7 @@ function camera_set!{S<:PosSpeed1D,D,I,R}(rendermodel::RenderModel, cam::SceneFo
 
     rendermodel
 end
-function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!{S<:RoadwayState,D,I,R}(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
 
     if length(scene) > 0
