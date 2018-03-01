@@ -23,6 +23,9 @@ function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::
 end
 camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
+# method for new interface
+camera_set!(rm::RenderModel, cam::StaticCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rm, cam, canvas_width, canvas_height)
+
 mutable struct FitToContentCamera <: Camera
     percent_border::Float64
     FitToContentCamera(percent_border::Float64=0.1) = new(percent_border)
@@ -33,12 +36,14 @@ function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_w
 end
 camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
+# method for new interface
+camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+
 mutable struct CarFollowCamera{I} <: Camera
     targetid::I
     zoom::Float64 # [pix/meter]
-
-    CarFollowCamera{I}(targetid::I, zoom::Float64=3.0) where {I} = new(targetid, zoom)
 end
+CarFollowCamera(targetid::I, zoom::Float64=3.0) where {I} = CarFollowCamera{I}(targetid, zoom)
 
 function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
@@ -62,6 +67,22 @@ function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::CarFo
     else
         add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
         camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
+    end
+
+    rendermodel
+end
+
+# method for new interface
+function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canvas_width::Int, canvas_height::Int)
+
+    inds = find(x -> x isa ArrowCar && id(x) == cam.targetid, scene)
+    if isempty(inds)
+        add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find an ArrowCar with id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
+        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
+    else
+        veh_index = first(inds)
+        camera_set_pos!(rendermodel, pos(scene[veh_index])...)
+        camera_setzoom!(rendermodel, cam.zoom)
     end
 
     rendermodel

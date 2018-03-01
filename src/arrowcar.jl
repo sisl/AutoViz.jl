@@ -1,5 +1,5 @@
 #TODO: Add doc string
-@with_kw struct ArrowCar{A<:AbstractArray{Float64}, C<:Color} <: Renderable
+@with_kw struct ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
     pos::A         = SVector(0.0, 0.0)
     angle::Float64 = 0.0
     length::Float64 = 4.8
@@ -9,15 +9,16 @@
     id::Int        = 0
 end
 
-ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(pos, angle, color, length, width, "", id)
+ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(pos, angle, length, width, color, "", id)
+ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, "", id)
 
-function render!(rm::RenderModel, object::ArrowCar)
-    add_instruction!(rm, render_vehicle, (object.pos[1], object.pos[2], object.angle, object.length, object.width, object.color))
-    #TODO: Add text instructions
-    return rendermodel
+function render!(rm::RenderModel, c::ArrowCar)
+    x = c.pos[1]
+    y = c.pos[2]
+    add_instruction!(rm, render_vehicle, (x, y, c.angle, c.length, c.width, c.color))
+    add_instruction!(rm, render_text, (c.text, x, y-c.width/2, 10, colorant"white"))
+    return rm
 end
 
-#TODO: Convert to ArrowCar type
-#function ArrowCar(pos::AbstractArray, angle::Float64=0.0, vehicletype::String)
-#
-#end
+id(ac::ArrowCar) = ac.id
+pos(ac::ArrowCar) = ac.pos

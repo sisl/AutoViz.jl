@@ -12,7 +12,7 @@ function render!{S,D,I}(
     rendermodel
 end
 
-function render{R}(roadway::R;
+function render{R<:Roadway}(roadway::R;
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel = RenderModel(),
