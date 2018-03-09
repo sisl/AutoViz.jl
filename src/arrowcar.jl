@@ -9,14 +9,14 @@
     id::Int        = 0
 end
 
-ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(pos, angle, length, width, color, "", id)
-ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, "", id)
+ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
+ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
 
 function render!(rm::RenderModel, c::ArrowCar)
     x = c.pos[1]
     y = c.pos[2]
     add_instruction!(rm, render_vehicle, (x, y, c.angle, c.length, c.width, c.color))
-    add_instruction!(rm, render_text, (c.text, x, y-c.width/2, 10, colorant"white"))
+    add_instruction!(rm, render_text, (c.text, x, y-c.width/2 - 2.0, 10, colorant"white"))
     return rm
 end
 

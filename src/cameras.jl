@@ -43,7 +43,7 @@ mutable struct CarFollowCamera{I} <: Camera
     targetid::I
     zoom::Float64 # [pix/meter]
 end
-CarFollowCamera(targetid::I, zoom::Float64=3.0) where {I} = CarFollowCamera{I}(targetid, zoom)
+CarFollowCamera(targetid::I) where {I} = CarFollowCamera{I}(targetid, 3.0)
 
 function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
 
@@ -134,5 +134,3 @@ function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::Scene
 
     rendermodel
 end
-
-

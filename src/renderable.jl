@@ -11,6 +11,8 @@ function isrenderable end
 isrenderable(object) = isrenderable(typeof(object))
 isrenderable(::Type{R}) where R <: Renderable = true
 isrenderable(t::Type) = method_exists(render!, Tuple{RenderModel, t})
+isrenderable(t::Type{Roadway}) = true
+
 
 function render(scene; # iterable of renderable objects
                 overlays=[],
@@ -42,8 +44,16 @@ function render(scene; # iterable of renderable objects
     return s
 end
 
-#TODO: default rendering function: Ekhlas: Take abstract vectors of (x,y,θ=0) and make ArrowCar
+function Base.convert(::Type{Renderable}, x::AbstractVector{R}) where R <: Real
+    @assert length(x) >= 2
+    if length(x) == 2
+        ac = ArrowCar(SVector(x[1],x[2]))
+    else
+        ac = ArrowCar(SVector(x[1],x[2]), x[3])
+    end
+    ac
+end
 #TODO: Tutorial notebook -> roadways, arrow cars, how to convert: Ekhlas
+
 #TODO: test -> run tutorial notebook, default conversions, isrenderable(), etc.: Ekhlas
 #TODO: Hints for figuring out rendermodels: Zach
-#TODO: make roadways directly renderable : isrenderable(::Type{Roadway}) = true, render!(): Ekhlas
