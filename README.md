@@ -5,6 +5,8 @@
 
 A package for rendering simple scenes primarily consisting of cars on roadways using Cairo.
 
+AutoViz is undergoing significant changes. If you are looking for the version before these changes that is designed around AutomotiveDrivingModels.jl, please checkout the v0.6.0 tag.
+
 ![AutoViz](readmeimage.png)
 
 ## Usage
