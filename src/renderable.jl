@@ -13,17 +13,24 @@ isrenderable(::Type{R}) where R <: Renderable = true
 isrenderable(t::Type) = method_exists(render!, Tuple{RenderModel, t})
 isrenderable(t::Type{Roadway}) = true
 
+"""
+    render(scene)
+    render(scene; kwargs...)
 
+Render all the items in `scene` to a Cairo surface and return it.
+
+`scene` is simply an iterable object (e.g. a vector) of items that are either directly renderable or renderable by conversion. See the AutoViz README for more details.
+"""
 function render(scene; # iterable of renderable objects
                 overlays=[],
                 rendermodel::RenderModel=RenderModel(),
                 cam::Camera=FitToContentCamera(),
                 canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
-                canvas_width::Int=DEFAULT_CANVAS_WIDTH
+                canvas_width::Int=DEFAULT_CANVAS_WIDTH,
+                surface=CairoRGBSurface(canvas_width, canvas_height)
                )
 
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
+    ctx = creategc(surface)
     clear_setup!(rendermodel)
 
     for x in scene
@@ -41,7 +48,7 @@ function render(scene; # iterable of renderable objects
     camera_set!(rendermodel, cam, scene, canvas_width, canvas_height)
 
     render(rendermodel, ctx, canvas_width, canvas_height)
-    return s
+    return surface
 end
 
 function Base.convert(::Type{Renderable}, x::AbstractVector{R}) where R <: Real
