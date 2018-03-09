@@ -53,7 +53,3 @@ function Base.convert(::Type{Renderable}, x::AbstractVector{R}) where R <: Real
     end
     ac
 end
-#TODO: Tutorial notebook -> roadways, arrow cars, how to convert: Ekhlas
-
-#TODO: test -> run tutorial notebook, default conversions, isrenderable(), etc.: Ekhlas
-#TODO: Hints for figuring out rendermodels: Zach
