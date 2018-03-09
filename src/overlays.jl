@@ -87,6 +87,19 @@ function render!{S,D,I,R}(rendermodel::RenderModel, overlay::TextOverlay, scene:
     rendermodel
 end
 
+# method for new interface
+function render!(rendermodel::RenderModel, overlay::TextOverlay, scene)
+    x = overlay.pos.x
+    y = overlay.pos.y
+    y_jump = overlay.line_spacing*overlay.font_size
+    for line in overlay.text
+        add_instruction!(rendermodel, render_text, (line, x, y, overlay.font_size, overlay.color), incameraframe=overlay.incameraframe)
+        y += y_jump
+    end
+    rendermodel
+end
+
+
 mutable struct Overwash <: SceneOverlay
     color::Colorant
 end
@@ -94,4 +107,3 @@ function render!{S,D,I,R}(rendermodel::RenderModel, overlay::Overwash, scene::En
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
 end
-
