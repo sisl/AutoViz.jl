@@ -26,7 +26,7 @@ car = ArrowCar([0.0, 0.0], 0.0, color=colorant"blue") # [north, east], angle
 render([roadway, car, "some text"])
 ```
 
-A short tutorial is located in [notebooks/tutorial.ipynb]().
+A short tutorial is located in [notebooks/tutorial.ipynb](notebooks/tutorial.ipynb).
 
 ### Renderable
 
