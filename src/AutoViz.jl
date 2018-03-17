@@ -19,6 +19,7 @@ export
         render!,
         get_pastel_car_colors,
 
+        Renderable,
         render,
         isrenderable,
 
