@@ -78,7 +78,7 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canv
     inds = find(x -> x isa ArrowCar && id(x) == cam.targetid, scene)
     if isempty(inds)
         ids = [c.id for c in scene if c isa ArrowCar]
-        add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find an ArrowCar with id %d (found ids: $ids)", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
+        add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find an ArrowCar with id $(cam.targetid) (found ids: $ids)", 10, 15, 15, colorant"white"), incameraframe=false)
         camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
     else
         veh_index = first(inds)
