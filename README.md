@@ -26,7 +26,7 @@ car = ArrowCar([0.0, 0.0], 0.0, color=colorant"blue") # [north, east], angle
 render([roadway, car, "some text"])
 ```
 
-In a jupyter notebook, an image will appear, otherwise see the [Saving images](#Saving-images) section below. A short tutorial is located in [notebooks/tutorial.ipynb](notebooks/tutorial.ipynb).
+In a jupyter notebook, an image will appear, otherwise see the [Saving images](#saving-images) section below. A short tutorial is located in [notebooks/tutorial.ipynb](notebooks/tutorial.ipynb).
 
 ## Renderable
 
