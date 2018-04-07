@@ -26,9 +26,9 @@ car = ArrowCar([0.0, 0.0], 0.0, color=colorant"blue") # [north, east], angle
 render([roadway, car, "some text"])
 ```
 
-A short tutorial is located in [notebooks/tutorial.ipynb](notebooks/tutorial.ipynb).
+In a jupyter notebook, an image will appear, otherwise see the [Saving images](#Saving-images) section below. A short tutorial is located in [notebooks/tutorial.ipynb](notebooks/tutorial.ipynb).
 
-### Renderable
+## Renderable
 
 *What does it mean to be "renderable"?*
 
@@ -73,6 +73,10 @@ The following additional keyword arguments will accepted by `render()`:
 - `rendermodel`
 - `overlays`
 - `cam` - a camera controlling the field of view as in the previous version of AutoViz
+
+## Saving images
+
+Png images can be saved with `write_to_png(render(scene), "filename.png")`. Gif animations may be created with e.g. [Reel.jl](https://github.com/shashi/Reel.jl).
 
 ## `RenderModel`s
 
