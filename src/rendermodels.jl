@@ -341,9 +341,9 @@ function render_line{T<:Real}(
     stroke(ctx)
     restore(ctx)
 end
-function render_line(
+function render_line{T<:Real}(
     ctx        :: CairoContext,
-    pts        :: Vector{VecE2}, # 2×n
+    pts        :: Vector{VecE2{T}}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     line_cap   :: Integer=Cairo.CAIRO_LINE_CAP_ROUND, # CAIRO_LINE_CAP_BUTT, CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE
@@ -394,9 +394,9 @@ function render_closed_line{T<:Real}(
 
     restore(ctx)
 end
-function render_closed_line(
+function render_closed_line{T<:Real}(
     ctx        :: CairoContext,
-    pts        :: Vector{VecE2},
+    pts        :: Vector{VecE2{T}},
     color      :: Colorant,
     line_width :: Real = 1.0,
     fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
@@ -794,7 +794,7 @@ function camera_fit_to_content!(
                     ymax = max(ymax, pts[2,i])
                     ymin = min(ymin, pts[2,i])
                 end
-            elseif isa(pts, Vector{VecE2})
+            elseif isa(pts, Vector{VecE2{T}} where T<:Real)
                 for P in pts
                     xmax = max(xmax, P.x)
                     xmin = min(xmin, P.x)

@@ -5,9 +5,9 @@ function render!(rendermodel::RenderModel, roadway::StraightRoadway;
     lane_marking_width::Float64 = 0.15, # [m]
     )
 
-    pts = Array{VecE2}(2)
-    pts[1] = VecE2(-extra_length, 0)
-    pts[2] = VecE2( extra_length + roadway.length, 0)
+    pts = Array{VecE2{Float64}}(2)
+    pts[1] = VecE2(-extra_length, 0.)
+    pts[2] = VecE2( extra_length + roadway.length, 0.)
 
     add_instruction!(rendermodel, render_line, (pts, color_asphalt, lane_width))
     add_instruction!(rendermodel, render_line, ([p + VecE2(0, -lane_width/2) for p in pts], COLOR_LANE_MARKINGS_WHITE, lane_marking_width))
