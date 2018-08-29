@@ -6,7 +6,7 @@ export
     SceneFollowCamera
 
 abstract type Camera end
-camera_set!{S,D,I,R}(::RenderModel, cam::Camera, ::EntityFrame{S,D,I}, ::R, canvas_width::Int, canvas_height::Int) = error("camera_set! not implemented for Camera $cam")
+camera_set!(::RenderModel, cam::Camera, ::EntityFrame{S,D,I}, ::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = error("camera_set! not implemented for Camera $cam")
 
 mutable struct StaticCamera <: Camera
     pos::VecE2
@@ -21,7 +21,7 @@ function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::
 
     rendermodel
 end
-camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+camera_set!(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 # method for new interface
 camera_set!(rm::RenderModel, cam::StaticCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rm, cam, canvas_width, canvas_height)
@@ -34,7 +34,7 @@ function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_w
     camera_fit_to_content!(rendermodel, canvas_width, canvas_height, percent_border=cam.percent_border)
     rendermodel
 end
-camera_set!{S,D,I,R}(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 # method for new interface
 camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
@@ -45,7 +45,7 @@ mutable struct CarFollowCamera{I} <: Camera
 end
 CarFollowCamera(targetid::I) where {I} = CarFollowCamera{I}(targetid, 3.0)
 
-function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
     veh_index = findfirst(scene, cam.targetid)
     if veh_index != 0
@@ -58,7 +58,7 @@ function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::CarFollowC
 
     rendermodel
 end
-function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
 
     veh_index = findfirst(scene, cam.targetid)
     if veh_index != 0
@@ -93,7 +93,7 @@ mutable struct SceneFollowCamera <: Camera
     zoom::Float64 # [pix/meter]
     SceneFollowCamera(zoom::Float64=3.0) = new(zoom)
 end
-function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
 
     if length(scene) > 0
@@ -114,7 +114,7 @@ function camera_set!{S<:State1D,D,I,R}(rendermodel::RenderModel, cam::SceneFollo
 
     rendermodel
 end
-function camera_set!{S<:VehicleState,D,I,R}(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int)
+function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
 
 
     if length(scene) > 0

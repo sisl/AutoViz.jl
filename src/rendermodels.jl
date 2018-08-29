@@ -45,7 +45,7 @@ mutable struct RenderModel
     camera_rotation  :: Float64        # [rad]
     background_color :: RGB
 
-    RenderModel() = new(Array{Tuple}(0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
+    RenderModel() = new(Array{Tuple}(undef, 0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
 end
 
 Cairo.move_to(ctx::CairoContext, P::VecE2) = move_to(ctx, P.x, P.y)
@@ -302,11 +302,11 @@ function render_vehicle(
 end
 
 # aggregate
-function render_point_trail{T<:Real}(
+function render_point_trail(
     ctx           :: CairoContext,
     pts           :: Matrix{T}, # 2×n
     color         :: Colorant,
-    circle_radius :: Real = 0.25 )
+    circle_radius :: Real = 0.25 ) where {T<:Real}
 
     save(ctx)
 
@@ -319,13 +319,13 @@ function render_point_trail{T<:Real}(
 
     restore(ctx)
 end
-function render_line{T<:Real}(
+function render_line(
     ctx        :: CairoContext,
     pts        :: Matrix{T}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     line_cap   :: Integer=Cairo.CAIRO_LINE_CAP_ROUND, # CAIRO_LINE_CAP_BUTT, CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE
-    )
+    ) where {T<:Real}
 
     line_width = user_to_device_distance!(ctx, [line_width,0])[1]
 
@@ -341,13 +341,13 @@ function render_line{T<:Real}(
     stroke(ctx)
     restore(ctx)
 end
-function render_line{T<:Real}(
+function render_line(
     ctx        :: CairoContext,
     pts        :: Vector{VecE2{T}}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     line_cap   :: Integer=Cairo.CAIRO_LINE_CAP_ROUND, # CAIRO_LINE_CAP_BUTT, CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE
-    )
+    ) where {T<:Real}
 
     line_width = user_to_device_distance!(ctx, [line_width,0])[1]
 
@@ -363,13 +363,13 @@ function render_line{T<:Real}(
     stroke(ctx)
     restore(ctx)
 end
-function render_closed_line{T<:Real}(
+function render_closed_line(
     ctx        :: CairoContext,
     pts        :: Matrix{T}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
-    )
+    ) where {T<:Real}
 
     line_width = user_to_device_distance!(ctx, [line_width,0])[1]
 
@@ -394,13 +394,13 @@ function render_closed_line{T<:Real}(
 
     restore(ctx)
 end
-function render_closed_line{T<:Real}(
+function render_closed_line(
     ctx        :: CairoContext,
     pts        :: Vector{VecE2{T}},
     color      :: Colorant,
     line_width :: Real = 1.0,
     fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
-    )
+    ) where {T<:Real}
 
     line_width = user_to_device_distance!(ctx, [line_width,0])[1]
 
@@ -425,11 +425,11 @@ function render_closed_line{T<:Real}(
 
     restore(ctx)
 end
-function render_fill_region{T<:Real}(
+function render_fill_region(
     ctx        :: CairoContext,
     pts        :: Matrix{T}, # 2×n
     color      :: Colorant,
-    )
+    ) where {T<:Real}
 
     save(ctx)
     set_source_rgba(ctx,color)
@@ -494,7 +494,7 @@ function render_line_segment(
     stroke(ctx)
     restore(ctx)
 end
-function render_dashed_line{T<:Real}(
+function render_dashed_line(
     ctx          :: CairoContext,
     pts          :: Matrix{T}, # 2×n
     color        :: Colorant,
@@ -503,7 +503,7 @@ function render_dashed_line{T<:Real}(
     dash_spacing_in :: Real = 1.0,
     dash_offset_in  :: Real = 0.0,
     line_cap :: Integer = Cairo.CAIRO_LINE_CAP_ROUND,
-    )
+    ) where {T<:Real}
 
     line_width   = user_to_device_distance!(ctx, [line_width_in,  0])[1]
     dash_length  = user_to_device_distance!(ctx, [dash_length_in, 0])[1]
@@ -561,7 +561,7 @@ function render_dashed_arc(
 
     restore(ctx)
 end
-function render_arrow{T<:Real}(
+function render_arrow(
     ctx               :: CairoContext,
     pts               :: Matrix{T}, # 2×n
     color             :: Colorant,
@@ -570,7 +570,7 @@ function render_arrow{T<:Real}(
     ARROW_WIDTH_RATIO :: AbstractFloat = 0.8,
     ARROW_ALPHA       :: AbstractFloat = 0.1pi,
     ARROW_BETA        :: AbstractFloat = 0.8pi
-    )
+    ) where {T<:Real}
 
     @assert(size(pts,2) > 1)
 
@@ -617,12 +617,12 @@ function render_arrow{T<:Real}(
     restore(ctx)
 end
 
-function render_colormesh{T<:Real, S<:Real, U<:Real}(
+function render_colormesh(
     ctx::CairoContext,
     C::Matrix{T}, # n×m matrix of 0->1 values
     X::Vector{S}, # n+1 vector of x bin boundaries
     Y::Vector{U} # m+1 vector of y bin boundaries
-    )
+    ) where {T<:Real, S<:Real, U<:Real}
 
     n,m = size(C)
     @assert(length(X) == n+1)
@@ -653,14 +653,15 @@ function render_colormesh{T<:Real, S<:Real, U<:Real}(
 
     restore(ctx)
 end
-function render_colormesh{T<:Real, S<:Real, U<:Real}(
+function render_colormesh(
     ctx::CairoContext,
     C::Matrix{T}, # n×m matrix of 0->1 values
     X::Vector{S}, # n+1 vector of x bin boundaries
     Y::Vector{U}, # m+1 vector of y bin boundaries
     color₀::Colorant, # color for c = 0
     color₁::Colorant, # color for c = 1
-    )
+    ) where {T<:Real, S<:Real, U<:Real}
+
 
     n,m = size(C)
     @assert(length(X) == n+1)

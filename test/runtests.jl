@@ -1,11 +1,11 @@
-using Base.Test
-using AutomotiveDrivingModels
+using Test
 using AutoViz
 using NBInclude
 using Colors
+using AutomotiveDrivingModels
 
-nbinclude(Pkg.dir("AutoViz", "doc", "AutoViz.ipynb"))
-nbinclude(Pkg.dir("AutoViz", "notebooks", "tutorial.ipynb"))
+@nbinclude(Pkg.dir("AutoViz", "doc", "AutoViz.ipynb"))
+@nbinclude(Pkg.dir("AutoViz", "notebooks", "tutorial.ipynb"))
 
 rw = gen_straight_roadway(3, 100.0)
 car = ArrowCar(0.0, 0.0, 0.0, id=1)
