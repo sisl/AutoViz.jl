@@ -75,7 +75,7 @@ end
 # method for new interface
 function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canvas_width::Int, canvas_height::Int)
 
-    inds = find(x -> x isa ArrowCar && id(x) == cam.targetid, scene)
+    inds = findall(x -> x isa ArrowCar && id(x) == cam.targetid, scene)
     if isempty(inds)
         ids = [c.id for c in scene if c isa ArrowCar]
         add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find an ArrowCar with id $(cam.targetid) (found ids: $ids)", 10, 15, 15, colorant"white"), incameraframe=false)

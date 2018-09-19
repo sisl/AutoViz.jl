@@ -10,7 +10,7 @@ function isrenderable end
 
 isrenderable(object) = isrenderable(typeof(object))
 isrenderable(::Type{R}) where R <: Renderable = true
-isrenderable(t::Type) = method_exists(render!, Tuple{RenderModel, t})
+isrenderable(t::Type) = hasmethod(render!, Tuple{RenderModel, t})
 isrenderable(t::Type{Roadway}) = true
 
 """
