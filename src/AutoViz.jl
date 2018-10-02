@@ -6,6 +6,7 @@ using Reexport
 using Parameters
 using StaticArrays
 using AutomotiveDrivingModels
+using Printf
 
 @reexport using Colors
 @reexport using Cairo

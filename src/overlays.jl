@@ -14,13 +14,13 @@ export
 
 abstract type SceneOverlay end
 
-function render{S,D,I,O<:SceneOverlay,R}(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{O};
+function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{O};
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
     car_colors::Dict{I,Colorant}=Dict{I,Colorant}(),
-    )
+    ) where {S,D,I,O<:SceneOverlay,R}
 
     s = CairoRGBSurface(canvas_width, canvas_height)
     ctx = creategc(s)
@@ -76,7 +76,7 @@ end
     line_spacing::Float64 = 1.5 # multiple of font_size
     incameraframe=false
 end
-function render!{S,D,I,R}(rendermodel::RenderModel, overlay::TextOverlay, scene::EntityFrame{S,D,I}, roadway::R)
+function render!(rendermodel::RenderModel, overlay::TextOverlay, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
     x = overlay.pos.x
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
@@ -103,7 +103,7 @@ end
 mutable struct Overwash <: SceneOverlay
     color::Colorant
 end
-function render!{S,D,I,R}(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R)
+function render!(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
 end
