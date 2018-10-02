@@ -1,7 +1,7 @@
 name = "AutoViz"
 uuid = "82aa6e0c-a491-5edf-8d4b-c16b98e4ea17"
 repo = "https://github.com/sisl/AutoViz.jl.git"
-version = "0.0.0"
+version = "0.6.2"
 
 [deps]
 Cairo = "159f3aea-2a34-519c-b102-8c37f9878175"
