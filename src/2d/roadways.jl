@@ -1,7 +1,7 @@
 function render!(
     rendermodel::RenderModel,
     boundary::LaneBoundary,
-    pts::Matrix{Float64},
+    pts::AbstractArray{Float64},
     lane_marking_width  :: Real=0.15, # [m]
     lane_dash_len       :: Real=0.91, # [m]
     lane_dash_spacing   :: Real=2.74, # [m]

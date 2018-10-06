@@ -95,7 +95,7 @@ function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, sc
     add_instruction!( rendermodel, render_text, (@sprintf("id = %d", overlay.target_id), 10, text_y, font_size, overlay.color), incameraframe=false)
         text_y += text_y_jump
 
-    veh_index = findfirst(scene, overlay.target_id)
+    veh_index = findfirst(overlay.target_id, scene)
     if veh_index != 0
         veh = scene[veh_index]
 
@@ -160,7 +160,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
     yₒ = textparams.y_start
     Δy = textparams.y_jump
 
-    vehicle_index = findfirst(scene, overlay.target_id)
+    vehicle_index = findfirst(overlay.target_id, scene)
     if vehicle_index != 0
 
         veh_ego = scene[vehicle_index]

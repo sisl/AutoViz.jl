@@ -39,7 +39,7 @@ export
 
 # config variables
 mutable struct RenderModel
-    instruction_set  :: Vector{Tuple}  # set of render instructions (function, array of inputs sans ctx, incameraframe)
+    instruction_set  :: AbstractVector{Tuple}  # set of render instructions (function, array of inputs sans ctx, incameraframe)
     camera_center    :: VecE2          # position of camera in [N,E] relative to the mean point. meters
     camera_zoom      :: Float64        # [pix/m]
     camera_rotation  :: Float64        # [rad]
@@ -304,7 +304,7 @@ end
 # aggregate
 function render_point_trail(
     ctx           :: CairoContext,
-    pts           :: Matrix{T}, # 2×n
+    pts           :: AbstractVector{T}, # 2×n
     color         :: Colorant,
     circle_radius :: Real = 0.25 ) where {T<:Real}
 
@@ -321,7 +321,7 @@ function render_point_trail(
 end
 function render_line(
     ctx        :: CairoContext,
-    pts        :: Matrix{T}, # 2×n
+    pts        :: AbstractArray{T}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     line_cap   :: Integer=Cairo.CAIRO_LINE_CAP_ROUND, # CAIRO_LINE_CAP_BUTT, CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE
@@ -343,7 +343,7 @@ function render_line(
 end
 function render_line(
     ctx        :: CairoContext,
-    pts        :: Vector{VecE2{T}}, # 2×n
+    pts        :: AbstractVector{VecE2{T}}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     line_cap   :: Integer=Cairo.CAIRO_LINE_CAP_ROUND, # CAIRO_LINE_CAP_BUTT, CAIRO_LINE_CAP_ROUND, CAIRO_LINE_CAP_SQUARE
@@ -365,7 +365,7 @@ function render_line(
 end
 function render_closed_line(
     ctx        :: CairoContext,
-    pts        :: Matrix{T}, # 2×n
+    pts        :: AbstractArray{T}, # 2×n
     color      :: Colorant,
     line_width :: Real = 1.0,
     fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
@@ -396,7 +396,7 @@ function render_closed_line(
 end
 function render_closed_line(
     ctx        :: CairoContext,
-    pts        :: Vector{VecE2{T}},
+    pts        :: AbstractVector{VecE2{T}},
     color      :: Colorant,
     line_width :: Real = 1.0,
     fill_color :: Colorant = RGBA(0.0,0.0,0.0,0.0),
@@ -427,7 +427,7 @@ function render_closed_line(
 end
 function render_fill_region(
     ctx        :: CairoContext,
-    pts        :: Matrix{T}, # 2×n
+    pts        :: AbstractArray{T}, # 2×n
     color      :: Colorant,
     ) where {T<:Real}
 
@@ -496,7 +496,7 @@ function render_line_segment(
 end
 function render_dashed_line(
     ctx          :: CairoContext,
-    pts          :: Matrix{T}, # 2×n
+    pts          :: AbstractArray{T}, # 2×n
     color        :: Colorant,
     line_width_in   :: Real = 1.0,
     dash_length_in  :: Real = 1.0,
@@ -563,7 +563,7 @@ function render_dashed_arc(
 end
 function render_arrow(
     ctx               :: CairoContext,
-    pts               :: Matrix{T}, # 2×n
+    pts               :: AbstractArray{T}, # 2×n
     color             :: Colorant,
     line_width        :: Real,
     arrowhead_len     :: Real;
@@ -619,9 +619,9 @@ end
 
 function render_colormesh(
     ctx::CairoContext,
-    C::Matrix{T}, # n×m matrix of 0->1 values
-    X::Vector{S}, # n+1 vector of x bin boundaries
-    Y::Vector{U} # m+1 vector of y bin boundaries
+    C::AbstractArray{T}, # n×m matrix of 0->1 values
+    X::AbstractVector{S}, # n+1 vector of x bin boundaries
+    Y::AbstractVector{U} # m+1 vector of y bin boundaries
     ) where {T<:Real, S<:Real, U<:Real}
 
     n,m = size(C)
@@ -655,9 +655,9 @@ function render_colormesh(
 end
 function render_colormesh(
     ctx::CairoContext,
-    C::Matrix{T}, # n×m matrix of 0->1 values
-    X::Vector{S}, # n+1 vector of x bin boundaries
-    Y::Vector{U}, # m+1 vector of y bin boundaries
+    C::AbstractArray{T}, # n×m matrix of 0->1 values
+    X::AbstractVector{S}, # n+1 vector of x bin boundaries
+    Y::AbstractVector{U}, # m+1 vector of y bin boundaries
     color₀::Colorant, # color for c = 0
     color₁::Colorant, # color for c = 1
     ) where {T<:Real, S<:Real, U<:Real}
@@ -788,14 +788,14 @@ function camera_fit_to_content!(
                f == render_dashed_line || f == render_fill_region
 
             pts = tup[2][1]
-            if isa(pts, Matrix{Float64})
+            if isa(pts, AbstractArray{Float64})
                 for i in 1 : size(pts, 2)
                     xmax = max(xmax, pts[1,i])
                     xmin = min(xmin, pts[1,i])
                     ymax = max(ymax, pts[2,i])
                     ymin = min(ymin, pts[2,i])
                 end
-            elseif isa(pts, Vector{VecE2{T}} where T<:Real)
+            elseif isa(pts, AbstractVector{VecE2{T}} where T<:Real)
                 for P in pts
                     xmax = max(xmax, P.x)
                     xmin = min(xmin, P.x)

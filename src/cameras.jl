@@ -47,7 +47,7 @@ CarFollowCamera(targetid::I) where {I} = CarFollowCamera{I}(targetid, 3.0)
 
 function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
-    veh_index = findfirst(scene, cam.targetid)
+    veh_index = findfirst(cam.targetid, scene)
     if veh_index != 0
         camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
         camera_setzoom!(rendermodel, cam.zoom)
@@ -60,7 +60,7 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::E
 end
 function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
 
-    veh_index = findfirst(scene, cam.targetid)
+    veh_index = findfirst(cam.targetid, scene)
     if veh_index != 0
         camera_set_pos!(rendermodel, scene[veh_index].state.posG)
         camera_setzoom!(rendermodel, cam.zoom)
