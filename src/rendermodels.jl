@@ -22,6 +22,7 @@ export
         render_text,
         render_circle,
         render_arc,
+        render_rect,
         render_round_rect,
         render_car,
         render_vehicle,
@@ -158,6 +159,32 @@ function render_arc(
     set_source_rgba(ctx, color_stroke)
     stroke(ctx)
 
+    restore(ctx)
+end
+function render_rect(ctx::CairoContext,
+                    x::Real,
+                    y::Real,
+                    width::Real,
+                    height::Real,
+                    color_fill::Colorant,
+                    ffill         :: Bool        = false,
+                    fstroke       :: Bool        = true,
+                    color_stroke  :: Colorant    = color_fill,
+                    line_width    :: Real        = 2.0
+                    )
+    Cairo.save(ctx)
+    rectangle(ctx, x, y, width, height)
+    if ffill
+        set_source_rgba(ctx, color_fill)
+        fstroke ? fill_preserve(ctx) : fill(ctx)
+    end
+    
+    if fstroke
+        set_source_rgba(ctx, color_stroke)
+        set_line_width(ctx, line_width)
+        stroke(ctx)
+    end
+    
     restore(ctx)
 end
 function render_round_rect(

@@ -8,6 +8,7 @@ export
         MOBILOverlay,
         CollisionOverlay,
         MarkerDistOverlay,
+        HistogramOverlay,
 
         TextParams,
         drawtext
@@ -106,4 +107,32 @@ end
 function render!(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
+end
+
+"""
+    HistogramOverlay
+
+Display a bar at the specified position `pos`, the bar is of size `width`, `height` and is filled up to a given proportion of its height. 
+The fill proportion is set using `val`, it should be a number between 0 and 1. If it is 0, the bar is not filled, if it is 1 it is filled to the top.
+"""
+@with_kw mutable struct HistogramOverlay <: SceneOverlay
+    pos::VecE2{Float64} = VecE2(0.,0.)
+    incameraframe::Bool = true
+    label::String = "histogram"
+    val::Float64 = 0.5 # should be between 0 and 1
+    width::Float64 = 2.
+    height::Float64 = 5. 
+    fill_color::Colorant = colorant"blue"
+    line_color::Colorant = colorant"white"
+    font_size::Int64 = 15 # [pix]
+    label_pos::VecSE2{Float64} = pos + VecSE2(0., -height/2)
+end
+
+function AutoViz.render!(rendermodel::RenderModel, overlay::HistogramOverlay, scene::Scene, roadway::R) where R
+    # render value 
+    add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.val*overlay.height,overlay.fill_color, true, false), incameraframe=overlay.incameraframe)
+    # render histogram outline 
+    add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.height, overlay.line_color), incameraframe=overlay.incameraframe)
+     # label 
+    add_instruction!(rendermodel, render_text, (overlay.label, overlay.label_pos.x, overlay.label_pos.y, overlay.font_size, overlay.line_color), incameraframe=overlay.incameraframe)
 end

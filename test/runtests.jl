@@ -7,6 +7,7 @@ using Random
 using AutomotiveDrivingModels
 
 @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "tutorial.ipynb"))
+@nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "overlay_tutorial.ipynb"))
 @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "doc", "AutoViz.ipynb"))
 
 rw = gen_straight_roadway(3, 100.0)
