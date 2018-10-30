@@ -4,7 +4,8 @@ export
     CarFollowingStatsOverlay,
     NeighborsOverlay,
     MOBILOverlay,
-    MarkerDistOverlay
+    MarkerDistOverlay,
+    BlinkerOverlay
 
 mutable struct LineToCenterlineOverlay <: SceneOverlay
     target_id::Int # if -1 does it for all
@@ -70,6 +71,36 @@ function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::S
     end
 
     rendermodel
+end
+
+"""
+    BlinkerOverlay
+Displays a circle on one of the top corner of a vehicle to symbolize a blinker. 
+fields: 
+- on: turn the blinker on
+- right: blinker on the top right corner, if false, blinker on the left 
+- veh: the vehicle for which to display the blinker 
+- color: the color of the blinker
+- size: the size of the blinker 
+""" 
+@with_kw struct BlinkerOverlay <: SceneOverlay
+    on::Bool = false 
+    right::Bool = true
+    veh::Vehicle = Vehicle(VehicleState(), VehicleDef(), 0)
+    color::Colorant = colorant"0xFFEF00FF" # yellow 
+    size::Float64 = 0.3
+end
+
+function AutoViz.render!(rendermodel::RenderModel, overlay::BlinkerOverlay, scene::Scene, roadway::R) where R
+    if !overlay.on
+        return nothing 
+    end
+    if overlay.right 
+        pos = get_front(overlay.veh) + polar(overlay.veh.def.width/2, overlay.veh.state.posG.θ - pi/2)
+    else
+        pos = get_front(overlay.veh) + polar(overlay.veh.def.width/2, overlay.veh.state.posG.θ + pi/2)
+    end
+    add_instruction!(rendermodel, render_circle, (pos.x, pos.y, overlay.size, overlay.color))    
 end
 
 mutable struct CarFollowingStatsOverlay <: SceneOverlay
