@@ -6,7 +6,7 @@ export
     SceneFollowCamera
 
 abstract type Camera end
-camera_set!(::RenderModel, cam::Camera, ::EntityFrame{S,D,I}, ::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = error("camera_set! not implemented for Camera $cam")
+# camera_set!(::RenderModel, cam::Camera, ::EntityFrame{S,D,I}, ::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = error("camera_set! not implemented for Camera $cam")
 
 mutable struct StaticCamera <: Camera
     pos::VecE2
@@ -21,7 +21,7 @@ function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::
 
     rendermodel
 end
-camera_set!(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+# camera_set!(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 # method for new interface
 camera_set!(rm::RenderModel, cam::StaticCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rm, cam, canvas_width, canvas_height)
@@ -34,7 +34,7 @@ function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_w
     camera_fit_to_content!(rendermodel, canvas_width, canvas_height, percent_border=cam.percent_border)
     rendermodel
 end
-camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+# camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 # method for new interface
 camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
@@ -45,32 +45,32 @@ mutable struct CarFollowCamera{I} <: Camera
 end
 CarFollowCamera(targetid::I) where {I} = CarFollowCamera{I}(targetid, 3.0)
 
-function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
+# function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
-    veh_index = findfirst(cam.targetid, scene)
-    if veh_index != 0
-        camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
-        camera_setzoom!(rendermodel, cam.zoom)
-    else
-        add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
-    end
+#     veh_index = findfirst(cam.targetid, scene)
+#     if veh_index != 0
+#         camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
+#         camera_setzoom!(rendermodel, cam.zoom)
+#     else
+#         add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
+#         camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
+#     end
 
-    rendermodel
-end
-function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
+#     rendermodel
+# end
+# function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
 
-    veh_index = findfirst(cam.targetid, scene)
-    if veh_index != 0
-        camera_set_pos!(rendermodel, scene[veh_index].state.posG)
-        camera_setzoom!(rendermodel, cam.zoom)
-    else
-        add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
-    end
+#     veh_index = findfirst(cam.targetid, scene)
+#     if veh_index != 0
+#         camera_set_pos!(rendermodel, scene[veh_index].state.posG)
+#         camera_setzoom!(rendermodel, cam.zoom)
+#     else
+#         add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
+#         camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
+#     end
 
-    rendermodel
-end
+#     rendermodel
+# end
 
 # method for new interface
 function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canvas_width::Int, canvas_height::Int)
@@ -89,6 +89,8 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canv
     rendermodel
 end
 
+#TODO reimplement for Roadways.jl if useful 
+#=
 mutable struct SceneFollowCamera <: Camera
     zoom::Float64 # [pix/meter]
     SceneFollowCamera(zoom::Float64=3.0) = new(zoom)
@@ -135,3 +137,4 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::En
 
     rendermodel
 end
+=#
