@@ -81,3 +81,6 @@ Png images can be saved with `write_to_png(render(scene), "filename.png")`. Gif 
 ## `RenderModel`s
 
 The mid-level interface for this package (which is what you will use when you write `render!()` for your types or when you write an overlay) revolves around adding instructions to a `RenderModel`. Each instruction consists of a function and a tuple of arguments for the function. This is not documented in this readme, but it is fairly easy to figure out by reading `rendermodels.jl`, `overlays.jl`, and `arrowcar.jl`.
+
+## Installation
+`julia> Pkg.add(PackageSpec(url="https://github.com/sisl/AutoViz.jl.git"))`
