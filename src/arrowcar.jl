@@ -22,3 +22,30 @@ end
 
 id(ac::ArrowCar) = ac.id
 pos(ac::ArrowCar) = ac.pos
+
+function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene, canvas_width::Int, canvas_height::Int)
+    C = SVector(0.0, 0.0)
+    n_cars = 0
+    for x in scene 
+        c = getcenter(x)
+        @show c
+        @show x
+        if c != nothing 
+            println("hello")
+            C += c 
+            n_cars += 1
+        end
+    end
+    if n_cars > 0
+        C = C ./ n_cars 
+        camera_set_pos!(rendermodel, C...)
+        camera_setzoom!(rendermodel, cam.zoom)
+    else
+        add_instruction!( rendermodel, render_text, ("SceneFollowCamera did not find any vehicles", 10, 15, 15, colorant"white"), incameraframe=false)
+        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
+    end 
+    rendermodel
+end
+
+getcenter(car::ArrowCar) = car.pos
+getcenter(x) = nothing
