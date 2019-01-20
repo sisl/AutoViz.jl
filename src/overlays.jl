@@ -1,3 +1,5 @@
+#TODO move export statement
+#TODO reimplement using the renderable interface
 export
         SceneOverlay,
         TextOverlay,

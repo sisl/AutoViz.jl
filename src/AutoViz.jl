@@ -5,8 +5,10 @@ module AutoViz
 using Reexport
 using Parameters
 using StaticArrays
-using AutomotiveDrivingModels
+using Vec
+# using AutomotiveDrivingModels
 using Printf
+using Roadways
 
 @reexport using Colors
 @reexport using Cairo
@@ -39,12 +41,14 @@ include("renderable.jl")
 include("arrowcar.jl")
 include("text.jl")
 
-include("interface.jl")
-include("overlays.jl")
+# include("interface.jl")
+# include("overlays.jl")
 include("reel_drive.jl")
 
-include("1d/main.jl")
-include("2d/main.jl")
+# include("1d/main.jl")
+# include("2d/main.jl")
+
+include("roadways.jl")
 
 
 end # module
