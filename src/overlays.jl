@@ -49,7 +49,7 @@ mutable struct TextParams
 
     function TextParams(;
         size::Int=12,
-        color::Colorant=colorant"white",
+        color::Colorant=colorant"black",
         x::Int=20,
         y_start::Int=20,
         y_jump::Int=round(Int, size*1.2),
@@ -123,7 +123,7 @@ The fill proportion is set using `val`, it should be a number between 0 and 1. I
     width::Float64 = 2.
     height::Float64 = 5. 
     fill_color::Colorant = colorant"blue"
-    line_color::Colorant = colorant"white"
+    line_color::Colorant = colorant"black"
     font_size::Int64 = 15 # [pix]
     label_pos::VecSE2{Float64} = pos + VecSE2(0., -height/2)
 end

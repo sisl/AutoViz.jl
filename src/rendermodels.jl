@@ -46,7 +46,7 @@ mutable struct RenderModel
     camera_rotation  :: Float64        # [rad]
     background_color :: RGB
 
-    RenderModel() = new(Array{Tuple}(undef, 0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
+    RenderModel() = new(Array{Tuple}(undef, 0), VecE2(0.0,0.0), 1.0, 0.0, RGB(1, 1, 1))
 end
 
 Cairo.move_to(ctx::CairoContext, P::VecE2) = move_to(ctx, P.x, P.y)

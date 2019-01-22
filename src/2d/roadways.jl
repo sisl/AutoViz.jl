@@ -39,7 +39,7 @@ end
 
 function render!(rendermodel::RenderModel, roadway::Roadway;
     color_asphalt       :: Colorant=COLOR_ASPHALT,
-    lane_marking_width  :: Real=0.15, # [m]
+    lane_marking_width  :: Real=0.1, # [m]
     lane_dash_len       :: Real=0.91, # [m]
     lane_dash_spacing   :: Real=2.74, # [m]
     lane_dash_offset    :: Real=0.00  # [m]

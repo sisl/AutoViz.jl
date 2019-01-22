@@ -7,7 +7,7 @@ export
     MONOKAI
 
 const COLOR_ASPHALT       = colorant"0x708090FF"
-const COLOR_LANE_MARKINGS_WHITE = colorant"0xDFDFDFFF"
+const COLOR_LANE_MARKINGS_WHITE = colorant"black"#colorant"0xDFDFDFFF"
 const COLOR_LANE_MARKINGS_YELLOW = colorant"0xFFEF00FF"
 const COLOR_CAR_EGO       = colorant"0x00FFFFFF" # bluish
 const COLOR_CAR_OTHER     = colorant"0xFF007FFF" # reddish
