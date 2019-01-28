@@ -89,10 +89,19 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canv
     rendermodel
 end
 
-mutable struct SceneFollowCamera <: Camera
-    zoom::Float64 # [pix/meter]
-    SceneFollowCamera(zoom::Float64=3.0) = new(zoom)
+"""
+    SceneFollowCamera{R<:Real}
+
+Camera centered over all vehicles 
+The zoom can be adjusted. 
+# Fields 
+- `zoom::R`
+
+"""
+@with_kw struct SceneFollowCamera{R<:Real} <: Camera
+    zoom::R = 3.0 # [pix/meter]
 end
+
 function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
 
@@ -109,7 +118,7 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::En
         camera_setzoom!(rendermodel, cam.zoom)
     else
         add_instruction!( rendermodel, render_text, ("SceneFollowCamera did not find any vehicles", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height, 0.1)
+        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
     end
 
     rendermodel
@@ -130,7 +139,7 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::En
         camera_setzoom!(rendermodel, cam.zoom)
     else
         add_instruction!( rendermodel, render_text, ("SceneFollowCamera did not find any vehicles", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height, 0.1)
+        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
     end
 
     rendermodel

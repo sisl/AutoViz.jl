@@ -19,3 +19,5 @@ render([rw, car, "some text"])
 render([rw, car, car2, "some text"], cam=CarFollowCamera(0))
 
 render([rw, car, car2], overlays=[TextOverlay(text=["overlay"], color=colorant"blue")])
+
+render([rw, car, car2], cam=SceneFollowCamera())
