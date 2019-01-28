@@ -1,4 +1,10 @@
-#TODO: Add doc string
+"""
+    ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
+    ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0)
+    ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0)
+
+A renderable type to represent a rectangular car with an arrow in the middle. 
+"""
 @with_kw struct ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
     pos::A         = SVector(0.0, 0.0)
     angle::Float64 = 0.0
@@ -28,10 +34,7 @@ function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene, ca
     n_cars = 0
     for x in scene 
         c = getcenter(x)
-        @show c
-        @show x
         if c != nothing 
-            println("hello")
             C += c 
             n_cars += 1
         end
