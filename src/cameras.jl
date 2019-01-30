@@ -52,7 +52,7 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::E
         camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
         camera_setzoom!(rendermodel, cam.zoom)
     else
-        add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
+        add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find id $(cam.targetid)", 10, 15, 15, colorant"white"), incameraframe=false)
         camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
     end
 
@@ -65,7 +65,7 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::E
         camera_set_pos!(rendermodel, scene[veh_index].state.posG)
         camera_setzoom!(rendermodel, cam.zoom)
     else
-        add_instruction!( rendermodel, render_text, (@sprintf("CarFollowCamera did not find id %d", cam.targetid), 10, 15, 15, colorant"white"), incameraframe=false)
+        add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find id $(cam.targetid)", 10, 15, 15, colorant"white"), incameraframe=false)
         camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
     end
 
