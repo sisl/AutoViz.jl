@@ -9,6 +9,16 @@ AutoViz is undergoing significant changes. If you are looking for the version be
 
 ![AutoViz](readmeimage.png)
 
+## Installation 
+
+```julia 
+using Pkg
+Pkg.add(PackageSpec(url="https://github.com/sisl/Vec.jl"))
+Pkg.add(PackageSpec(url="https://github.com/sisl/Records.jl"))
+Pkg.add(PackageSpec(url="https://github.com/sisl/AutomotiveDrivingModels.jl"))
+Pkg.add(PackageSpec(url="https://github.com/sisl/AutoViz.jl"))
+```
+
 ## Usage
 
 The main function is
