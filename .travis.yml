@@ -16,6 +16,7 @@ addons:
 notifications:
   email: false
 script:
+  - git clone https://github.com/JuliaRegistries/General  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "General"))')  
   - git clone https://github.com/SISL/Registry  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "SISL"))')  
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia --project --color=yes --check-bounds=yes -e 'import Pkg; Pkg.build("AutoViz"); Pkg.test("AutoViz"; coverage=true)'  
