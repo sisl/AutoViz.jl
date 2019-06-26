@@ -15,10 +15,11 @@ addons:
 
 notifications:
   email: false
-# script:
-  # - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  # - julia --project --check-bounds=yes -e 'using Pkg; Pkg.build("AutoViz"); Pkg.test("AutoViz"; coverage=true)'
-  # - julia --project --check-bounds=yes -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/sisl/Vec.jl")); Pkg.add(PackageSpec(url="https://github.com/sisl/Records.jl")); Pkg.add(PackageSpec(url="https://github.com/sisl/AutomotiveDrivingModels.jl")); Pkg.build("AutoViz"); Pkg.test("AutoViz"; coverage=true)'
+script:
+  - git clone https://github.com/JuliaRegistries/General  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "General"))')  
+  - git clone https://github.com/SISL/Registry  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "SISL"))')  
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia --project --color=yes --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("AutoViz"; coverage=true)'  
 after_success:
   - julia --project -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
 
