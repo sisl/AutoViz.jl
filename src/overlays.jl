@@ -9,6 +9,7 @@ export
         CollisionOverlay,
         MarkerDistOverlay,
         HistogramOverlay,
+        IDOverlay,
 
         TextParams,
         drawtext
@@ -135,4 +136,26 @@ function AutoViz.render!(rendermodel::RenderModel, overlay::HistogramOverlay, sc
     add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.height, overlay.line_color), incameraframe=overlay.incameraframe)
      # label 
     add_instruction!(rendermodel, render_text, (overlay.label, overlay.label_pos.x, overlay.label_pos.y, overlay.font_size, overlay.line_color), incameraframe=overlay.incameraframe)
+end
+
+"""
+    IDOverlay
+
+Display the ID on top of each entity in a scene.
+
+# Fiels
+- `color::Colorant` default white
+- `font_size::Int64` default 15
+"""
+@with_kw mutable struct IDOverlay <: SceneOverlay
+    color::Colorant = colorant"white"
+    font_size::Int = 15
+end
+
+function AutoViz.render!(rendermodel::RenderModel, overlay::IDOverlay, scene::Scene, env::E) where E
+    font_size = overlay.font_size
+    for veh in scene
+        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x, veh.state.posG.y, font_size, overlay.color), incameraframe=true)
+    end
+    return rendermodel
 end
