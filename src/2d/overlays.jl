@@ -63,7 +63,7 @@ function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::S
     for ind in target_inds
         veh = scene[ind]
         veh_ind_front = get_neighbor_fore_along_lane(scene, ind, roadway).ind
-        if veh_ind_front != 0
+        if veh_ind_front != nothing
             v2 = scene[veh_ind_front]
             add_instruction!(rendermodel, render_line_segment,
                 (veh.state.posG.x, veh.state.posG.y, v2.state.posG.x, v2.state.posG.y, overlay.color, overlay.line_width))
@@ -127,7 +127,7 @@ function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, sc
         text_y += text_y_jump
 
     veh_index = findfirst(overlay.target_id, scene)
-    if veh_index != 0
+    if veh_index != nothing
         veh = scene[veh_index]
 
         if overlay.verbosity ≥ 2
@@ -142,7 +142,7 @@ function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, sc
 
 
         foreinfo = get_neighbor_fore_along_lane(scene, veh_index, roadway; max_distance_fore=Inf)
-        if foreinfo.ind != 0
+        if foreinfo.ind != nothing
             v2 = scene[foreinfo.ind]
             rel_speed = v2.state.v - veh.state.v
             fmt_txt = @sprintf("Δv = %10.3f m/s", rel_speed)
@@ -198,7 +198,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
     Δy = textparams.y_jump
 
     vehicle_index = findfirst(overlay.target_id, scene)
-    if vehicle_index != 0
+    if vehicle_index != nothing
 
         veh_ego = scene[vehicle_index]
         t = veh_ego.state.posF.t
@@ -207,7 +207,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         len_ego = veh_ego.def.length
 
         fore_L = get_neighbor_fore_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
-        if fore_L.ind != 0
+        if fore_L.ind != nothing
             veh_oth = scene[fore_L.ind]
             A = get_front(veh_ego)
             B = get_rear(veh_oth)
@@ -216,7 +216,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         end
 
         fore_M = get_neighbor_fore_along_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
-        if fore_M.ind != 0
+        if fore_M.ind != nothing
             veh_oth = scene[fore_M.ind]
             A = get_front(veh_ego)
             B = get_rear(veh_oth)
@@ -225,7 +225,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         end
 
         fore_R = get_neighbor_fore_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
-        if fore_R.ind != 0
+        if fore_R.ind != nothing
             veh_oth = scene[fore_R.ind]
             A = get_front(veh_ego)
             B = get_rear(veh_oth)
@@ -234,7 +234,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         end
 
         rear_L = get_neighbor_rear_along_left_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
-        if rear_L.ind != 0
+        if rear_L.ind != nothing
             veh_oth = scene[rear_L.ind]
             A = get_rear(veh_ego)
             B = get_front(veh_oth)
@@ -243,7 +243,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         end
 
         rear_M = get_neighbor_rear_along_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
-        if rear_M.ind != 0
+        if rear_M.ind != nothing
             veh_oth = scene[rear_M.ind]
             A = get_rear(veh_ego)
             B = get_front(veh_oth)
@@ -252,7 +252,7 @@ function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Sce
         end
 
         rear_R = get_neighbor_rear_along_right_lane(scene, vehicle_index, roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
-        if rear_R.ind != 0
+        if rear_R.ind != nothing
             veh_oth = scene[rear_R.ind]
             A = get_rear(veh_ego)
             B = get_front(veh_oth)
@@ -486,7 +486,7 @@ function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Sc
     update!(overlay.rec, scene)
 
     vehicle_index = findfirst(scene, overlay.target_id)
-    if vehicle_index != 0
+    if vehicle_index != nothing
         veh_ego = scene[vehicle_index]
         drawtext(@sprintf("lane offset:       %10.3f", veh_ego.state.posF.t), yₒ + 0*Δy, rendermodel, textparams)
         drawtext(@sprintf("markerdist left:   %10.3f", convert(Float64, get(MARKERDIST_LEFT, overlay.rec, roadway, vehicle_index))), yₒ + 1*Δy, rendermodel, textparams)
