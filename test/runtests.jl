@@ -20,4 +20,8 @@ render([rw, car, car2, "some text"], cam=CarFollowCamera(0))
 
 render([rw, car, car2], overlays=[TextOverlay(text=["overlay"], color=colorant"blue")])
 
-render([rw, car, car2], cam=SceneFollowCamera())
+c = render([rw, car, car2], cam=SceneFollowCamera())
+
+write_to_svg(c, "out.svg")
+
+@test isfile("out.svg")
