@@ -1,43 +1,3 @@
-export
-        RenderModel,
-
-        render,
-        add_instruction!,
-        camera_fit_to_content!,
-        camera_move!,
-        camera_move_pix!,
-        camera_rotate!,
-        camera_setrotation!,
-        camera_zoom!,
-        camera_setzoom!,
-        camera_set_pos!,
-        camera_set_x!,
-        camera_set_y!,
-        camera_reset!,
-        camera_set!,
-        clear_setup!,
-        set_background_color!,
-
-        render_paint,
-        render_text,
-        render_circle,
-        render_arc,
-        render_rect,
-        render_round_rect,
-        render_car,
-        render_vehicle,
-        render_point_trail,
-        render_line,
-        render_closed_line,
-        render_fill_region,
-        render_line_segment,
-        render_dashed_line,
-        render_arrow,
-        render_colormesh,
-
-        get_surface_and_context,
-        grayscale_transform
-
 # config variables
 mutable struct RenderModel
     instruction_set  :: AbstractVector{Tuple}  # set of render instructions (function, array of inputs sans ctx, incameraframe)
@@ -998,10 +958,4 @@ function Cairo.set_source_rgba(ctx::CairoContext, color₀::Colorant, color₁::
     b = b₀ + (b₁ - b₀)*t
     a = a₀ + (a₁ - a₀)*t
     set_source_rgba(ctx, r, g, b, a)
-end
-
-function get_surface_and_context(canvas_width::Int, canvas_height::Int)
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
-    (s, ctx)
 end

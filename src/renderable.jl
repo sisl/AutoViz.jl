@@ -27,7 +27,7 @@ function render(scene; # iterable of renderable objects
                 cam::Camera=FitToContentCamera(),
                 canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
                 canvas_width::Int=DEFAULT_CANVAS_WIDTH,
-                surface=CairoRGBSurface(canvas_width, canvas_height)
+                surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
                )
 
     ctx = creategc(surface)
@@ -48,7 +48,22 @@ function render(scene; # iterable of renderable objects
     camera_set!(rendermodel, cam, scene, canvas_width, canvas_height)
 
     render(rendermodel, ctx, canvas_width, canvas_height)
+        
     return surface
+end
+
+"""
+    write_to_svg(surface::CairoSurface, filename::AbstractString)
+
+Write a cairo svg surface to a file. The surface object is destroyed after.
+"""
+function write_to_svg(surface::CairoSurface, filename::AbstractString)
+    finish(surface)
+    seek(surface.stream, 0)
+    open(filename, "w") do io
+        write(io, read(surface.stream, String))
+    end
+    return 
 end
 
 function Base.convert(::Type{Renderable}, x::AbstractVector{R}) where R <: Real

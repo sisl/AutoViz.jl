@@ -16,23 +16,25 @@ function render!(rendermodel::RenderModel, roadway::StraightRoadway;
     add_instruction!(rendermodel, render_line, ([p + VecE2(0,  lane_width/2) for p in pts], COLOR_LANE_MARKINGS_WHITE, lane_marking_width))
     return rendermodel
 end
+
 function render(roadway::StraightRoadway;
     canvas_width::Int=DEFAULT_CANVAS_WIDTH,
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel = RenderModel(),
     cam::Camera = FitToContentCamera(),
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     )
 
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
+    ctx = creategc(surface)
     clear_setup!(rendermodel)
-
     render!(rendermodel, roadway)
-
     camera_set!(rendermodel, cam, canvas_width, canvas_height)
+
     render(rendermodel, ctx, canvas_width, canvas_height)
-    return s
+
+    return surface
 end
+
 Base.show(io::IO, ::MIME"image/png", roadway::StraightRoadway) = show(io, MIME"image/png"(), render(roadway))
 
 function render!(
