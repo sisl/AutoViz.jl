@@ -36,7 +36,10 @@ export
     COLOR_LANE_MARKINGS_YELLOW,
     COLOR_CAR_EGO,
     COLOR_CAR_OTHER,
-    MONOKAI
+    MONOKAY,
+    OFFICETHEME,
+    LIGHTTHEME,
+    set_color_theme
 
 include("colorscheme.jl")
 

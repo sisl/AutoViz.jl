@@ -6,7 +6,7 @@ mutable struct RenderModel
     camera_rotation  :: Float64        # [rad]
     background_color :: RGB
 
-    RenderModel() = new(Array{Tuple}(undef, 0), VecE2(0.0,0.0), 1.0, 0.0, RGB(0, 0, 0))
+    RenderModel() = new(Array{Tuple}(undef, 0), VecE2(0.0,0.0), 1.0, 0.0, _colortheme["background"])
 end
 
 Cairo.move_to(ctx::CairoContext, P::VecE2) = move_to(ctx, P.x, P.y)
@@ -489,7 +489,7 @@ function render_dashed_line(
     dash_length_in  :: Real = 1.0,
     dash_spacing_in :: Real = 1.0,
     dash_offset_in  :: Real = 0.0,
-    line_cap :: Integer = Cairo.CAIRO_LINE_CAP_ROUND,
+    line_cap :: Integer = Cairo.CAIRO_LINE_CAP_SQUARE ,
     ) where {T<:Real}
 
     line_width   = user_to_device_distance!(ctx, [line_width_in,  0])[1]
@@ -852,7 +852,9 @@ end
 function render(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
 
     # fill with background color
-    set_source_rgba( ctx, rendermodel.background_color)
+    bgc = rendermodel.background_color
+    r,g,b,a = red(bgc), green(bgc), blue(bgc), alpha(bgc)
+    set_source_rgba(ctx, a,r,g,b)
     paint(ctx)
 
     # render text if no other instructions

@@ -1,7 +1,7 @@
 function render!(
     rendermodel::RenderModel,
     scene::EntityFrame{S,D,I};
-    car_color::Colorant=COLOR_CAR_OTHER, # default color
+    car_color::Colorant=_colortheme["COLOR_CAR_OTHER"], # default color
     car_colors::Dict{I,Colorant}=Dict{I,Colorant}(), #  id -> color
     ) where {S,D,I}
 

@@ -1,7 +1,7 @@
 ## 1D roadways
 
 function render!(rendermodel::RenderModel, roadway::StraightRoadway;
-    color_asphalt::Colorant=COLOR_ASPHALT,
+    color_asphalt::Colorant=_colortheme["COLOR_ASPHALT"],
     lane_width::Float64 = DEFAULT_LANE_WIDTH,
     extra_length::Float64 = 50.0, # [m]
     lane_marking_width::Float64 = 0.15, # [m]
@@ -12,8 +12,8 @@ function render!(rendermodel::RenderModel, roadway::StraightRoadway;
     pts[2] = VecE2( extra_length + roadway.length, 0.)
 
     add_instruction!(rendermodel, render_line, (pts, color_asphalt, lane_width))
-    add_instruction!(rendermodel, render_line, ([p + VecE2(0, -lane_width/2) for p in pts], COLOR_LANE_MARKINGS_WHITE, lane_marking_width))
-    add_instruction!(rendermodel, render_line, ([p + VecE2(0,  lane_width/2) for p in pts], COLOR_LANE_MARKINGS_WHITE, lane_marking_width))
+    add_instruction!(rendermodel, render_line, ([p + VecE2(0, -lane_width/2) for p in pts], _colortheme["COLOR_LANE_MARKINGS_WHITE"], lane_marking_width))
+    add_instruction!(rendermodel, render_line, ([p + VecE2(0,  lane_width/2) for p in pts], _colortheme["COLOR_LANE_MARKINGS_WHITE"], lane_marking_width))
     return rendermodel
 end
 
@@ -47,7 +47,7 @@ function render!(
     lane_dash_offset    :: Real=0.00  # [m]
     )
 
-    marker_color = boundary.color == :yellow ? COLOR_LANE_MARKINGS_YELLOW : COLOR_LANE_MARKINGS_WHITE
+    marker_color = boundary.color == :yellow ? _colortheme["COLOR_LANE_MARKINGS_YELLOW"] : _colortheme["COLOR_LANE_MARKINGS_WHITE"]
     if boundary.style == :broken
         add_instruction!(rendermodel, render_dashed_line, (pts, marker_color, lane_marking_width, lane_dash_len, lane_dash_spacing, lane_dash_offset))
     else
@@ -57,7 +57,7 @@ function render!(
 end
 
 function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
-    color_asphalt       :: Colorant=COLOR_ASPHALT,
+    color_asphalt       :: Colorant=_colortheme["COLOR_ASPHALT"],
     )
 
     n = length(lane.curve)
@@ -77,10 +77,10 @@ function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
 end
 
 function render!(rendermodel::RenderModel, roadway::Roadway;
-    color_asphalt       :: Colorant=COLOR_ASPHALT,
+    color_asphalt       :: Colorant=_colortheme["COLOR_ASPHALT"],
     lane_marking_width  :: Real=0.15, # [m]
-    lane_dash_len       :: Real=0.91, # [m]
-    lane_dash_spacing   :: Real=2.74, # [m]
+    lane_dash_len       :: Real=1.0, # [m]
+    lane_dash_spacing   :: Real=2.0, # [m]
     lane_dash_offset    :: Real=0.00  # [m]
     )
 
