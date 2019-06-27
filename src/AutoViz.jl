@@ -7,6 +7,8 @@ using Parameters
 using StaticArrays
 using AutomotiveDrivingModels
 using Printf
+using LightXML
+using Rsvg
 
 @reexport using Colors
 @reexport using Cairo
@@ -20,6 +22,13 @@ export
 
 const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
+
+global _rendermode = :fancy
+
+function set_render_mode(m::Symbol)
+    global _rendermode
+    _rendermode = m
+end
 
 export
     COLOR_ASPHALT,
@@ -68,9 +77,12 @@ export
         render_dashed_line,
         render_arrow,
         render_colormesh,
-        grayscale_transform
+        grayscale_transform,
+        render_fancy_car,
+        render_fancy_pedestrian
 
 include("rendermodels.jl")
+include("fancy_render.jl")
 
 # Cameras
 export

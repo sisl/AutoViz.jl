@@ -5,26 +5,32 @@ function render!(
     )
 
     s = veh.state.s
-    add_instruction!(rendermodel, render_vehicle, (s, 0.0, 0.0, veh.def.length, veh.def.width, color))
+
+    add_instruction!(rendermodel, renderfun(veh), (s, 0.0, 0.0, veh.def.length, veh.def.width, color))
     return rendermodel
 end
 
 function render!(
     rendermodel::RenderModel,
-    veh::Vehicle,
+    veh::Entity{VehicleState,D,I},
     color::Colorant=RGB(rand(), rand(), rand())
-    )
+    ) where {D<:AbstractAgentDefinition, I}
 
     p = veh.state.posG
-    add_instruction!(rendermodel, render_vehicle, (p.x, p.y, p.θ, veh.def.length, veh.def.width, color))
+    l, w = length(veh.def), AutomotiveDrivingModels.width(veh.def)
+    add_instruction!(rendermodel, renderfun(veh), (p.x, p.y, p.θ, l, w, color))
     return rendermodel
 end
-function render!(
-    rendermodel::RenderModel,
-    veh::Entity{VehicleState, BicycleModel, Int},
-    color::Colorant=RGB(rand(), rand(), rand())
-    )
 
-    veh2 = Vehicle(veh.state, veh.def.def, veh.id)
-    render!(rendermodel, veh2, color)
+"""
+    renderfun(veh::Entity{S,D,I}) where {S,D,I}
+decides which rendering function to use based on the class of veh and AutoViz RENDER_MODE
+"""
+function renderfun(veh::Entity{S,D,I}) where {S,D,I}
+    if _rendermode == :fancy && class(veh.def) == AgentClass.PEDESTRIAN
+        return render_fancy_pedestrian
+    elseif _rendermode == :fancy
+        return render_fancy_car
+    end
+    return render_vehicle
 end
