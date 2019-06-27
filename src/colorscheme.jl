@@ -37,7 +37,7 @@ const OFFICETHEME = Dict(
 
 
 const LIGHTTHEME = Dict(
-            "COLOR_ASPHALT"              => colorant"#FFFFFFFF",
+            "COLOR_ASPHALT"              => colorant"transparent",
             "COLOR_LANE_MARKINGS_WHITE"  => colorant"black",
             "COLOR_LANE_MARKINGS_YELLOW" => colorant"0xFFEF00FF",
             "COLOR_CAR_EGO"              => colorant"#0090bc",
