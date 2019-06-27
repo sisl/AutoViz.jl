@@ -8,7 +8,7 @@ using AutomotiveDrivingModels
 
 @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "tutorial.ipynb"))
 @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "overlay_tutorial.ipynb"))
-@nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "docs", "AutoViz.ipynb"))
+@nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "AutoViz.ipynb"))
 
 rw = gen_straight_roadway(3, 100.0)
 car = ArrowCar(0.0, 0.0, 0.0, id=1)
