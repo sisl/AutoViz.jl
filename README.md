@@ -87,11 +87,23 @@ The following additional keyword arguments will accepted by `render()`:
 
 ## Saving images
 
-Png images can be saved with `write_to_png(render(scene), "filename.png")`. Gif animations may be created with e.g. [Reel.jl](https://github.com/shashi/Reel.jl).
+Png images can be saved with `write_to_png(render(scene), "filename.png")` or `write_to_svg(render(scene), "filename.svg")`.
+ Gif animations may be created with e.g. [Reel.jl](https://github.com/shashi/Reel.jl).
 
 ## `RenderModel`s
 
 The mid-level interface for this package (which is what you will use when you write `render!()` for your types or when you write an overlay) revolves around adding instructions to a `RenderModel`. Each instruction consists of a function and a tuple of arguments for the function. This is not documented in this readme, but it is fairly easy to figure out by reading `rendermodels.jl`, `overlays.jl`, and `arrowcar.jl`.
 
-## Installation
-`julia> Pkg.add(PackageSpec(url="https://github.com/sisl/AutoViz.jl.git"))`
+## Customization
+
+AutoViz.jl has two display mode: a "fancy" mode (default) that uses the svg representations in `icons/` to display cars and pedestrian, and a more basic mode where cars are rendered as rounded rectangles. To turn-off the fancy mode you can run:
+```julia
+AutoViz.set_render_mode(:basic) # set to :fancy for fancy mode
+```
+
+In addition you can also change the color theme. Three color themes are provided: `MONOKAY` (default), `OFFICETHEME`, `LIGHTTHEME`. You can change the color theme by running:
+```julia
+using AutoViz
+set_color_theme(LIGHTTHEME)
+```
+You can also define your own color theme using a dictionary. Look at the example in `src/colorscheme.jl` to have the correct key names.

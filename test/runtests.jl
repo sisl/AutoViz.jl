@@ -56,3 +56,28 @@ end
     render([roadway, veh1, veh2, veh3])
 end
 
+@testset "color theme" begin
+    AutoViz.set_color_theme(OFFICETHEME)
+    @test AutoViz._colortheme == OFFICETHEME
+
+    roadway = gen_stadium_roadway(4)
+    vehstate = VehicleState(VecSE2(0.0, 0.0, 0.0), roadway, 0.0)
+
+    def1 = VehicleDef()
+    def2 = BicycleModel(def1)
+    def3 = VehicleDef(AgentClass.PEDESTRIAN, 1.0, 1.0)
+
+    veh1 = Entity(vehstate, def1, 1)
+    veh2 = Entity(vehstate, def2, 2)
+    veh3 = Entity(vehstate, def3, 3)
+
+    render([roadway, veh1, veh2, veh3])
+
+    AutoViz.set_color_theme(LIGHTTHEME)
+    @test AutoViz._colortheme == LIGHTTHEME
+
+    render([roadway, veh1, veh2, veh3])
+
+    AutoViz.set_color_theme(MONOKAY)
+    @test AutoViz._colortheme == MONOKAY
+end
