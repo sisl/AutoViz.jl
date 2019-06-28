@@ -5,9 +5,9 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(),
+    car_colors::Dict{I,C}=Dict{I,Colorant}(),
     filename::Union{Nothing, AbstractString} = nothing
-    ) where {S,D,I,O<:SceneOverlay,R}
+    ) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
 
     mktemp() do tmpdir, stream
         s = CairoSVGSurface(stream, canvas_width, canvas_height)

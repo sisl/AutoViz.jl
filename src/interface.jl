@@ -2,8 +2,8 @@ function render!(
     rendermodel::RenderModel,
     scene::EntityFrame{S,D,I};
     car_color::Colorant=_colortheme["COLOR_CAR_OTHER"], # default color
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(), #  id -> color
-    ) where {S,D,I}
+    car_colors::Dict{I,C}=Dict{I,Colorant}(), #  id -> color
+    ) where {S,D,I,C<:Colorant}
 
     for veh in scene
         render!(rendermodel, veh, get(car_colors, veh.id, car_color))
@@ -31,8 +31,8 @@ end
 function render(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(),
-    ) where {S,D,I,R}
+    car_colors::Dict{I,C}=Dict{I,Colorant}(),
+    ) where {S,D,I,R,C<:Colorant}
 
     canvas_width = floor(Int, Cairo.width(ctx))
     canvas_height = floor(Int, Cairo.height(ctx))
@@ -52,9 +52,9 @@ function render(scene::EntityFrame{S,D,I}, roadway::R;
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(), # id
+    car_colors::Dict{I,C}=Dict{I,Colorant}(), # id
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-    ) where {S,D,I,R}
+    ) where {S,D,I,R, C<:Colorant}
 
     ctx = creategc(surface)
     render(ctx, scene, roadway, rendermodel=rendermodel, cam=cam, car_colors=car_colors)

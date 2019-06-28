@@ -1,10 +1,3 @@
-const COLOR_ASPHALT       = colorant"0x708090FF"
-const COLOR_LANE_MARKINGS_WHITE = colorant"0xDFDFDFFF"
-const COLOR_LANE_MARKINGS_YELLOW = colorant"0xFFEF00FF"
-const COLOR_CAR_EGO       = colorant"0x00FFFFFF" # bluish
-const COLOR_CAR_OTHER     = colorant"0xFF007FFF" # reddish
-const COLOR_ROAD_BOUNDARIES = colorant"black"
-
 const MONOKAY = Dict(
             "COLOR_ASPHALT"              => colorant"0x708090FF",
             "COLOR_LANE_MARKINGS_WHITE"  => colorant"0xDFDFDFFF",
@@ -13,7 +6,7 @@ const MONOKAY = Dict(
             "COLOR_CAR_OTHER"            => colorant"0xFF007FFF", 
             "COLOR_ROAD_BOUNDARIES"      => colorant"white",
             "foreground" => colorant"0xCFBFADFF",
-            "background" => colorant"0x272822FF",
+            "background" => colorant"black",
             "color1"     => colorant"0x52E3F6FF", # light blue
             "color2"     => colorant"0xA7EC21FF", # light green
             "color3"     => colorant"0xFF007FFF", # red
@@ -50,7 +43,6 @@ const LIGHTTHEME = Dict(
             "color3"     => colorant"#ce0300", # red
     )
 
-
 global _colortheme = MONOKAY
 
 """ 
@@ -61,6 +53,13 @@ function set_color_theme(colortheme)
     global _colortheme
     _colortheme = colortheme
 end
+
+COLOR_ASPHALT       = _colortheme["COLOR_ASPHALT"]
+COLOR_LANE_MARKINGS_WHITE = _colortheme["COLOR_LANE_MARKINGS_WHITE"]
+COLOR_LANE_MARKINGS_YELLOW = _colortheme["COLOR_LANE_MARKINGS_YELLOW"]
+COLOR_CAR_EGO       = _colortheme["COLOR_CAR_EGO"]
+COLOR_CAR_OTHER     = _colortheme["COLOR_CAR_OTHER"]
+
 
 function Vec.lerp(a::Colorant, b::Colorant, t::Real)
 
