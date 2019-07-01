@@ -6,31 +6,24 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
     car_colors::Dict{I,C}=Dict{I,Colorant}(),
-    filename::Union{Nothing, AbstractString} = nothing
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     ) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
 
-    mktemp() do tmpdir, stream
-        s = CairoSVGSurface(stream, canvas_width, canvas_height)
-        ctx = creategc(s)
-        clear_setup!(rendermodel)
 
-        render!(rendermodel, roadway)
-        render!(rendermodel, scene, car_colors=car_colors)
+    ctx = creategc(surface)
+    clear_setup!(rendermodel)
 
-        for overlay in overlays
-            render!(rendermodel, overlay, scene, roadway)
-        end
+    render!(rendermodel, roadway)
+    render!(rendermodel, scene, car_colors=car_colors)
 
-        camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
-
-        render(rendermodel, ctx, canvas_width, canvas_height)
-        display(s)
-        finish(s)
-        if filename != nothing
-            close(stream)
-            cp(tmpdir, filename, force=true)
-        end
+    for overlay in overlays
+        render!(rendermodel, overlay, scene, roadway)
     end
+
+    camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
+
+    render(rendermodel, ctx, canvas_width, canvas_height)
+    return surface
 end
 
 mutable struct TextParams
