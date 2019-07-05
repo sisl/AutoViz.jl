@@ -1,7 +1,7 @@
 """
     ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
-    ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0)
-    ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0)
+    ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0)
+    ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0)
 
 A renderable type to represent a rectangular car with an arrow in the middle. 
 """
@@ -10,13 +10,13 @@ A renderable type to represent a rectangular car with an arrow in the middle.
     angle::Float64 = 0.0
     length::Float64 = 4.8
     width::Float64 = 1.8
-    color::C       = COLOR_CAR_OTHER
+    color::C       = _colortheme["COLOR_CAR_OTHER"]
     text::String   = "" # some debugging text to print by the car
     id::Int        = 0
 end
 
-ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
-ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=COLOR_CAR_OTHER, text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
+ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
+ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
 
 function render!(rm::RenderModel, c::ArrowCar)
     x = c.pos[1]

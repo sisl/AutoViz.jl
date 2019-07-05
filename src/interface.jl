@@ -1,9 +1,9 @@
 function render!(
     rendermodel::RenderModel,
     scene::EntityFrame{S,D,I};
-    car_color::Colorant=COLOR_CAR_OTHER, # default color
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(), #  id -> color
-    ) where {S,D,I}
+    car_color::Colorant=_colortheme["COLOR_CAR_OTHER"], # default color
+    car_colors::Dict{I,C}=Dict{I,Colorant}(), #  id -> color
+    ) where {S,D,I,C<:Colorant}
 
     for veh in scene
         render!(rendermodel, veh, get(car_colors, veh.id, car_color))
@@ -17,24 +17,22 @@ function render(roadway::R;
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel = RenderModel(),
     cam::Camera = FitToContentCamera(),
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     ) where {R<:Roadway}
 
-    s = CairoRGBSurface(canvas_width, canvas_height)
-    ctx = creategc(s)
+    ctx = creategc(surface)
     clear_setup!(rendermodel)
-
     render!(rendermodel, roadway)
-
     camera_set!(rendermodel, cam, canvas_width, canvas_height)
     render(rendermodel, ctx, canvas_width, canvas_height)
-    return s
+    return surface
 end
 
 function render(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(),
-    ) where {S,D,I,R}
+    car_colors::Dict{I,C}=Dict{I,Colorant}(),
+    ) where {S,D,I,R,C<:Colorant}
 
     canvas_width = floor(Int, Cairo.width(ctx))
     canvas_height = floor(Int, Cairo.height(ctx))
@@ -54,12 +52,14 @@ function render(scene::EntityFrame{S,D,I}, roadway::R;
     canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{I,Colorant}=Dict{I,Colorant}(), # id
-    ) where {S,D,I,R}
+    car_colors::Dict{I,C}=Dict{I,Colorant}(), # id
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+    ) where {S,D,I,R, C<:Colorant}
 
-    s, ctx = get_surface_and_context(canvas_width, canvas_height)
+    ctx = creategc(surface)
     render(ctx, scene, roadway, rendermodel=rendermodel, cam=cam, car_colors=car_colors)
-    s
+
+    return surface
 end
 
 function get_pastel_car_colors(scene::EntityFrame{S,D,I}; saturation::Float64=0.85, value::Float64=0.85) where {S,D,I}
