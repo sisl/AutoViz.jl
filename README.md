@@ -12,7 +12,15 @@ AutoViz is undergoing significant changes. If you are looking for the version be
 
 ## Installation 
 
+In julia 1.1+, the preferred way is to add the SISL registry and install AutoViz as follows:
+
 ```julia 
+] registry add https://github.com/sisl/Registry
+] add AutoViz
+```
+
+You can also manually add all the dependencies:
+```julia
 using Pkg
 Pkg.add(PackageSpec(url="https://github.com/sisl/Vec.jl"))
 Pkg.add(PackageSpec(url="https://github.com/sisl/Records.jl"))
