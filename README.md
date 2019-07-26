@@ -41,7 +41,7 @@ where scene is an iterable of renderable objects including cars and roadways.
 Example:
 ```julia
 roadway = gen_straight_roadway(3, 100.0)
-car = ArrowCar([0.0, 0.0], 0.0, color=colorant"blue") # [north, east], angle
+car = ArrowCar([50.0, 0.0], 0.0, color=colorant"blue") # [north, east], angle
 render([roadway, car, "some text"])
 ```
 

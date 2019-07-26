@@ -6,7 +6,7 @@ function render!(rm::RenderModel, t::String)
     y = 1.5*font_size
     y_jump = 1.5 * font_size
     for line in split(t, '\n')
-        add_instruction!(rm, render_text, (line, x, y, font_size, colorant"white"), incameraframe=false)
+        add_instruction!(rm, render_text, (line, x, y, font_size, colorant"gray75"), incameraframe=false)
         y += y_jump
     end
     return rm
