@@ -80,7 +80,7 @@ function render_fancy_pedestrian(
 
     translate(ctx, x, y)
     scale(ctx, xdir, ydir)
-    rotate(ctx, yaw - pi/2)
+    rotate(ctx, yaw + pi/2)
     translate(ctx, -d.width/2, -d.height/2)
 
     Rsvg.handle_render_cairo(ctx, r)
