@@ -135,12 +135,14 @@ Display the ID on top of each entity in a scene.
 @with_kw mutable struct IDOverlay <: SceneOverlay
     color::Colorant = colorant"white"
     font_size::Int = 15
+    x_off::Float64 = 0.
+    y_off::Float64 = 0.
 end
 
 function AutoViz.render!(rendermodel::RenderModel, overlay::IDOverlay, scene::Frame{Entity{S,D,I}}, env::E) where {S,D,I,E}
     font_size = overlay.font_size
     for veh in scene
-        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x, veh.state.posG.y, font_size, overlay.color), incameraframe=true)
+        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x + overlay.x_off, veh.state.posG.y + overlay.y_off, font_size, overlay.color), incameraframe=true)
     end
     return rendermodel
 end
