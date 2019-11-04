@@ -114,7 +114,7 @@ The fill proportion is set using `val`, it should be a number between 0 and 1. I
     label_pos::VecSE2{Float64} = pos + VecSE2(0., -height/2)
 end
 
-function AutoViz.render!(rendermodel::RenderModel, overlay::HistogramOverlay, scene::Scene, roadway::R) where R
+function AutoViz.render!(rendermodel::RenderModel, overlay::HistogramOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {R,S,D,I}
     # render value 
     add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.val*overlay.height,overlay.fill_color, true, false), incameraframe=overlay.incameraframe)
     # render histogram outline 
@@ -137,7 +137,7 @@ Display the ID on top of each entity in a scene.
     font_size::Int = 15
 end
 
-function AutoViz.render!(rendermodel::RenderModel, overlay::IDOverlay, scene::Scene, env::E) where E
+function AutoViz.render!(rendermodel::RenderModel, overlay::IDOverlay, scene::Frame{Entity{S,D,I}}, env::E) where {S,D,I,E}
     font_size = overlay.font_size
     for veh in scene
         add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x, veh.state.posG.y, font_size, overlay.color), incameraframe=true)
@@ -159,7 +159,7 @@ mutable struct LineToCenterlineOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Scene, roadway::Any)
+function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Frame{Entity{S,D,I}}, roadway::Any) where {S,D,I}
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -191,7 +191,7 @@ mutable struct LineToFrontOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -230,7 +230,7 @@ fields:
     size::Float64 = 0.3
 end
 
-function AutoViz.render!(rendermodel::RenderModel, overlay::BlinkerOverlay, scene::Scene, roadway::R) where R
+function AutoViz.render!(rendermodel::RenderModel, overlay::BlinkerOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {S,D,I,R}
     if !overlay.on
         return nothing 
     end
@@ -256,7 +256,7 @@ mutable struct CarFollowingStatsOverlay <: SceneOverlay
         new(target_id, verbosity, color,font_size)
     end
 end
-function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     font_size = overlay.font_size
     text_y = font_size
@@ -330,7 +330,7 @@ mutable struct NeighborsOverlay <: SceneOverlay
         new(target_id, color_L, color_M, color_R, line_width, textparams)
     end
 end
-function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     textparams = overlay.textparams
     yₒ = textparams.y_start
@@ -415,7 +415,7 @@ mutable struct MarkerDistOverlay <: SceneOverlay
     end
 end
 
-function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Scene, roadway::Roadway)
+function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     textparams = overlay.textparams
     yₒ = textparams.y_start
@@ -455,7 +455,7 @@ end
 #         retval
 #     end
 # end
-# function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Scene, roadway::Roadway)
+# function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
 #     rec = overlay.rec
 #     update!(rec, scene)
@@ -617,7 +617,7 @@ end
 
 #     CollisionOverlay(target_id::Int=-1; color::Colorant=RGBA(1.0,0.0,0.0,0.5)) = new(target_id, color, CPAMemory())
 # end
-# function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Scene, roadway::Roadway)
+# function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
 #     if overlay.target_id < 0
 #         target_inds = 1:length(scene)
