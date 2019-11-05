@@ -32,6 +32,13 @@ camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFram
 # method for new interface
 camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
+"""
+Camera which follows the vehicle with ID `targetid`.
+By default, the target vehicle is tracked in x and y direction.
+Tracking in either direction can be disabled by setting the 
+`follow_x` and `follow_y` keywords to false.
+The `zoom` keyword specifies the zoom level in pixels per meter.
+"""
 @with_kw mutable struct CarFollowCamera{I} <: Camera
     targetid::I
     zoom::Float64 = 3.0 # [pix/meter]

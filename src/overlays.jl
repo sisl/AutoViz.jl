@@ -127,10 +127,8 @@ end
     IDOverlay
 
 Display the ID on top of each entity in a scene.
-
-# Fiels
-- `color::Colorant` default white
-- `font_size::Int64` default 15
+The text can be customized with the `color::Colorant` (default=white) and `font_size::Int64` (default=15) keywords.
+The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float64`.
 """
 @with_kw mutable struct IDOverlay <: SceneOverlay
     color::Colorant = colorant"white"
