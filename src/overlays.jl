@@ -128,7 +128,7 @@ end
 
 Display the ID on top of each entity in a scene.
 The text can be customized with the `color::Colorant` (default=white) and `font_size::Int64` (default=15) keywords.
-The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float64`.
+The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float64` (in camera coordinates).
 """
 @with_kw mutable struct IDOverlay <: SceneOverlay
     color::Colorant = colorant"white"

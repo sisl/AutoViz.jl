@@ -36,12 +36,14 @@ camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_wid
 Camera which follows the vehicle with ID `targetid`.
 By default, the target vehicle is tracked in x and y direction.
 Tracking in either direction can be disabled by setting the 
-`follow_x` and `follow_y` keywords to false.
+`follow_x` and `follow_y` keywords to false, in which case the
+position defaults to `pos_default`.
 The `zoom` keyword specifies the zoom level in pixels per meter.
 """
 @with_kw mutable struct CarFollowCamera{I} <: Camera
     targetid::I
     zoom::Float64 = 3.0 # [pix/meter]
+    pos_default::VecE2 = VecE2(0.,0.)
     follow_x::Bool = true
     follow_y::Bool = true
 end
@@ -54,6 +56,8 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::E
     if veh_index != nothing
         if cam.follow_x
             camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
+        else
+            camera_set_pos!(rendermodel, VecE2(cam.pos_default.x, 0.0))
         end
         camera_setzoom!(rendermodel, cam.zoom)
     else
@@ -68,7 +72,10 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::E
     veh_index = findfirst(cam.targetid, scene)
     if veh_index != nothing
         target_pos = scene[veh_index].state.posG
-        camera_pos = VecSE2(cam.follow_x ? target_pos.x : 0., cam.follow_y ? target_pos.y : 0.)
+        camera_pos = VecSE2(
+            cam.follow_x ? target_pos.x : cam.pos_default.x,
+            cam.follow_y ? target_pos.y : cam.pos_default.y
+        )
         camera_set_pos!(rendermodel, camera_pos)
         camera_setzoom!(rendermodel, cam.zoom)
     else
