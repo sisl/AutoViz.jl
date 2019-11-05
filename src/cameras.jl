@@ -32,17 +32,33 @@ camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFram
 # method for new interface
 camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
-mutable struct CarFollowCamera{I} <: Camera
+"""
+Camera which follows the vehicle with ID `targetid`.
+By default, the target vehicle is tracked in x and y direction.
+Tracking in either direction can be disabled by setting the 
+`follow_x` and `follow_y` keywords to false, in which case the
+position defaults to `pos_default`.
+The `zoom` keyword specifies the zoom level in pixels per meter.
+"""
+@with_kw mutable struct CarFollowCamera{I} <: Camera
     targetid::I
-    zoom::Float64 # [pix/meter]
+    zoom::Float64 = 3.0 # [pix/meter]
+    pos_default::VecE2 = VecE2(0.,0.)
+    follow_x::Bool = true
+    follow_y::Bool = true
 end
-CarFollowCamera(targetid::I) where {I} = CarFollowCamera{I}(targetid, 3.0)
+CarFollowCamera(targetid::I, zoom::Float64=3.0) where {I} = CarFollowCamera{I}(targetid=targetid, zoom=zoom)
+CarFollowCamera{I}(targetid::I, zoom::Float64=3.0) where {I} = CarFollowCamera{I}(targetid=targetid, zoom=zoom)
 
 function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
     veh_index = findfirst(cam.targetid, scene)
     if veh_index != nothing
-        camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
+        if cam.follow_x
+            camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
+        else
+            camera_set_pos!(rendermodel, VecE2(cam.pos_default.x, 0.0))
+        end
         camera_setzoom!(rendermodel, cam.zoom)
     else
         add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find id $(cam.targetid)", 10, 15, 15, colorant"white"), incameraframe=false)
@@ -55,7 +71,12 @@ function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::E
 
     veh_index = findfirst(cam.targetid, scene)
     if veh_index != nothing
-        camera_set_pos!(rendermodel, scene[veh_index].state.posG)
+        target_pos = scene[veh_index].state.posG
+        camera_pos = VecSE2(
+            cam.follow_x ? target_pos.x : cam.pos_default.x,
+            cam.follow_y ? target_pos.y : cam.pos_default.y
+        )
+        camera_set_pos!(rendermodel, camera_pos)
         camera_setzoom!(rendermodel, cam.zoom)
     else
         add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find id $(cam.targetid)", 10, 15, 15, colorant"white"), incameraframe=false)

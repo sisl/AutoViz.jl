@@ -127,20 +127,20 @@ end
     IDOverlay
 
 Display the ID on top of each entity in a scene.
-
-# Fiels
-- `color::Colorant` default white
-- `font_size::Int64` default 15
+The text can be customized with the `color::Colorant` (default=white) and `font_size::Int64` (default=15) keywords.
+The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float64` (in camera coordinates).
 """
 @with_kw mutable struct IDOverlay <: SceneOverlay
     color::Colorant = colorant"white"
     font_size::Int = 15
+    x_off::Float64 = 0.
+    y_off::Float64 = 0.
 end
 
 function AutoViz.render!(rendermodel::RenderModel, overlay::IDOverlay, scene::Frame{Entity{S,D,I}}, env::E) where {S,D,I,E}
     font_size = overlay.font_size
     for veh in scene
-        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x, veh.state.posG.y, font_size, overlay.color), incameraframe=true)
+        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x + overlay.x_off, veh.state.posG.y + overlay.y_off, font_size, overlay.color), incameraframe=true)
     end
     return rendermodel
 end
