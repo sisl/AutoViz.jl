@@ -11,7 +11,7 @@ using LightXML
 using Rsvg
 
 @reexport using Colors
-@reexport using Cairo
+using Cairo
 
 import Reel
 Reel.set_output_type("gif")
