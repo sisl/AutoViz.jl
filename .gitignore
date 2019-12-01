@@ -2,3 +2,5 @@
 *.jl.mem
 **/.ipynb_checkpoints
 docs/build/
+
+test/*.svg

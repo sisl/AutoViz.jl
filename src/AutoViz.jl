@@ -130,7 +130,8 @@ export  SceneOverlay,
         drawtext,
         LineToCenterlineOverlay,
         LineToFrontOverlay,
-        BlinkerOverlay
+        BlinkerOverlay,
+        RenderableOverlay
 
 
 include("overlays.jl")

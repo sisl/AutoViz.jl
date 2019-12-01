@@ -635,3 +635,24 @@ end
 
 #     rendermodel
 # end
+
+"""
+Decorator which allows to use `SceneOverlay` objects together with the method
+    render([Renderables])
+"""
+struct RenderableOverlay{O,S,D,I} <: Renderable where {O<:SceneOverlay,S,D,I}
+    overlay::O
+    scene::Frame{Entity{S,D,I}}
+    roadway::Roadway
+end
+
+function render!(rm::RenderModel, ro::RenderableOverlay{O,S,D,I}) where {O<:SceneOverlay,S,D,I}
+    render!(rm, ro.overlay, ro.scene, ro.roadway)
+end
+
+function render!(rm::RenderModel, iterable::Union{Array{<:RenderableOverlay},Tuple{<:RenderableOverlay}})
+    for ro in iterable render!(rm, ro) end
+end
+isrenderable(::Type{Array{<:RenderableOverlay}}) = true
+isrenderable(::Type{Tuple{<:RenderableOverlay}}) = true
+
