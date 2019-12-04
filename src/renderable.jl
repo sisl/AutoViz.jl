@@ -1,4 +1,3 @@
-#TODO: Renderable type
 abstract type Renderable end
 
 """
@@ -19,38 +18,28 @@ isrenderable(t::Type{Roadway}) = true
 
 Render all the items in `scene` to a Cairo surface and return it.
 
-`scene` is simply an iterable object (e.g. a vector) of items that are either directly renderable or renderable by conversion. See the AutoViz README for more details.
-"""
-function render(scene; # iterable of renderable objects
-                overlays=[],
-                rendermodel::RenderModel=RenderModel(),
-                cam::Camera=FitToContentCamera(),
-                canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
-                canvas_width::Int=DEFAULT_CANVAS_WIDTH,
-                surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-               )
-
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-
-    for x in scene
-        if isrenderable(x)
-            render!(rendermodel, x)
-        else
-            render!(rendermodel, convert(Renderable, x))
-        end
-    end
-
-    for o in overlays
-        render!(rendermodel, o, scene)
-    end
-
-    camera_set!(rendermodel, cam, scene, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
-        
-    return surface
-end
+# `scene` is simply an iterable object (e.g. a vector) of items that are either directly renderable or renderable by conversion. See the AutoViz README for more details.
+# """
+# function render(scene; # iterable of renderable objects
+#                 overlays=[],
+#                 rendermodel::RenderModel=RenderModel(),
+#                 cam::Camera=FitToContentCamera(),
+#                 canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
+#                 canvas_width::Int=DEFAULT_CANVAS_WIDTH,
+#                 surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+#                )
+#     ctx = creategc(surface)
+#     clear_setup!(rendermodel)
+#     for x in scene
+#         render!(rendermodel, isrenderable(x) ? x : convert(Renderable, x))
+#     end
+#     for o in overlays
+#         render!(rendermodel, o, scene)
+#     end
+#     camera_set!(rendermodel, cam, scene, canvas_width, canvas_height)
+#     render(rendermodel, ctx, canvas_width, canvas_height)
+#     return surface
+# end
 
 """
     write_to_svg(surface::CairoSurface, filename::AbstractString)

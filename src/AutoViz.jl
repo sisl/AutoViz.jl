@@ -16,12 +16,9 @@ using Rsvg
 import Reel
 Reel.set_output_type("gif")
 
-export
-        DEFAULT_CANVAS_WIDTH,
-        DEFAULT_CANVAS_HEIGHT
-
 const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
+export DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
 
 global _rendermode = :fancy
 
@@ -30,6 +27,7 @@ function set_render_mode(m::Symbol)
     _rendermode = m
 end
 
+include("colorscheme.jl")
 export
     COLOR_ASPHALT,
     COLOR_LANE_MARKINGS_WHITE,
@@ -41,29 +39,25 @@ export
     LIGHTTHEME,
     set_color_theme
 
-include("colorscheme.jl")
-
-# Cairo drawing utilities
+include("rendermodels.jl")
 export
         RenderModel,
-
         render,
         add_instruction!,
         camera_fit_to_content!,
         camera_move!,
         camera_move_pix!,
         camera_rotate!,
-        camera_setrotation!,
         camera_zoom!,
-        camera_setzoom!,
-        camera_set_pos!,
-        camera_set_x!,
-        camera_set_y!,
-        camera_reset!,
-        camera_set!,
-        clear_setup!,
-        set_background_color!,
+        reset_camera!,
+        reset_instructions!,
+        reset_model!,
+        set_camera!,
+        set_background_color!
 
+# Cairo drawing utilities
+include("render_instructions.jl")
+export
         render_paint,
         render_text,
         render_circle,
@@ -84,28 +78,31 @@ export
         render_fancy_car,
         render_fancy_pedestrian
 
-include("rendermodels.jl")
 include("fancy_render.jl")
 
 # Cameras
+include("cameras.jl")
 export
     Camera,
+    update_camera!,
+    TargetFollowCamera,
     StaticCamera,
     FitToContentCamera,
     CarFollowCamera,
     SceneFollowCamera
 
 
-include("cameras.jl")
-
 # main interface
+include("interface.jl")
 export  render!,
         render,
         get_pastel_car_colors
 
-include("interface.jl")
-
 # renderable interface
+include("renderable.jl")
+include("arrowcar.jl")
+include("text.jl")
+
 export  Renderable,
         render,
         isrenderable,
@@ -113,11 +110,8 @@ export  Renderable,
         ArrowCar
 
 
-include("renderable.jl")
-include("arrowcar.jl")
-include("text.jl")
-
 # Overlays
+include("overlays.jl")
 export  SceneOverlay,
         TextOverlay,
         Overwash,
@@ -133,9 +127,6 @@ export  SceneOverlay,
         BlinkerOverlay,
         RenderableOverlay
 
-
-include("overlays.jl")
-
 export PNGFrames,
        SVGFrames
 
@@ -145,6 +136,5 @@ include("reel_drive.jl")
 
 include("roadways.jl")
 include("vehicles.jl")
-
 
 end # module
