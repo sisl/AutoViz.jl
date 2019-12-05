@@ -85,11 +85,12 @@ include("cameras.jl")
 export
     Camera,
     update_camera!,
-    TargetFollowCamera,
     StaticCamera,
-    FitToContentCamera,
-    CarFollowCamera,
-    SceneFollowCamera
+    TargetFollowCamera,
+    ZoomingCamera,
+    ComposedCamera,
+    SceneFollowCamera,
+    FitToContentCamera
 
 
 # main interface
@@ -103,11 +104,15 @@ include("renderable.jl")
 include("arrowcar.jl")
 include("text.jl")
 
-export  Renderable,
-        render,
-        isrenderable,
-        write_to_svg,
-        ArrowCar
+export
+    Renderable,
+    render,
+    isrenderable,
+    write_to_svg,
+    ArrowCar,
+    EntityRectangle,
+    VelocityArrow,
+    FancyCar
 
 
 # Overlays

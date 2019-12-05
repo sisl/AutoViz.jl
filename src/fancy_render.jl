@@ -1,24 +1,5 @@
-
 const CARFILE = joinpath(@__DIR__, "..", "icons", "racing_car_top_view.svg")
 const PEDFILE = joinpath(@__DIR__, "..", "icons", "walking_person.svg")
-const CARDATA = parse_file(CARFILE)
-const PEDDATA = parse_file(PEDFILE)
-
-
-function set_car_color!(color::Colorant, doc::XMLDocument)
-    xroot = root(doc)
-    body = xroot["g"][1]["g"][1]["path"][2]
-    color_code ="#"*hex(color)
-    set_attribute(body, "style", "fill:$color_code;fill-opacity:0.99607843;stroke:none")
-end
-
-function set_ped_color!(color::Colorant, doc::XMLDocument)
-    xroot = root(doc)
-    body = xroot["g"][1]["path"][6]
-    color_code = "#"*hex(color)
-    set_attribute(body, "fill", color_code)
-end
-
 
 function render_fancy_car(
     ctx           :: CairoContext,
@@ -30,17 +11,16 @@ function render_fancy_car(
     color_fill    :: Colorant
     )
 
-    # renders a car from the top view sport car svg
-    # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
+    # # renders a car from the top view sport car svg
+    # # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
 
     save(ctx)
-    cardata = parse_file(CARFILE)
-    set_car_color!(color_fill, cardata)
-
-    r = Rsvg.handle_new_from_data(string(cardata))
-
+    cardata = string(parse_file(CARFILE))
+    cardata = replace(cardata, "#CAAC00"=>"#"*hex(color_fill))
+    r = Rsvg.handle_new_from_data(cardata)
     
     d = Rsvg.handle_get_dimensions(r)
+
     # scaling factor
     xdir, ydir = length/d.width, width/d.height
 
@@ -52,6 +32,7 @@ function render_fancy_car(
     Rsvg.handle_render_cairo(ctx, r)
 
     restore(ctx)
+
 end
 
 function render_fancy_pedestrian(
@@ -67,11 +48,9 @@ function render_fancy_pedestrian(
     # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
 
     save(ctx)
-
-    peddata = parse_file(PEDFILE)
-    set_ped_color!(color_fill, peddata)
-
-    r = Rsvg.handle_new_from_data(string(peddata))
+    peddata = string(parse_file(PEDFILE))
+    peddata = replace(peddata, "#C90000"=>"#"*hex(color_fill))
+    r = Rsvg.handle_new_from_data(peddata)
 
     d = Rsvg.handle_get_dimensions(r)
 

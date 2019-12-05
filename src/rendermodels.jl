@@ -68,6 +68,9 @@ set_camera!(rm::RenderModel, xy::AbstractVec, zoom::Real=rm.camera_zoom) = set_c
 
 function render(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
 
+    # TODO: debug
+    # render_fancy_car(ctx, 400., 400., 0pi, 500., 200., colorant"yellow")
+
     # fill with background color
     bgc = rendermodel.background_color
     r,g,b,a = red(bgc), green(bgc), blue(bgc), alpha(bgc)
@@ -89,6 +92,9 @@ function render(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integ
     Cairo.scale(ctx, rendermodel.camera_zoom, -rendermodel.camera_zoom )               # [pix -> m]
     rotate(ctx, rendermodel.camera_rotation)
     translate(ctx, -rendermodel.camera_center.x, -rendermodel.camera_center.y) # translate to camera location
+
+    # TODO: debug
+    # render_fancy_car(ctx, 0., 0., 0pi, 30., 10., colorant"yellow")
 
     # execute all instructions
     for tup in rendermodel.instruction_set

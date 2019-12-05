@@ -4,6 +4,12 @@ Camera abstract type
 abstract type Camera end
 
 """
+Static  camera, does nothing
+"""
+struct StaticCamera <: Camera end
+update_camera!(::RenderModel, ::StaticCamera, ::Frame) = nothing
+
+"""
 Camera which follows the vehicle with ID `target_id`.
 By default, the target vehicle is tracked in x and y direction.
 Tracking in either direction can be disabled by setting the 
@@ -24,17 +30,57 @@ function update_camera!(rendermodel::RenderModel, camera::TargetFollowCamera{I},
 end
 
 """
+Camera which gradually changes the zoom level of the scene to `zoom_target` with step size `dz`.
+"""
+@with_kw mutable struct ZoomingCamera <: Camera
+    zoom_target::Float64 = 20.
+    dz::Float64 = .5
+end
+
+function update_camera!(rendermodel::RenderModel, camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
+    zt, zc = camera.zoom_target, rendermodel.camera_zoom
+    if zt < zc  # zooming in 
+        set_camera!(rendermodel, zoom=max(zt, zc-camera.dz))
+    elseif zt > zc  # zooming out
+        set_camera!(rendermodel, zoom=min(zt, zc+camera.dz))
+    end
+end
+
+"""
     SceneFollowCamera{R<:Real}
 
 Camera centered over all vehicles, does not change the zoom level.
 """
 struct SceneFollowCamera <: Camera end
-
 function update_camera!(rendermodel::RenderModel, camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
     C = sum([posg(veh.state)[1:2] for veh in scene])/length(scene)  # center of mass
     set_camera!(rendermodel, x=C[1], y=C[2])
 end
 
+
+"""
+Composition of several cameras. The `update_camera` actions of the individual cameras are applied in the order in which they are saved in the `cameras` array.
+
+Example Usage
+
+    cam = ComposedCamera(cameras=[SceneFollowCamera(), ZoomingCamera()])
+"""
+@with_kw mutable struct ComposedCamera <: Camera
+    cameras::Array{Camera}
+end
+
+function update_camera!(rendermodel::RenderModel, camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
+    for cam in camera.cameras
+        update_camera!(rendermodel, cam, scene)
+    end
+end
+
+
+"""
+Positions the camera so that all content is visible within its field of view
+This will always set the camera rotation to zero
+An extra border can be added as well
+"""
 @with_kw mutable struct FitToContentCamera <: Camera
     canvas_width::Int64 = DEFAULT_CANVAS_WIDTH
     canvas_height::Int64 = DEFAULT_CANVAS_HEIGHT
@@ -45,11 +91,6 @@ function update_camera!(rendermodel::RenderModel, cam::FitToContentCamera, scene
     rendermodel
 end
 
-"""
-Positions the camera so that all content is visible within its field of view
-This will always set the camera rotation to zero
-An extra border can be added as well
-"""
 function camera_fit_to_content!(
     rendermodel    :: RenderModel,
     canvas_width   :: Integer,
