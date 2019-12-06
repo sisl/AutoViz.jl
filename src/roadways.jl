@@ -1,6 +1,6 @@
 ## 1D roadways
 
-function render!(rendermodel::RenderModel, roadway::StraightRoadway;
+function add_renderable!(rendermodel::RenderModel, roadway::StraightRoadway;
     color_asphalt::Colorant=_colortheme["COLOR_ASPHALT"],
     lane_width::Float64 = DEFAULT_LANE_WIDTH,
     extra_length::Float64 = 50.0, # [m]
@@ -17,27 +17,7 @@ function render!(rendermodel::RenderModel, roadway::StraightRoadway;
     return rendermodel
 end
 
-function render(roadway::StraightRoadway;
-    canvas_width::Int=DEFAULT_CANVAS_WIDTH,
-    canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
-    rendermodel = RenderModel(),
-    cam::Camera = FitToContentCamera(),
-    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-    )
-
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-    render!(rendermodel, roadway)
-    camera_set!(rendermodel, cam, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
-
-    return surface
-end
-
-Base.show(io::IO, ::MIME"image/png", roadway::StraightRoadway) = show(io, MIME"image/png"(), render(roadway))
-
-function render!(
+function add_renderable!(
     rendermodel::RenderModel,
     boundary::LaneBoundary,
     pts::AbstractArray{Float64},
@@ -56,7 +36,7 @@ function render!(
     return rendermodel
 end
 
-function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
+function add_renderable!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     color_asphalt       :: Colorant=_colortheme["COLOR_ASPHALT"],
     )
 
@@ -76,7 +56,7 @@ function render!(rendermodel::RenderModel, lane::Lane, roadway::Roadway;
     return rendermodel
 end
 
-function render!(rendermodel::RenderModel, roadway::Roadway;
+function add_renderable!(rendermodel::RenderModel, roadway::Roadway;
     color_asphalt       :: Colorant=_colortheme["COLOR_ASPHALT"],
     lane_marking_width  :: Real=0.15, # [m]
     lane_dash_len       :: Real=1.0, # [m]
@@ -170,7 +150,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
                 pts_left = hcat(pts_left, [p_left.x, p_left.y])
             end
 
-            render!(rendermodel, lane.boundary_left, pts_left, lane_marking_width, lane_dash_len, lane_dash_spacing, lane_dash_offset)
+            add_renderable!(rendermodel, lane.boundary_left, pts_left, lane_marking_width, lane_dash_len, lane_dash_spacing, lane_dash_offset)
 
             # only render the right lane marking if this is the first lane
             if lane.tag.lane == 1
@@ -190,7 +170,7 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
                     pts_right = hcat(pts_right, [p_right.x, p_right.y])
                 end
 
-                render!(rendermodel, lane.boundary_right, pts_right, lane_marking_width, lane_dash_len, lane_dash_spacing, lane_dash_offset)
+                add_renderable!(rendermodel, lane.boundary_right, pts_right, lane_marking_width, lane_dash_len, lane_dash_spacing, lane_dash_offset)
             end
         end
     end
@@ -199,6 +179,6 @@ function render!(rendermodel::RenderModel, roadway::Roadway;
 end
 
 # for case when there is no roadway
-render!(rendermodel::RenderModel, roadway::Nothing) = rendermodel
+add_renderable!(rendermodel::RenderModel, roadway::Nothing) = rendermodel
 
 Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))

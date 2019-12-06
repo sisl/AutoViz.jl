@@ -66,7 +66,32 @@ function set_camera!(
 end
 set_camera!(rm::RenderModel, xy::AbstractVec, zoom::Real=rm.camera_zoom) = set_camera!(rm; x=xy[1], y=xy[2], zoom=zoom)
 
-function render(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
+
+"""
+Draw all `renderables` to a `surface` using the parameters specified in `rendermodel`.
+The canvas is initialized to a `CairoSurface` of dimensions `canvas_width`, `canvas_height`.
+All renderables must inherit from `Renderable` and implement the `add_renderable!` function
+which adds instructions for rendering to the render model.
+
+You should call `update_camera!` before calling `render` to adapt the camera to the new scene.
+The instructions of the `rendermodel` are reset automatically at the beginning of this function.
+"""
+function render!(rendermodel::RenderModel, renderables::AbstractVector;  # TODO: specify type ::Vector{<:Renderable};
+    canvas_width::Int=AutoViz.DEFAULT_CANVAS_WIDTH,
+    canvas_height::Int=AutoViz.DEFAULT_CANVAS_HEIGHT,
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+)
+    reset_instructions!(rendermodel)
+    ctx = creategc(surface)
+    for renderable in renderables
+        add_renderable!(rendermodel, renderable)
+    end
+    render_to_canvas(rendermodel, ctx, canvas_width, canvas_height)
+    return surface
+end
+
+
+function render_to_canvas(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
 
     # TODO: debug
     # render_fancy_car(ctx, 400., 400., 0pi, 500., 200., colorant"yellow")

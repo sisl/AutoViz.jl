@@ -42,7 +42,7 @@ export
 include("rendermodels.jl")
 export
         RenderModel,
-        render,
+        render_to_canvas,
         add_instruction!,
         camera_fit_to_content!,
         camera_move!,
@@ -93,20 +93,15 @@ export
     FitToContentCamera
 
 
-# main interface
-include("interface.jl")
-export  render!,
-        render,
-        get_pastel_car_colors
-
 # renderable interface
 include("renderable.jl")
-include("arrowcar.jl")
 include("text.jl")
 
 export
     Renderable,
     render,
+    render!,
+    add_renderable!,
     isrenderable,
     write_to_svg,
     ArrowCar,
@@ -138,8 +133,10 @@ export PNGFrames,
 include("reel_drive.jl")
 
 # Convenient implementation for roadway and vehicle rendering
-
 include("roadways.jl")
-include("vehicles.jl")
+
+# old render methods that should be removed in future versions
+include("deprecated.jl")
+export render, render!
 
 end # module
