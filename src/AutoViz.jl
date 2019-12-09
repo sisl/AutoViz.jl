@@ -7,7 +7,6 @@ using Parameters
 using StaticArrays
 using AutomotiveDrivingModels
 using Printf
-using LightXML
 using Rsvg
 
 @reexport using Colors

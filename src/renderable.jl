@@ -71,7 +71,9 @@ function render_entity_rectangle(ctx::CairoContext, er::EntityRectangle)
     w, h = length(er.entity.def), er.entity.def.width
     cr = 0.5 # [m]
     save(ctx); translate(ctx, x, y); rotate(ctx, yaw);
-    render_round_rect(ctx, 0, 0, w, h, 1., cr, er.color, true, true, .8*er.color, .3)
+    color_fill = er.color
+    color_line = weighted_color_mean(.4, colorant"black", color_fill)
+    render_round_rect(ctx, 0, 0, w, h, 1., cr, color_fill, true, true, color_line, .3)
     restore(ctx)
 end
 add_renderable!(rm::RenderModel, er::EntityRectangle) = add_instruction!(rm, render_entity_rectangle, (er,))

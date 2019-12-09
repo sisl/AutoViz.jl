@@ -15,10 +15,10 @@ function render_fancy_car(
     # # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
 
     save(ctx)
-    cardata = string(parse_file(CARFILE))
-    cardata = replace(cardata, "#CAAC00"=>"#"*hex(color_fill))
-    r = Rsvg.handle_new_from_data(cardata)
-    
+    open(CARFILE, "r") do car_svg
+        car_svg = replace(car_svg, "#CAAC00"=>"#"*hex(color_fill))
+        r = Rsvg.handle_new_from_data(car_svg)
+    end
     d = Rsvg.handle_get_dimensions(r)
 
     # scaling factor
@@ -48,10 +48,10 @@ function render_fancy_pedestrian(
     # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
 
     save(ctx)
-    peddata = string(parse_file(PEDFILE))
-    peddata = replace(peddata, "#C90000"=>"#"*hex(color_fill))
-    r = Rsvg.handle_new_from_data(peddata)
-
+    open(PEDFILE, "r") do ped_svg
+        ped_svg = replace(ped_svg, "#C90000"=>"#"*hex(color_fill))
+        r = Rsvg.handle_new_from_data(ped_svg)
+    end
     d = Rsvg.handle_get_dimensions(r)
 
     # scaling factor
