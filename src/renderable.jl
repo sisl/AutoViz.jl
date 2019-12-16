@@ -143,7 +143,7 @@ function add_renderable!(
     color::Colorant=RGB(rand(), rand(), rand())
     ) where {D<:AbstractAgentDefinition, I}
     if _rendermode == :fancy
-        fe = (class(veh.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
+        fe = (class(entity.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
         add_renderable!(rendermodel, fe)
     else
         er = EntityRectangle(entity=entity, color=color)
