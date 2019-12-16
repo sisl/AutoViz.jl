@@ -15,9 +15,10 @@ function render_fancy_car(
     # # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
 
     save(ctx)
-    open(CARFILE, "r") do car_svg
+    r = open(CARFILE, "r") do carfile
+        car_svg = read(carfile, String)
         car_svg = replace(car_svg, "#CAAC00"=>"#"*hex(color_fill))
-        r = Rsvg.handle_new_from_data(car_svg)
+        Rsvg.handle_new_from_data(car_svg)
     end
     d = Rsvg.handle_get_dimensions(r)
 
@@ -48,9 +49,10 @@ function render_fancy_pedestrian(
     # (x,y) are in meters and yaw is the radians, counter-clockwise from pos x axis
 
     save(ctx)
-    open(PEDFILE, "r") do ped_svg
+    r = open(PEDFILE, "r") do pedfile
+        ped_svg = read(pedfile, String)
         ped_svg = replace(ped_svg, "#C90000"=>"#"*hex(color_fill))
-        r = Rsvg.handle_new_from_data(ped_svg)
+        Rsvg.handle_new_from_data(ped_svg)
     end
     d = Rsvg.handle_get_dimensions(r)
 
