@@ -16,7 +16,7 @@ function render(scene; # iterable of renderable objects
                 canvas_width::Int=DEFAULT_CANVAS_WIDTH,
                 surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
                )
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
     ctx = creategc(surface)
     clear_setup!(rendermodel)
     for x in scene
@@ -39,7 +39,7 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     ) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
 
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
 
     ctx = creategc(surface)
     clear_setup!(rendermodel)
@@ -64,7 +64,7 @@ function render!(
     car_colors::Dict{I,C}=Dict{I,Colorant}(), #  id -> color
     ) where {S,D,I,C<:Colorant}
 
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
 
     for veh in scene
         render!(rendermodel, veh, get(car_colors, veh.id, car_color))
@@ -81,7 +81,7 @@ function render(roadway::R;
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     ) where {R<:Roadway}
 
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
 
     ctx = creategc(surface)
     clear_setup!(rendermodel)
@@ -97,7 +97,7 @@ function render(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     car_colors::Dict{I,C}=Dict{I,Colorant}(),
     ) where {S,D,I,R,C<:Colorant}
 
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
 
     canvas_width = floor(Int, Cairo.width(ctx))
     canvas_height = floor(Int, Cairo.height(ctx))
@@ -121,7 +121,7 @@ function render(scene::EntityFrame{S,D,I}, roadway::R;
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     ) where {S,D,I,R, C<:Colorant}
 
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
 
     ctx = creategc(surface)
     render(ctx, scene, roadway, rendermodel=rendermodel, cam=cam, car_colors=car_colors)
@@ -137,7 +137,7 @@ function render(roadway::StraightRoadway;
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
     )
 
-    Base.depwarn("You are sing an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.")
+    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
 
     ctx = creategc(surface)
     clear_setup!(rendermodel)
