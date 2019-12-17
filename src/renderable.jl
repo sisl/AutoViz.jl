@@ -141,7 +141,7 @@ function add_renderable!(
     rendermodel::RenderModel,
     entity::Entity{VehicleState,D,I},
     color::Colorant=RGB(rand(), rand(), rand())
-    ) where {D<:AbstractAgentDefinition, I}
+) where {D<:AbstractAgentDefinition, I}
     if _rendermode == :fancy
         fe = (class(entity.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
         add_renderable!(rendermodel, fe)
@@ -151,5 +151,52 @@ function add_renderable!(
         va = VelocityArrow(entity=entity, color=color)
         add_renderable!(rendermodel, va)
     end
-    rendermodel
+    return rendermodel
 end
+
+
+"""
+Convenience function for rendering a scene. Takes care of initializing a `RenderModel` and updating the camera.
+For full control, use `render!(rendermodel, renderables)` instead.
+"""
+function render(
+    # TODO: what about the roadway?
+    #  A) only allow rendering with roadway (as a first or second argument), scene without a roadway is not needed
+    #  B) implement a second, separate method?
+    #  C) allow roadway to be Union{Nothing, Roadway}?
+    #  D) more options??
+    scene::Frame{E}, overlays=[];
+    camera_zoom::Float64 = 10.,
+    camera_center::VecE2 = VecE2(0., 0.),
+    camera_rotation::Float64 = 0.,
+    camera_motion::Camera = SceneFollowCamera(),
+    canvas_width::Int=DEFAULT_CANVAS_WIDTH,
+    canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+) where {E<:Entity}
+    rendermodel = RenderModel(
+        camera_center=camera_center, camera_zoom=camera_zoom, camera_rotation=camera_rotation
+    )
+    update_camera!(rendermodel, camera_motion, scene)
+
+    scene_renderables = []
+    for entity in scene
+        color = RGB(rand(), rand(), rand())  # TODO: random colors?? if not, how to determine id? 
+        if _rendermode == :fancy
+            if class(entity.def) == AgentClass.PEDESTRIAN
+                push!(scene_renderables, FancyPedestrian(ped=entity, color=color))
+            else
+                push!(scene_renderables, FancyCar(car=entity, color=color))
+            end
+        else
+            push!(scene_renderables, EntityRectangle(entity=entity, color=color))
+            push!(scene_renderables, VelocityArrow(entity=entity, color=color))
+        end
+    end
+
+    # TODO: roadway or not?
+    # [roadway], 
+    render!(rendermodel, vcat(scene_renderables, overlays), surface=surface)
+    return surface
+end
+

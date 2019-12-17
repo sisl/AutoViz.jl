@@ -55,6 +55,8 @@ end
     @test AutoViz._rendermode == :fancy
 
     @test_deprecated render([roadway, veh1, veh2, veh3])
+    # render(Frame([veh1, veh2, veh3]), camera_zoom=15., camera_center=VecE2(1.,1.), camera_motion=TargetFollowCamera(target_id=1))  # TODO: multiple dispatch not working on update_camera!
+    render(Frame([veh1, veh2, veh3]), camera_zoom=15., camera_center=VecE2(1.,1.), camera_motion=StaticCamera())
 end
 
 @testset "color theme" begin
