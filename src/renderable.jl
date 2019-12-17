@@ -68,7 +68,7 @@ end
 
 function render_entity_rectangle(ctx::CairoContext, er::EntityRectangle)
     x, y, yaw = posg(er.entity.state)
-    w, h = length(er.entity.def), er.entity.def.width
+    w, h = length(er.entity.def), AutomotiveDrivingModels.width(er.entity.def)
     cr = 0.5 # [m]
     save(ctx); translate(ctx, x, y); rotate(ctx, yaw);
     color_fill = er.color
@@ -103,14 +103,14 @@ A drawable 'fancy' svg image of a race car.
 The car is placed at the position of `entity` and the width and length are scaled accordingly.
 The color of the car can be specified using the `color` keyword.
 """
-@with_kw struct FancyCar{C<:Colorant, I} <: Renderable
-    car::Entity{VehicleState, VehicleDef, I}
+@with_kw struct FancyCar{C<:Colorant, S, D, I} <: Renderable
+    car::Entity{S, D, I}
     color::C = AutoViz._colortheme["COLOR_CAR_OTHER"]
 end
 
 function add_renderable!(rm::RenderModel, fc::FancyCar)
     x, y, yaw = posg(fc.car.state)
-    l, w = length(fc.car.def), fc.car.def.width
+    l, w = length(fc.car.def), AutomotiveDrivingModels.width(fc.car.def)
     add_instruction!(rm, render_fancy_car, (x, y, yaw, l, w, fc.color))
     return rm
 end
@@ -121,14 +121,14 @@ A drawable 'fancy' svg image of a pedestrian.
 The pedestrian is placed at the position of `entity` and the width and length of the original image are scaled accordingly.
 The color of the pedestrian can be specified using the `color` keyword.
 """
-@with_kw struct FancyPedestrian{C<:Colorant, I} <: Renderable
-    ped::Entity{VehicleState, VehicleDef, I}
+@with_kw struct FancyPedestrian{C<:Colorant, S, D, I} <: Renderable
+    ped::Entity{S, D, I}
     color::C = colorant"blue"
 end
 
 function add_renderable!(rm::RenderModel, fp::FancyPedestrian)
     x, y, yaw = posg(fp.ped.state)
-    l, w = length(fp.ped.def), fp.ped.def.width
+    l, w = length(fp.ped.def), AutomotiveDrivingModels.width(fp.ped.def)
     add_instruction!(rm, render_fancy_pedestrian, (x, y, yaw, l, w, fp.color))
     return rm
 end

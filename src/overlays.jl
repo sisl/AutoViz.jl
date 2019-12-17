@@ -613,6 +613,9 @@ end
 """
 Decorator which allows to use `SceneOverlay` objects together with the method
     render([Renderables])
+
+This is required primarily for allowing backward compatibility with overlays
+that use the old rendering interface.
 """
 struct RenderableOverlay{O,S,D,I} <: Renderable where {O<:SceneOverlay,S,D,I}
     overlay::O

@@ -1,4 +1,4 @@
-# TODO: add fallback implementations and more informative deprecation warnings
+render_depwarn_msg = "This version of the render function is deprecated since v0.8. Please use render!(rendermodel::RenderModel, renderables) instead."
 
 """
     render(scene)
@@ -15,18 +15,16 @@ function render(scene; # iterable of renderable objects
                 canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
                 canvas_width::Int=DEFAULT_CANVAS_WIDTH,
                 surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-               )
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-    for x in scene
-        render!(rendermodel, isrenderable(x) ? x : convert(Renderable, x))
-    end
+)
+    Base.depwarn(render_depwarn_msg, :render)
+    renderables = [isrenderable(x) ? x : convert(Renderable, x) for x in scene]
     for o in overlays
-        render!(rendermodel, o, scene)
+        push!(renderables, RenderableOverlay{typeof(o), VehicleState, VehicleDef, Int64}(o, Scene(), Roadway()))
     end
-    camera_set!(rendermodel, cam, scene, canvas_width, canvas_height)
-    render(rendermodel, ctx, canvas_width, canvas_height)
+    render!(
+        rendermodel, renderables,
+        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
+    )
     return surface
 end
 
@@ -37,23 +35,31 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
     cam::Camera=SceneFollowCamera(),
     car_colors::Dict{I,C}=Dict{I,Colorant}(),
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-    ) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
-
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-
-    render!(rendermodel, roadway)
-    render!(rendermodel, scene, car_colors=car_colors)
-
-    for overlay in overlays
-        render!(rendermodel, overlay, scene, roadway)
+) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
+    Base.depwarn(render_depwarn_msg, :render)
+    renderables = [roadway]
+    for (i, veh) in enumerate(scene)
+        c = car_colors[i]
+        if _rendermode == :fancy
+            r = (
+                class(veh.def) == AgentClass.PEDESTRIAN
+                ? FancyPedestrian(ped=veh, color=c)
+                : FancyCar(car=veh, color=c)
+            )
+        else
+            x, y, theta = posg(veh)
+            r = ArrowCar(x, y, theta, length=length(veh.def), width=width(veh.def), color=c, id=veh.id)
+        end
+        push!(renderables, r)
     end
-
-    camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
+    for o in overlays
+        push!(renderables, RenderableOverlay(o, scene, roadway))
+    end
+    update_camera!(rendermodel, cam, scene)
+    render!(
+        rendermodel, renderables,
+        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
+    )
     return surface
 end
 
@@ -62,15 +68,28 @@ function render!(
     scene::EntityFrame{S,D,I};
     car_color::Colorant=_colortheme["COLOR_CAR_OTHER"], # default color
     car_colors::Dict{I,C}=Dict{I,Colorant}(), #  id -> color
-    ) where {S,D,I,C<:Colorant}
-
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-
-    for veh in scene
-        render!(rendermodel, veh, get(car_colors, veh.id, car_color))
+) where {S,D,I,C<:Colorant}
+    Base.depwarn(render_depwarn_msg, :render)
+    renderables = []
+    for (i, veh) in enumerate(scene)
+        c = car_colors[i]
+        if _rendermode == :fancy
+            r = (
+                class(veh.def) == AgentClass.PEDESTRIAN
+                ? FancyPedestrian(ped=veh, color=c)
+                : FancyCar(car=veh, color=c)
+            )
+        else
+            x, y, theta = posg(veh)
+            r = ArrowCar(x, y, theta, length=length(veh.def), width=width(veh.def), color=c, id=veh.id)
+        end
+        push!(renderables, r)
     end
-
-    rendermodel
+    render!(
+        rendermodel, renderables,
+        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
+    )
+    return rendermodel
 end
 
 function render(roadway::R;
@@ -79,15 +98,13 @@ function render(roadway::R;
     rendermodel = RenderModel(),
     cam::Camera = FitToContentCamera(),
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-    ) where {R<:Roadway}
-
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-    render!(rendermodel, roadway)
-    camera_set!(rendermodel, cam, canvas_width, canvas_height)
-    render(rendermodel, ctx, canvas_width, canvas_height)
+) where {R<:Roadway}
+    Base.depwarn(render_depwarn_msg, :render)
+    renderables = [roadway]
+    render!(
+        rendermodel, renderables,
+        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
+    )
     return surface
 end
 
@@ -95,21 +112,29 @@ function render(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     rendermodel::RenderModel=RenderModel(),
     cam::Camera=SceneFollowCamera(),
     car_colors::Dict{I,C}=Dict{I,Colorant}(),
-    ) where {S,D,I,R,C<:Colorant}
-
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-
-    canvas_width = floor(Int, Cairo.width(ctx))
-    canvas_height = floor(Int, Cairo.height(ctx))
-
-    clear_setup!(rendermodel)
-
-    render!(rendermodel, roadway)
-    render!(rendermodel, scene, car_colors=car_colors)
-
-    camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
+) where {S,D,I,R,C<:Colorant}
+    Base.depwarn(render_depwarn_msg, :render)
+    renderables = [roadway]
+    for (i, veh) in enumerate(scene)
+        c = car_colors[i]
+        if _rendermode == :fancy
+            r = (
+                class(veh.def) == AgentClass.PEDESTRIAN
+                ? FancyPedestrian(ped=veh, color=c)
+                : FancyCar(car=veh, color=c)
+            )
+        else
+            x, y, theta = posg(veh)
+            r = ArrowCar(x, y, theta, length=length(veh.def), width=width(veh.def), color=c, id=veh.id)
+        end
+        push!(renderables, r)
+    end
+    reset_instructions!(rendermodel)
+    update_camera!(rendermodel, cam, scene)
+    for renderable in renderables
+        add_renderable!(rendermodel, renderable)
+    end
+    render_to_canvas(rendermodel, ctx, canvas_width, canvas_height)
     ctx
 end
 function render(scene::EntityFrame{S,D,I}, roadway::R;
@@ -119,13 +144,10 @@ function render(scene::EntityFrame{S,D,I}, roadway::R;
     cam::Camera=SceneFollowCamera(),
     car_colors::Dict{I,C}=Dict{I,Colorant}(), # id
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-    ) where {S,D,I,R, C<:Colorant}
-
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-
+) where {S,D,I,R, C<:Colorant}
+    Base.depwarn(render_depwarn_msg, :render)
     ctx = creategc(surface)
     render(ctx, scene, roadway, rendermodel=rendermodel, cam=cam, car_colors=car_colors)
-
     return surface
 end
 
@@ -135,17 +157,14 @@ function render(roadway::StraightRoadway;
     rendermodel = RenderModel(),
     cam::Camera = FitToContentCamera(),
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+)
+    Base.depwarn(render_depwarn_msg, :render)
+    renderables = [roadway]
+    update_camera!(rendermodel, cam, scene)
+    render!(
+        rendermodel, renderables,
+        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
     )
-
-    Base.depwarn("You are using an old rendering interface. Please use render(rendermodel::RenderModel, renderables) instead. This implementation will most probably crash.", :render)
-
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-    add_renderable!(rendermodel, roadway)
-    camera_set!(rendermodel, cam, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
-
     return surface
 end
 
