@@ -1,13 +1,56 @@
 """
+Representation of camera parameters such as position, rotation and zoom level.
+
+ - `camera_center::VecE2`: position of camera in [N,E] relative to the mean point. meters
+ - `camera_zoom::Float64`: camera zoom in [pix/m]
+ - `camera_rotation::Float64`: camera rotation in [rad]
+"""
+@with_kw struct CameraState
+    position  :: VecE2 = VecE2(0.0,0.0)  # TODO: this could simply be a tuple?
+    zoom      :: Float64 = 1.
+    rotation  :: Float64 = 0.
+end
+position(cs::CameraState) = cs.position
+zoom(cs::CameraState) = cs.zoom
+rotation(cs::CameraState) = cs.rotation
+
+camera_move!(cs::CameraState, dx::Real, dy::Real) = cs.position = cs.position + VecE2(dx, dy)
+camera_move!(cs::CameraState, Δ::VecE2) = cs.position = cs.position + Δ
+camera_move_pix!(cs::CameraState, dx::Real, dy::Real) = cs.position = cs.position + VecE2(dx/cs.zoom, dy/cs.zoom)
+camera_move_pix!(cs::CameraState, Δ::VecE2) = cs.position = cs.position + VecE2(Δ.x/cs.zoom, Δ.y/cs.zoom)
+camera_rotate!(cs::CameraState, θ::Real) = cs.rotation += θ # [radians]
+camera_zoom!(cs::CameraState, factor::Real) = cs.zoom *= factor
+
+function set_camera!(
+    cs::CameraState;
+    x::Real=cs.position.x,
+    y::Real=cs.position.y,
+    zoom::Real=cs.zoom,
+    rotation::Real=cs.rotation
+)
+    cs.position = VecE2(x,y)
+    cs.zoom = zoom
+    cs.rotation = rotation
+    return cs
+end
+reset_camera!(cs::CameraState) = set_camera!(cs, x=0., y=0., zoom=1., rotation=0.)
+
+
+"""
 Camera abstract type
 """
 abstract type Camera end
+position(c::Camera) = position(c.state)
+zoom(c::Camera) = zoom(c.state)
+rotation(c::Camera) = rotation(c.state)
 
 """
 Static  camera, does nothing
 """
-struct StaticCamera <: Camera end
-update_camera!(::RenderModel, ::StaticCamera, ::Frame) = nothing
+@with_kw struct StaticCamera <: Camera
+    state::CameraState = CameraState()
+end
+update_camera!(::StaticCamera, ::Frame) = nothing
 
 """
 Camera which follows the vehicle with ID `target_id`.
@@ -16,33 +59,35 @@ Tracking in either direction can be disabled by setting the
 `x` or `y` keys to a desired value.
 """
 @with_kw mutable struct TargetFollowCamera{I} <: Camera where I
+    state::CameraState = CameraState()
     target_id::I
     x::Float64 = NaN
     y::Float64 = NaN
 end
 
-function update_camera!(rendermodel::RenderModel, camera::TargetFollowCamera{I}, scene::Frame{Entity{S,D,I}}) where {S,D,I}
+function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{Entity{S,D,I}}) where {S,D,I}
     target = get_by_id(scene, camera.target_id)
     pos_target = VecE2(posg(target.state)[1:2]...)
     x = isnan(camera.x) ? pos_target.x : camera.x
     y = isnan(camera.y) ? pos_target.y : camera.y
-    set_camera!(rendermodel, x=x, y=y)
+    set_camera!(camera.state, x=x, y=y)
 end
 
 """
 Camera which gradually changes the zoom level of the scene to `zoom_target` with step size `dz`.
 """
 @with_kw mutable struct ZoomingCamera <: Camera
+    state::CameraState = CameraState()
     zoom_target::Float64 = 20.
     dz::Float64 = .5
 end
 
-function update_camera!(rendermodel::RenderModel, camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
-    zt, zc = camera.zoom_target, rendermodel.camera_zoom
+function update_camera!(camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
+    zt, zc = camera.zoom_target, zoom(camera)
     if zt < zc  # zooming in 
-        set_camera!(rendermodel, zoom=max(zt, zc-camera.dz))
+        set_camera!(camera.cs, zoom=max(zt, zc-camera.dz))
     elseif zt > zc  # zooming out
-        set_camera!(rendermodel, zoom=min(zt, zc+camera.dz))
+        set_camera!(camera.cs, zoom=min(zt, zc+camera.dz))
     end
 end
 
@@ -51,150 +96,32 @@ end
 
 Camera centered over all vehicles, does not change the zoom level.
 """
-struct SceneFollowCamera <: Camera end
-function update_camera!(rendermodel::RenderModel, camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
+@with_kw struct SceneFollowCamera <: Camera
+    state::CameraState = CameraState()
+end
+function update_camera!(camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
     C = sum([posg(veh.state)[1:2] for veh in scene])/length(scene)  # center of mass
-    set_camera!(rendermodel, x=C[1], y=C[2])
+    set_camera!(camera.cs, x=C[1], y=C[2])
+    # should also add capabilities for adapting zoom level to make all vehicles of the scene fit
+    # along the lines of FitToContentCamera, but much simpler (just using entity coordinates to determine bounding box but INCLUDING zoom)
 end
 
 
 """
 Composition of several cameras. The `update_camera` actions of the individual cameras are applied in the order in which they are saved in the `cameras` array.
+States of individual cameras are ignored, the state of the composed camera is the one that will be used for rendering.
 
 Example Usage
 
     cam = ComposedCamera(cameras=[SceneFollowCamera(), ZoomingCamera()])
 """
 @with_kw mutable struct ComposedCamera <: Camera
+    state::CameraState = CameraState()
     cameras::Array{Camera}
 end
 
-function update_camera!(rendermodel::RenderModel, camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
+function update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
     for cam in camera.cameras
-        update_camera!(rendermodel, cam, scene)
+        update_camera!(camera.cs, cam, scene)
     end
 end
-
-
-"""
-Positions the camera so that all content is visible within its field of view
-This will always set the camera rotation to zero
-An extra border can be added as well
-"""
-@with_kw mutable struct FitToContentCamera <: Camera
-    canvas_width::Int64 = DEFAULT_CANVAS_WIDTH
-    canvas_height::Int64 = DEFAULT_CANVAS_HEIGHT
-    percent_border::Float64 = 0.1
-end
-function update_camera!(rendermodel::RenderModel, cam::FitToContentCamera, scene::Frame{E}) where {E<:Entity}
-    camera_fit_to_content!(rendermodel, cam.canvas_width, cam.canvas_height, percent_border=cam.percent_border)
-    rendermodel
-end
-
-function camera_fit_to_content!(
-    rendermodel    :: RenderModel,
-    canvas_width   :: Integer,
-    canvas_height  :: Integer;
-    percent_border :: Real = 0.1 # amount of extra border we add
-    )
-
-    rendermodel.camera_rotation = 0.0
-
-    if isempty(rendermodel.instruction_set)
-        return
-    end
-
-    # determine render bounds
-    xmax = -Inf; xmin = Inf
-    ymax = -Inf; ymin = Inf
-
-    for tup in rendermodel.instruction_set
-        f = tup[1]
-        in_camera_frame = tup[3]
-        if !in_camera_frame
-            continue
-        end
-
-        (x,y,flag) = (0,0,false)
-        if f == render_circle || f == render_round_rect
-            (x,y,flag) = (tup[2][1],tup[2][2],true)
-        elseif f == render_text
-            (x,y,flag) = (tup[2][2],tup[2][3],true)
-        elseif f == render_point_trail || f == render_line ||
-               f == render_dashed_line || f == render_fill_region
-
-            pts = tup[2][1]
-            if isa(pts, AbstractArray{Float64})
-                for i in 1 : size(pts, 2)
-                    xmax = max(xmax, pts[1,i])
-                    xmin = min(xmin, pts[1,i])
-                    ymax = max(ymax, pts[2,i])
-                    ymin = min(ymin, pts[2,i])
-                end
-            elseif isa(pts, AbstractVector{VecE2{T}} where T<:Real)
-                for P in pts
-                    xmax = max(xmax, P.x)
-                    xmin = min(xmin, P.x)
-                    ymax = max(ymax, P.y)
-                    ymin = min(ymin, P.y)
-                end
-            end
-
-        # vehicles - center + sqrt((width/2)^2 + (height/2)^2)
-        elseif f == render_vehicle
-            x = tup[2][1]
-            y = tup[2][2]
-            width = tup[2][5]
-            height = tup[2][4]
-            bounding_radius = sqrt((width/2)^2 + (height/2)^2)
-            xmax = max(xmax, x + bounding_radius)
-            xmin = min(xmin, x - bounding_radius)
-            ymax = max(ymax, y + bounding_radius)
-            ymin = min(ymin, y - bounding_radius)
-        end
-
-        if flag
-            xmax = max(xmax, x)
-            xmin = min(xmin, x)
-            ymax = max(ymax, y)
-            ymin = min(ymin, y)
-        end
-    end
-
-    if isinf(xmin) || isinf(ymin)
-        return
-    end
-
-    if xmax < xmin
-        xmax = xmin + 1.0
-    end
-    if ymax < ymin
-        ymax = ymin + 1.0
-    end
-
-    # compute zoom to fit
-    world_width = xmax - xmin
-    world_height = ymax - ymin
-    canvas_aspect = canvas_width / canvas_height
-    world_aspect = world_width / world_height
-
-    if world_aspect > canvas_aspect
-        # expand height to fit
-        half_diff =  (world_width * canvas_aspect - world_height) / 2
-        world_height = world_width * canvas_aspect # [m]
-        ymax += half_diff
-        ymin -= half_diff
-    else
-        # expand width to fit
-        half_diff = (canvas_aspect * world_height - world_width) / 2
-        world_width = canvas_aspect * world_height
-        xmax += half_diff
-        xmin -= half_diff
-    end
-
-    rendermodel.camera_center = VecE2(xmin + world_width/2, ymin + world_height/2) # [m]
-    rendermodel.camera_zoom   = (canvas_width*(1-percent_border)) / world_width # [pix / m]
-
-    rendermodel
-end
-

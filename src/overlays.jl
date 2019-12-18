@@ -37,7 +37,7 @@ end
     line_spacing::Float64 = 1.5 # multiple of font_size
     incameraframe=false
 end
-function add_renderable!(rendermodel::RenderModel, overlay::TextOverlay, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
+function add_renderable!(rendermodel::RenderModel, overlay::TextOverlay)
     x = overlay.pos.x
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
@@ -64,7 +64,7 @@ end
 mutable struct Overwash <: SceneOverlay
     color::Colorant
 end
-function add_renderable!(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
+function add_renderable!(rendermodel::RenderModel, overlay::Overwash)
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
 end
@@ -88,7 +88,7 @@ The fill proportion is set using `val`, it should be a number between 0 and 1. I
     label_pos::VecSE2{Float64} = pos + VecSE2(0., -height/2)
 end
 
-function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::HistogramOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {R,S,D,I}
+function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::HistogramOverlay)
     # render value 
     add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.val*overlay.height,overlay.fill_color, true, false), incameraframe=overlay.incameraframe)
     # render histogram outline 
@@ -204,7 +204,7 @@ fields:
     size::Float64 = 0.3
 end
 
-function add_renderable!(rendermodel::RenderModel, overlay::BlinkerOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {S,D,I,R}
+function add_renderable!(rendermodel::RenderModel, overlay::BlinkerOverlay)
     if !overlay.on
         return nothing 
     end
@@ -619,12 +619,21 @@ that use the old rendering interface.
 """
 struct RenderableOverlay{O,S,D,I} <: Renderable where {O<:SceneOverlay,S,D,I}
     overlay::O
-    scene::Frame{Entity{S,D,I}}
-    roadway::Roadway
+    scene::Union{Nothing, Frame{Entity{S,D,I}}}
+    roadway::Union{Nothing, Roadway}
 end
+RenderableOverlay(overlay::O) where {O<:SceneOverlay} = RenderableOverlay(overlay, nothing, nothing)
 
 function add_renderable!(rm::RenderModel, ro::RenderableOverlay{O,S,D,I}) where {O<:SceneOverlay,S,D,I}
-    add_renderable!(rm, ro.overlay, ro.scene, ro.roadway)
+    if (overlay.scene === nothing) && (overlay.roadway === nothing)
+        # These are the overlays that could also be used without scene and roadway,
+        # they do not require the RenderableOverlay wrapper
+        add_renderable!(rm, ro.overlay)
+    else
+        # These overlays rely on the `RenderableOverlay` wrapper to provide scene and roadway
+        @assert (overlay.scene !== nothing) && (overlay.roadway !== nothing)
+        add_renderable!(rm, ro.overlay, ro.scene, ro.roadway)
+    end
 end
 
 function add_renderable!(rm::RenderModel, iterable::Union{Array{<:RenderableOverlay},Tuple{<:RenderableOverlay}})

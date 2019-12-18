@@ -18,13 +18,10 @@ end
     car = ArrowCar(0.0, 0.0, 0.0, id=1)
     car2 = ArrowCar(1.0, 1.0, 1.0, color=colorant"green", text="text")
 
-    @test_deprecated render([rw, car, "some text"])
-
-    @test_deprecated render([rw, car, car2, "some text"], cam=TargetFollowCamera(target_id=0))
-
-    @test_deprecated render([rw, car, car2], overlays=[TextOverlay(text=["overlay"], color=colorant"blue")])
-
-    c = @test_deprecated render([rw, car, car2], cam=SceneFollowCamera())
+    render([rw, car, "some text"])
+    render([rw, car, car2, "some text"], camera=TargetFollowCamera(target_id=0))
+    render([rw, car, car2, TextOverlay(text=["overlay"], color=colorant"blue")])
+    c = render([rw, car, car2], camera=SceneFollowCamera())
 end
 
 @testset "write SVG" begin 
@@ -49,14 +46,14 @@ end
     veh2 = Entity(vehstate, def2, 2)
     veh3 = Entity(vehstate, def3, 3)
 
-    @test_deprecated render([roadway, veh1, veh2, veh3])
+    render([roadway, veh1, veh2, veh3])
 
     AutoViz.set_render_mode(:fancy)
     @test AutoViz._rendermode == :fancy
 
-    @test_deprecated render([roadway, veh1, veh2, veh3])
+    render([roadway, veh1, veh2, veh3])
     # render(Frame([veh1, veh2, veh3]), camera_zoom=15., camera_center=VecE2(1.,1.), camera_motion=TargetFollowCamera(target_id=1))  # TODO: multiple dispatch not working on update_camera!
-    render(Frame([veh1, veh2, veh3]), camera_zoom=15., camera_center=VecE2(1.,1.), camera_motion=StaticCamera())
+    render([Frame([veh1, veh2, veh3])], camera=StaticCamera(state=CameraState(zoom=10.)))
 end
 
 @testset "color theme" begin
@@ -74,12 +71,12 @@ end
     veh2 = Entity(vehstate, def2, 2)
     veh3 = Entity(vehstate, def3, 3)
 
-    @test_deprecated render([roadway, veh1, veh2, veh3])
+    render([roadway, veh1, veh2, veh3])
 
     AutoViz.set_color_theme(LIGHTTHEME)
     @test AutoViz._colortheme == LIGHTTHEME
 
-    @test_deprecated render([roadway, veh1, veh2, veh3])
+    render([roadway, veh1, veh2, veh3])
 
     AutoViz.set_color_theme(MONOKAY)
     @test AutoViz._colortheme == MONOKAY
