@@ -56,9 +56,7 @@ end
 function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, ctx::CairoContext)
 
     # fill with background color
-    bgc = rendermodel.background_color
-    r,g,b,a = red(bgc), green(bgc), blue(bgc), alpha(bgc)
-    set_source_rgba(ctx, a,r,g,b)
+    set_source_rgba(ctx, rendermodel.background_color)
     paint(ctx)
 
     w, h = canvas_width(camera_state), canvas_height(camera_state)
