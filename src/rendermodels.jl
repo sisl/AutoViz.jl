@@ -38,7 +38,7 @@ which adds instructions for rendering to the render model.
 You should call `update_camera!` before calling `render` to adapt the camera to the new scene.
 The instructions of the `rendermodel` are reset automatically at the beginning of this function.
 """
-function render(renderables::AbstractVector;  # TODO: specify type ::Vector{<:Renderable};
+function render(renderables::AbstractVector;
     camera::Camera=SceneFollowCamera(),
     canvas_width::Int=AutoViz.DEFAULT_CANVAS_WIDTH,
     canvas_height::Int=AutoViz.DEFAULT_CANVAS_HEIGHT,
@@ -78,7 +78,7 @@ function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, c
     Cairo.scale(ctx, zoom(camera_state), -zoom(camera_state))    # [pix -> m]
     rotate(ctx, rotation(camera_state))
     x, y = position(camera_state)
-    translate(ctx, x, y) # translate to camera location
+    translate(ctx, -x, -y) # translate to camera location
 
     # execute all instructions
     for tup in rendermodel.instruction_set

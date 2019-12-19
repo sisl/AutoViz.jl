@@ -625,13 +625,13 @@ end
 RenderableOverlay(overlay::O) where {O<:SceneOverlay} = RenderableOverlay(overlay, nothing, nothing)
 
 function add_renderable!(rm::RenderModel, ro::RenderableOverlay{O,S,D,I}) where {O<:SceneOverlay,S,D,I}
-    if (overlay.scene === nothing) && (overlay.roadway === nothing)
+    if (ro.scene === nothing) && (ro.roadway === nothing)
         # These are the overlays that could also be used without scene and roadway,
         # they do not require the RenderableOverlay wrapper
         add_renderable!(rm, ro.overlay)
     else
         # These overlays rely on the `RenderableOverlay` wrapper to provide scene and roadway
-        @assert (overlay.scene !== nothing) && (overlay.roadway !== nothing)
+        @assert (ro.scene !== nothing) && (ro.roadway !== nothing)
         add_renderable!(rm, ro.overlay, ro.scene, ro.roadway)
     end
 end

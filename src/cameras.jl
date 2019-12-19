@@ -5,7 +5,7 @@ Representation of camera parameters such as position, rotation and zoom level.
  - `camera_zoom::Float64`: camera zoom in [pix/m]
  - `camera_rotation::Float64`: camera rotation in [rad]
 """
-@with_kw struct CameraState
+@with_kw mutable struct CameraState
     position  :: VecE2 = VecE2(0.0,0.0)  # TODO: this could simply be a tuple?
     zoom      :: Float64 = 1.
     rotation  :: Float64 = 0.
@@ -47,9 +47,10 @@ rotation(c::Camera) = rotation(c.state)
 """
 Static  camera, does nothing
 """
-@with_kw struct StaticCamera <: Camera
-    state::CameraState = CameraState()
+struct StaticCamera <: Camera
+    state::CameraState
 end
+StaticCamera(;kwargs...) = StaticCamera(CameraState(;kwargs...))
 update_camera!(::StaticCamera, ::Frame) = nothing
 
 """
@@ -58,28 +59,34 @@ By default, the target vehicle is tracked in x and y direction.
 Tracking in either direction can be disabled by setting the 
 `x` or `y` keys to a desired value.
 """
-@with_kw mutable struct TargetFollowCamera{I} <: Camera where I
-    state::CameraState = CameraState()
+mutable struct TargetFollowCamera{I} <: Camera where I
+    state::CameraState
     target_id::I
-    x::Float64 = NaN
-    y::Float64 = NaN
+    x::Float64
+    y::Float64
+end
+function TargetFollowCamera(target_id; x=NaN, y=NaN, kwargs...)
+    TargetFollowCamera(CameraState(;kwargs...), target_id, x, y)
 end
 
 function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{Entity{S,D,I}}) where {S,D,I}
     target = get_by_id(scene, camera.target_id)
-    pos_target = VecE2(posg(target.state)[1:2]...)
-    x = isnan(camera.x) ? pos_target.x : camera.x
-    y = isnan(camera.y) ? pos_target.y : camera.y
+    x, y = posg(target.state)[1:2]
+    x = isnan(camera.x) ? x : camera.x
+    y = isnan(camera.y) ? y : camera.y
     set_camera!(camera.state, x=x, y=y)
 end
 
 """
 Camera which gradually changes the zoom level of the scene to `zoom_target` with step size `dz`.
 """
-@with_kw mutable struct ZoomingCamera <: Camera
-    state::CameraState = CameraState()
-    zoom_target::Float64 = 20.
-    dz::Float64 = .5
+mutable struct ZoomingCamera <: Camera
+    state::CameraState
+    zoom_target::Float64
+    dz::Float64
+end
+function ZoomingCamera(;zoom_target=20., dz=.5, kwargs...)
+    ZoomingCamera(CameraState(;kwargs...), zoom_target, dz)
 end
 
 function update_camera!(camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
@@ -96,9 +103,10 @@ end
 
 Camera centered over all vehicles, does not change the zoom level.
 """
-@with_kw struct SceneFollowCamera <: Camera
-    state::CameraState = CameraState()
+struct SceneFollowCamera <: Camera
+    state::CameraState
 end
+SceneFollowCamera(;kwargs...) = SceneFollowCamera(CameraState(;kwargs...))
 function update_camera!(camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
     C = sum([posg(veh.state)[1:2] for veh in scene])/length(scene)  # center of mass
     set_camera!(camera.cs, x=C[1], y=C[2])
@@ -115,10 +123,11 @@ Example Usage
 
     cam = ComposedCamera(cameras=[SceneFollowCamera(), ZoomingCamera()])
 """
-@with_kw mutable struct ComposedCamera <: Camera
-    state::CameraState = CameraState()
+mutable struct ComposedCamera <: Camera
+    state::CameraState
     cameras::Array{Camera}
 end
+ComposedCamera(cameras; kwargs...) = ComposedCamera(CameraState(;kwargs...), cameras)
 
 function update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
     for cam in camera.cameras
