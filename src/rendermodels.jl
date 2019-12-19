@@ -40,9 +40,7 @@ The instructions of the `rendermodel` are reset automatically at the beginning o
 """
 function render(renderables::AbstractVector;
     camera::Camera=SceneFollowCamera(),
-    canvas_width::Int=AutoViz.DEFAULT_CANVAS_WIDTH,
-    canvas_height::Int=AutoViz.DEFAULT_CANVAS_HEIGHT,
-    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width(camera), canvas_height(camera))
 )
     rendermodel = RenderModel()
     reset_instructions!(rendermodel)
@@ -50,12 +48,12 @@ function render(renderables::AbstractVector;
     for renderable in renderables
         add_renderable!(rendermodel, renderable)
     end
-    render_to_canvas(rendermodel, camera, ctx, canvas_width, canvas_height)
+    render_to_canvas(rendermodel, camera, ctx)
     return surface
 end
 
 
-function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
+function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, ctx::CairoContext)
 
     # fill with background color
     bgc = rendermodel.background_color
@@ -63,18 +61,23 @@ function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, c
     set_source_rgba(ctx, a,r,g,b)
     paint(ctx)
 
+    w, h = canvas_width(camera_state), canvas_height(camera_state)
+
     # render text if no other instructions
     if isempty(rendermodel.instruction_set)
         text_color = RGB(1.0 - convert(Float64, red(rendermodel.background_color)),
                          1.0 - convert(Float64, green(rendermodel.background_color)),
                          1.0 - convert(Float64, blue(rendermodel.background_color)))
-        render_text(ctx, "This screen left intentionally blank", canvas_width/2, canvas_height/2, 40, text_color, true)
+        render_text(
+            ctx, "This screen left intentionally blank",
+            w/2, h/2, 40, text_color, true
+        )
         return
     end
 
     # reset the transform
     reset_transform(ctx)
-    translate(ctx, canvas_width/2, canvas_height/2)  # translate to image center
+    translate(ctx, w/2, h/2)  # translate to image center
     Cairo.scale(ctx, zoom(camera_state), -zoom(camera_state))    # [pix -> m]
     rotate(ctx, rotation(camera_state))
     x, y = position(camera_state)
@@ -114,8 +117,8 @@ function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, c
 
     ctx
 end
-function render_to_canvas(rendermodel::RenderModel, camera::Camera, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
-    render_to_canvas(rendermodel, camera.state, ctx, canvas_width, canvas_height)
+function render_to_canvas(rendermodel::RenderModel, camera::Camera, ctx::CairoContext)
+    render_to_canvas(rendermodel, camera.state, ctx)
 end
 
 
@@ -218,8 +221,10 @@ function camera_fit_to_content(
 
     camera_state = CameraState(
         position = VecE2(xmin + world_width/2, ymin + world_height/2), # [m]
-        zoom     = (canvas_width*(1-percent_border)) / world_width, # [pix / m]
-        rotation = 0.
+        zoom     = (canvas_width*(1-percent_border)) / world_width,    # [pix/m]
+        rotation = 0.,                                                 # [rad]
+        canvas_width = canvas_width,                                   # [px]
+        canvas_height = canvas_height                                  # [px]
     )
     return camera_state
 end

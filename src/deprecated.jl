@@ -28,10 +28,7 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
         push!(renderables, RenderableOverlay(o, scene, roadway))
     end
     update_camera!(cam, scene)
-    render(
-        renderables, camera=cam,
-        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
-    )
+    render(renderables, camera=cam, surface=surface)
     return surface
 end
 
@@ -57,10 +54,7 @@ function render!(
         end
         push!(renderables, r)
     end
-    render(
-        renderables, camera=cam,
-        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
-    )
+    render(renderables, camera=cam, surface=surface)
     return rendermodel
 end
 
@@ -73,10 +67,7 @@ function render(roadway::R;
 ) where {R<:Roadway}
     Base.depwarn(render_depwarn_msg, :render)
     renderables = [roadway]
-    render(
-        renderables, camera=cam,
-        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
-    )
+    render(renderables, camera=cam, surface=surface)
     return surface
 end
 
@@ -106,7 +97,7 @@ function render(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     for renderable in renderables
         add_renderable!(rendermodel, renderable)
     end
-    render_to_canvas(rendermodel, cam, ctx, canvas_width, canvas_height)
+    render_to_canvas(rendermodel, cam, ctx)
     ctx
 end
 function render(scene::EntityFrame{S,D,I}, roadway::R;
@@ -133,10 +124,7 @@ function render(roadway::StraightRoadway;
     Base.depwarn(render_depwarn_msg, :render)
     renderables = [roadway]
     update_camera!(cam, scene)
-    render(
-        renderables, camera=cam,
-        canvas_width=canvas_width, canvas_height=canvas_height, surface=surface
-    )
+    render(renderables, camera=cam, surface=surface)
     return surface
 end
 

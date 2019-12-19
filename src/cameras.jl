@@ -6,13 +6,17 @@ Representation of camera parameters such as position, rotation and zoom level.
  - `camera_rotation::Float64`: camera rotation in [rad]
 """
 @with_kw mutable struct CameraState
-    position  :: VecE2 = VecE2(0.0,0.0)  # TODO: this could simply be a tuple?
+    position  :: VecE2 = VecE2(0.,0.)
     zoom      :: Float64 = 1.
     rotation  :: Float64 = 0.
+    canvas_width  :: Int64 = DEFAULT_CANVAS_WIDTH
+    canvas_height :: Int64 = DEFAULT_CANVAS_HEIGHT
 end
 position(cs::CameraState) = cs.position
 zoom(cs::CameraState) = cs.zoom
 rotation(cs::CameraState) = cs.rotation
+canvas_width(cs::CameraState) = cs.canvas_width
+canvas_height(cs::CameraState) = cs.canvas_height
 
 camera_move!(cs::CameraState, dx::Real, dy::Real) = cs.position = cs.position + VecE2(dx, dy)
 camera_move!(cs::CameraState, Δ::VecE2) = cs.position = cs.position + Δ
@@ -43,6 +47,8 @@ abstract type Camera end
 position(c::Camera) = position(c.state)
 zoom(c::Camera) = zoom(c.state)
 rotation(c::Camera) = rotation(c.state)
+canvas_width(c::Camera) = canvas_width(c.state)
+canvas_height(c::Camera) = canvas_height(c.state)
 
 """
 Static  camera, does nothing
@@ -101,17 +107,50 @@ end
 """
     SceneFollowCamera{R<:Real}
 
-Camera centered over all vehicles, does not change the zoom level.
+Camera centered over all vehicles.
+
+By default, the scene is tracked in x and y direction and the zoom level 
+is adapted to fit all vehicles in the scene. Tracking in either direction
+can be disabled by setting the `x` or `y` keys to a desired value. The
+zoom level can be fixed by passing a value to `zoom`.
+The value of `padding` specifies the width of the additional border around
+the zoomed-in area.
 """
 struct SceneFollowCamera <: Camera
     state::CameraState
+    x::Float64
+    y::Float64
+    zoom::Float64
+    padding::Float64
+    min_width::Float64
+    min_height::Float64
 end
-SceneFollowCamera(;kwargs...) = SceneFollowCamera(CameraState(;kwargs...))
+SceneFollowCamera(; x=NaN, y=NaN, zoom=NaN, padding=4., kwargs...) = SceneFollowCamera(CameraState(;kwargs...), x, y, zoom, padding, 10, 10)
 function update_camera!(camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
-    C = sum([posg(veh.state)[1:2] for veh in scene])/length(scene)  # center of mass
-    set_camera!(camera.cs, x=C[1], y=C[2])
-    # should also add capabilities for adapting zoom level to make all vehicles of the scene fit
-    # along the lines of FitToContentCamera, but much simpler (just using entity coordinates to determine bounding box but INCLUDING zoom)
+    if isnan(camera.zoom)
+        pos = [posg(veh.state) for veh in scene]
+        X = [p.x for p in pos]
+        Y = [p.y for p in pos]
+        p = camera.padding
+        x_min, x_max = minimum(X)-p, maximum(X)+p
+        y_min, y_max = minimum(Y)-p, maximum(Y)+p
+        width = max(x_max-x_min, camera.min_width)
+        height = max(y_max-y_min, camera.min_height)
+        x_zoom = canvas_width(camera) / width
+        y_zoom = canvas_height(camera) / height
+        x_zoom, y_zoom
+        x = isnan(camera.x) ? (x_min+x_max)/2 : camera.x
+        y = isnan(camera.y) ? (y_min+y_max)/2 : camera.y
+        zoom = min(x_zoom, y_zoom)
+    else
+        # TODO: is following the center of mass really the best thing to do?
+        C = sum([posg(veh.state)[1:2] for veh in scene])/length(scene)  # center of mass
+        x = isnan(camera.x) ? C[1] : camera.x
+        y = isnan(camera.y) ? C[2] : camera.y
+        zoom = camera.zoom
+    end
+    
+    set_camera!(camera.state, x=x, y=y, zoom=zoom)
 end
 
 
