@@ -1,31 +1,5 @@
 abstract type SceneOverlay end
 
-function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{O};
-    canvas_width::Int=DEFAULT_CANVAS_WIDTH,
-    canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
-    rendermodel::RenderModel=RenderModel(),
-    cam::Camera=SceneFollowCamera(),
-    car_colors::Dict{I,C}=Dict{I,Colorant}(),
-    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-    ) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
-
-
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-
-    render!(rendermodel, roadway)
-    render!(rendermodel, scene, car_colors=car_colors)
-
-    for overlay in overlays
-        render!(rendermodel, overlay, scene, roadway)
-    end
-
-    camera_set!(rendermodel, cam, scene, roadway, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
-    return surface
-end
-
 mutable struct TextParams
     size::Int
     color::Colorant
@@ -63,7 +37,7 @@ end
     line_spacing::Float64 = 1.5 # multiple of font_size
     incameraframe=false
 end
-function render!(rendermodel::RenderModel, overlay::TextOverlay, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
+function add_renderable!(rendermodel::RenderModel, overlay::TextOverlay, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
     x = overlay.pos.x
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
@@ -75,7 +49,7 @@ function render!(rendermodel::RenderModel, overlay::TextOverlay, scene::EntityFr
 end
 
 # method for new interface
-function render!(rendermodel::RenderModel, overlay::TextOverlay, scene)
+function add_renderable!(rendermodel::RenderModel, overlay::TextOverlay, scene)
     x = overlay.pos.x
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
@@ -90,7 +64,7 @@ end
 mutable struct Overwash <: SceneOverlay
     color::Colorant
 end
-function render!(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
+function add_renderable!(rendermodel::RenderModel, overlay::Overwash, scene::EntityFrame{S,D,I}, roadway::R) where {S,D,I,R}
     add_instruction!(rendermodel, render_paint, (overlay.color,))
     rendermodel
 end
@@ -114,7 +88,7 @@ The fill proportion is set using `val`, it should be a number between 0 and 1. I
     label_pos::VecSE2{Float64} = pos + VecSE2(0., -height/2)
 end
 
-function AutoViz.render!(rendermodel::RenderModel, overlay::HistogramOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {R,S,D,I}
+function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::HistogramOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {R,S,D,I}
     # render value 
     add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.val*overlay.height,overlay.fill_color, true, false), incameraframe=overlay.incameraframe)
     # render histogram outline 
@@ -137,7 +111,7 @@ The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float6
     y_off::Float64 = 0.
 end
 
-function AutoViz.render!(rendermodel::RenderModel, overlay::IDOverlay, scene::Frame{Entity{S,D,I}}, env::E) where {S,D,I,E}
+function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::IDOverlay, scene::Frame{Entity{S,D,I}}, env::E) where {S,D,I,E}
     font_size = overlay.font_size
     for veh in scene
         add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x + overlay.x_off, veh.state.posG.y + overlay.y_off, font_size, overlay.color), incameraframe=true)
@@ -159,7 +133,7 @@ mutable struct LineToCenterlineOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Frame{Entity{S,D,I}}, roadway::Any) where {S,D,I}
+function add_renderable!(rendermodel::RenderModel, overlay::LineToCenterlineOverlay, scene::Frame{Entity{S,D,I}}, roadway::Any) where {S,D,I}
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -191,7 +165,7 @@ mutable struct LineToFrontOverlay <: SceneOverlay
         new(target_id, line_width, color)
     end
 end
-function render!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
+function add_renderable!(rendermodel::RenderModel, overlay::LineToFrontOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     if overlay.target_id < 0
         target_inds = 1:length(scene)
@@ -230,7 +204,7 @@ fields:
     size::Float64 = 0.3
 end
 
-function AutoViz.render!(rendermodel::RenderModel, overlay::BlinkerOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {S,D,I,R}
+function add_renderable!(rendermodel::RenderModel, overlay::BlinkerOverlay, scene::Frame{Entity{S,D,I}}, roadway::R) where {S,D,I,R}
     if !overlay.on
         return nothing 
     end
@@ -256,7 +230,7 @@ mutable struct CarFollowingStatsOverlay <: SceneOverlay
         new(target_id, verbosity, color,font_size)
     end
 end
-function render!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
+function add_renderable!(rendermodel::RenderModel, overlay::CarFollowingStatsOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     font_size = overlay.font_size
     text_y = font_size
@@ -330,7 +304,7 @@ mutable struct NeighborsOverlay <: SceneOverlay
         new(target_id, color_L, color_M, color_R, line_width, textparams)
     end
 end
-function render!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
+function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     textparams = overlay.textparams
     yₒ = textparams.y_start
@@ -415,7 +389,7 @@ mutable struct MarkerDistOverlay <: SceneOverlay
     end
 end
 
-function render!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
+function add_renderable!(rendermodel::RenderModel, overlay::MarkerDistOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
     textparams = overlay.textparams
     yₒ = textparams.y_start
@@ -455,7 +429,7 @@ end
 #         retval
 #     end
 # end
-# function render!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
+# function add_renderable!(rendermodel::RenderModel, overlay::MOBILOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
 #     rec = overlay.rec
 #     update!(rec, scene)
@@ -617,7 +591,7 @@ end
 
 #     CollisionOverlay(target_id::Int=-1; color::Colorant=RGBA(1.0,0.0,0.0,0.5)) = new(target_id, color, CPAMemory())
 # end
-# function render!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
+# function add_renderable!(rendermodel::RenderModel, overlay::CollisionOverlay, scene::Frame{Entity{S,D,I}}, roadway::Roadway) where {S,D,I}
 
 #     if overlay.target_id < 0
 #         target_inds = 1:length(scene)
@@ -635,3 +609,26 @@ end
 
 #     rendermodel
 # end
+
+"""
+Decorator which allows to use `SceneOverlay` objects together with the method
+    render([Renderables])
+
+This is required primarily for allowing backward compatibility with overlays
+that use the old rendering interface.
+"""
+struct RenderableOverlay{O,S,D,I} <: Renderable where {O<:SceneOverlay,S,D,I}
+    overlay::O
+    scene::Frame{Entity{S,D,I}}
+    roadway::Roadway
+end
+
+function add_renderable!(rm::RenderModel, ro::RenderableOverlay{O,S,D,I}) where {O<:SceneOverlay,S,D,I}
+    add_renderable!(rm, ro.overlay, ro.scene, ro.roadway)
+end
+
+function add_renderable!(rm::RenderModel, iterable::Union{Array{<:RenderableOverlay},Tuple{<:RenderableOverlay}})
+    for ro in iterable add_renderable!(rm, ro) end
+end
+isrenderable(::Type{Array{<:RenderableOverlay}}) = true
+isrenderable(::Type{Tuple{<:RenderableOverlay}}) = true

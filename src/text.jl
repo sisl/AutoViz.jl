@@ -1,6 +1,6 @@
 isrenderable(::Type{String}) = true
 
-function render!(rm::RenderModel, t::String)
+function add_renderable!(rm::RenderModel, t::String)
     font_size = 12
     x = 10
     y = 1.5*font_size

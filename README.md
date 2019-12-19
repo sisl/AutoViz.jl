@@ -115,3 +115,40 @@ using AutoViz
 set_color_theme(LIGHTTHEME)
 ```
 You can also define your own color theme using a dictionary. Look at the example in `src/colorscheme.jl` to have the correct key names.
+
+
+## Change Log
+
+### v0.8.x
+
+#### Rendering
+ - Clean-up of the rendering interface: there is now only one single rendering function with the signature
+```
+render!(rendermodel::RenderModel, renderables::AbstractVector; canvas_width::Int, canvas_height::Int, surface::CairoSurface))
+```
+All keyword arguments are optional. Objects of type `Renderable` now no longer have to implement the `render!` function (which is a misleading name). Instead one must implement the `add_renderable!` function which adds the rendering instructions to the `RenderModel`.
+ - Implicit conversions of non-renderable objects (such as `obj::Frame{Entity{S,D,I}}`) via implementations of `Base.convert(Renderable, obj)` are now discouraged. Instead, one can overwrite the `add_renderable!` method for such types. This is done for some very common types.
+ - The new `render!` function now only takes objects which are renderable, i.e. which implement the `add_renderable(rm::RenderModel, obj)` function. There is no longer a distinction between drawing roadways, scenes or overlays. They all need to satisfy the same interface, and they are drawn in the order in which they are passed to the `render!` function. This change decreases the number of available render functions from almost ten to one and should make the control flow more clear.
+ - Additional arguments to `render!` such as `camera` and `car_colors` are no longer supported. Camera effects should be applied before calling `render!` (see section below) and rendering attributes such as colors should be passed in as part of a renderable object.
+
+#### Overlays
+ - Changed the interface for rendering overlays to only take an instance of `RenderModel` and the overlay itself. All additional data must be stored as part of the overlay if it is needed during rendering.
+ - Added a `RenderableOverlay` wrapper which makes the legacy overlays work with the new rendering interface (in which overlays do not get any input arguments for rendering)
+
+#### Cameras
+ - Changed the camera interface. The full state of the camera, such as `camera_pos`, `camera_zoom`, `camera_rotation` is stored in `RenderModel` (this has already been the case in previous AutoViz versions). A `Camera` acts upon a `RenderModel` by changing these internal variables. The function `camera_set!` now becomes `update_camera!`.
+ - Many setter functions for the camera have been replaced by the `set_camera!()` function which takes keyword arguments for `x`, `y` and `zoom`.
+ - The implementations of `TargetFollowCamera` (former `CarFollowCamera`) and `SceneFollowCamera` have been reviewed and simplified. Additionally, a `ZoomingCamera` type which gradually changes the zoom level has been introduced and for easy extensibility there is also a `ComposedCamera` type which takes a list of cameras and applies their effects sequentially to the `RenderModel`.
+ - The new `render!` function no longer takes a camera as an input argument, but assumes that the camera settings have already been applied to the `RenderModel` via `update_camera!` prior to calling `render!`. User code should be adapted accordingly.
+ 
+#### Visualization of Entities
+ - Controlling the appearance of vehicles by setting `set_render_mode(:basic|:fancy)` is no longer encouraged. Instead, we provide new renderable types such as `EntityRectangle`, `FancyCar`, `FancyPedestrian`, `VelocityArrow` in addition to the already implemented `ArrowCar` type which can all be used to conveniently display entities.
+ - A convenience function for rendering scenes directly (i.e. without explicit conversion to a `Renderable` type) is still supported.
+ - TODO: make FancyCar work on my platform
+
+#### 1D Vehicles
+ - Support for 1D vehicles has mostly been discontinued and some of the related functions were removed. However, the new functions should work seamlessly in many cases as long as the 1D vehicles implement basic functions such as `posg`, `width`, `length` from `AutomotiveDrivingModels.jl`
+
+## TODO: adapt tutorials
+## TODO: adapt unit tests
+## TODO: adapt docs
