@@ -18,6 +18,9 @@ Rsvg = "c4c386cf-5103-5370-be45-f3a111cca3b8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Vec = "44eeaf0b-fee4-471f-9310-ed6585cb3142"
 
+[compat]
+Colors = "0.9"
+
 [extras]
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
 NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
