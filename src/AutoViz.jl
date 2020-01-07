@@ -106,7 +106,8 @@ export
     ArrowCar,
     EntityRectangle,
     VelocityArrow,
-    FancyCar
+    FancyCar,
+    FancyPedestrian
 
 
 # Overlays
