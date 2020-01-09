@@ -39,7 +39,7 @@ You should call `update_camera!` before calling `render` to adapt the camera to 
 The instructions of the `rendermodel` are reset automatically at the beginning of this function.
 """
 function render(renderables::AbstractVector;
-    camera::Camera=SceneFollowCamera(),
+    camera::Camera=StaticCamera(;zoom=4.),
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width(camera), canvas_height(camera))
 )
     rendermodel = RenderModel()

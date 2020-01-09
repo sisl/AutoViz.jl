@@ -30,32 +30,88 @@ Pkg.add(PackageSpec(url="https://github.com/sisl/AutoViz.jl"))
 
 ## Usage
 
-The main function is
+AutoViz works by adding rendering instructions to a `RenderModel`,
+and finally applying those instructions to a canvas using the
+`render` function.
+
+### Basic Usage
+
+In the simplest case, a `roadway` and a `scene` of types `Roadway` and `Scene`
+respectively can be rendered via
 
 ```julia
-render(scene)
+render([roadway, scene])
 ```
 
-where scene is an iterable of renderable objects including cars and roadways.
+However, the rendering interface is much more flexible than that,
+supporting custom rendering and cameras.
 
-Example:
+### Renderable Objects
+
+In order for an object of type `ObjectType` to be "renderable",
+we need to provide a function with the signature
+``` julia
+    add_renderable!(rendermodel::RenderModel, obj::ObjectType)
+```
+The basic example above works, because AutoViz implements the
+`add_renderable!` function for commonly used types such as
+`Roadway`, `Vehicle` or `Scene`.
+In general, the `render(renderables)` function can take any collection
+of renderable objects.
+AutoViz provides a series of convenient wrapper objects such as
+`FancyCar`, `FancyPedestrian`, `EntityRectangle` to make entities
+renderable.
+
+### Cameras
+
+A `Camera` object specifies what portion of the scene should be rendered.
+
+By default, `render(renderables)` uses a static camera.
+In order to use an adaptive camera, the `camera` object
+needs to be updated before rendering and passed in to the
+`render` function as a keyword argument.
+
 ```julia
+update_camera!(scene, camera)
+render([roadway, scene], camera=camera)
+```
+
+### Full Example
+
+```julia
+# define roadway and vewhicle objects
 roadway = gen_straight_roadway(3, 100.0)
-car = ArrowCar([50.0, 0.0], 0.0, color=colorant"blue") # [north, east], angle
-render([roadway, car, "some text"])
+lane = roadway[LaneTag(1,2)]
+def = VehicleDef(length=5., width=2.)
+ego = Entity(VehicleState(Frenet(lane, 50.,  0., 0.), roadway, 5rand()), def, :ego)
+carA = Entity(VehicleState(Frenet(lane, 20.,  2., -.2), roadway, 5rand()), def, :carA)
+carB = Entity(VehicleState(Frenet(lane, 40.,  -2., -.1), roadway, 5rand()), def, :carB)
+carC = Entity(VehicleState(Frenet(lane, 60.,  0., .4), roadway, 5rand()), def, :carC)
+carD = Entity(VehicleState(Frenet(lane, 80.,  3., .1), roadway, 5rand()), def, :carD)
+scene = Frame([ego, carA, carB, carC, carD])
+
+# define camera and adjust to scene
+camera = TargetFollowCamera(:ego; y=0., zoom=12.)
+update_camera!(camera, scene)
+
+# render
+renderables = [
+    roadway,
+    FancyCar(car=ego, color=colorant"blue"),
+    FancyCar(car=carA, color=rand(RGB)),
+    FancyCar(car=carB, color=rand(RGB)),
+    EntityRectangle(entity=carC, color=rand(RGB)),
+    EntityRectangle(entity=carD, color=rand(RGB)),
+    TextOverlay(text=["AutoViz rocks!"], font_size=60, pos=VecE2(400, 100), color=colorant"green")
+]
+for veh in scene
+    push!(renderables, VelocityArrow(entity=veh))
+end
+img = render(renderables, camera=camera)
 ```
 
 In a jupyter notebook, an image will appear, otherwise see the [Saving images](#saving-images) section below. A short tutorial is located in [notebooks/tutorial.ipynb](notebooks/tutorial.ipynb).
 
-## Renderable
-
-*What does it mean to be "renderable"?*
-
-An object is *directly renderable* if the function `render!(rm::RenderModel, object)` is implemented for it.
-
-An object is *renderable by conversion* if `convert(Renderable, object)` returns a directly renderable object.
-
-When `render()` is invoked, direct renderability is checked with `isrenderable(object)`, which defaults to `method_exists(render!, Tuple{RenderModel, typeof(object)})`. If this check fails, a conversion attempt is made with `convert(Renderable, object)`.
 
 ### Roadways and ArrowCars
 

@@ -91,7 +91,7 @@ end
 function render_velocity_arrow(ctx::CairoContext, va::VelocityArrow)
     x, y, yaw = posg(va.entity.state)
     vx, vy = velg(va.entity.state)
-    save(ctx); translate(ctx, x, y); rotate(ctx, yaw);
+    save(ctx); translate(ctx, x, y);
     render_arrow(ctx, [[0.  vx];[0. vy]], va.color, .3, .8, ARROW_WIDTH_RATIO=1., ARROW_ALPHA=.12pi, ARROW_BETA=.6pi)
     restore(ctx)
 end
