@@ -1,17 +1,11 @@
 """
-Model to keep track of rendering parameters such as position, rotation and zoom level as well as background color.
+Model to keep track of rendering instructions and background color.
 
  - `instruction_set::AbstractVector{Tuple}`: set of render instructions (function, array of inputs sans ctx, incameraframe)
- - `camera_center::VecE2`: position of camera in [N,E] relative to the mean point. meters
- - `camera_zoom::Float64`: camera zoom in [pix/m]
- - `camera_rotation::Float64`: camera rotation in [rad]
  - `background_color::RGB`: background color
 """
 @with_kw mutable struct RenderModel
     instruction_set  :: AbstractVector{Tuple} = Array{Tuple}(undef, 0)
-    camera_center    :: VecE2 = VecE2(0.0,0.0)
-    camera_zoom      :: Float64 = 1.
-    camera_rotation  :: Float64 = 0.
     background_color :: RGB = _colortheme["background"]
 end
 
@@ -32,40 +26,8 @@ function add_instruction!(rm::RenderModel, f::Function, arr::Tuple; incamerafram
     rm
 end
 
-camera_move!(rm::RenderModel, dx::Real, dy::Real) = rm.camera_center = rm.camera_center + VecE2(dx, dy)
-camera_move!(rm::RenderModel, Δ::VecE2) = rm.camera_center = rm.camera_center + Δ
-camera_move_pix!(rm::RenderModel, dx::Real, dy::Real) = rm.camera_center = rm.camera_center + VecE2(dx/rm.camera_zoom, dy/rm.camera_zoom)
-camera_move_pix!(rm::RenderModel, Δ::VecE2) = rm.camera_center = rm.camera_center + VecE2(Δ.x/rm.camera_zoom, Δ.y/rm.camera_zoom)
-camera_rotate!(rm::RenderModel, θ::Real) = rm.camera_rotation += θ # [radians]
-camera_zoom!(rm::RenderModel, factor::Real) = rm.camera_zoom *= factor
 set_background_color!(rm::RenderModel, color::Colorant) = rm.background_color = convert(RGB{U8}, color)
-
-function reset_camera!(rm::RenderModel)
-    rm.camera_center = VecE2(0.0,0.0)
-    rm.camera_zoom = 1.0
-    rm.camera_rotation = 0.0
-    rm
-end
 reset_instructions!(rm::RenderModel) = empty!(rm.instruction_set)
-function reset_model!(rm::RenderModel)
-    reset_instructions!(rm)
-    reset_camera!(rm)
-end
-
-function set_camera!(
-    rm::RenderModel;
-    x::Real=rm.camera_center.x,
-    y::Real=rm.camera_center.y,
-    zoom::Real=rm.camera_zoom,
-    rotation::Real=rm.camera_rotation
-)
-    rm.camera_center = VecE2(x,y)
-    rm.camera_zoom = zoom
-    rm.camera_rotation = rotation
-    rm
-end
-set_camera!(rm::RenderModel, xy::AbstractVec, zoom::Real=rm.camera_zoom) = set_camera!(rm; x=xy[1], y=xy[2], zoom=zoom)
-
 
 """
 Draw all `renderables` to a `surface` using the parameters specified in `rendermodel`.
@@ -76,42 +38,48 @@ which adds instructions for rendering to the render model.
 You should call `update_camera!` before calling `render` to adapt the camera to the new scene.
 The instructions of the `rendermodel` are reset automatically at the beginning of this function.
 """
-function render!(rendermodel::RenderModel, renderables::AbstractVector;  # TODO: specify type ::Vector{<:Renderable};
-    canvas_width::Int=AutoViz.DEFAULT_CANVAS_WIDTH,
-    canvas_height::Int=AutoViz.DEFAULT_CANVAS_HEIGHT,
-    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+function render(renderables::AbstractVector;
+    camera::Camera=StaticCamera(;zoom=4.),
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width(camera), canvas_height(camera))
 )
+    rendermodel = RenderModel()
     reset_instructions!(rendermodel)
     ctx = creategc(surface)
     for renderable in renderables
         add_renderable!(rendermodel, renderable)
     end
-    render_to_canvas(rendermodel, ctx, canvas_width, canvas_height)
+    render_to_canvas(rendermodel, camera, ctx)
     return surface
 end
 
 
-function render_to_canvas(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer, canvas_height::Integer)
+function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, ctx::CairoContext)
 
     # fill with background color
     set_source_rgba(ctx, rendermodel.background_color)
     paint(ctx)
+
+    w, h = canvas_width(camera_state), canvas_height(camera_state)
 
     # render text if no other instructions
     if isempty(rendermodel.instruction_set)
         text_color = RGB(1.0 - convert(Float64, red(rendermodel.background_color)),
                          1.0 - convert(Float64, green(rendermodel.background_color)),
                          1.0 - convert(Float64, blue(rendermodel.background_color)))
-        render_text(ctx, "This screen left intentionally blank", canvas_width/2, canvas_height/2, 40, text_color, true)
+        render_text(
+            ctx, "This screen left intentionally blank",
+            w/2, h/2, 40, text_color, true
+        )
         return
     end
 
     # reset the transform
     reset_transform(ctx)
-    translate(ctx, canvas_width/2, canvas_height/2)                              # translate to image center
-    Cairo.scale(ctx, rendermodel.camera_zoom, -rendermodel.camera_zoom )               # [pix -> m]
-    rotate(ctx, rendermodel.camera_rotation)
-    translate(ctx, -rendermodel.camera_center.x, -rendermodel.camera_center.y) # translate to camera location
+    translate(ctx, w/2, h/2)  # translate to image center
+    Cairo.scale(ctx, zoom(camera_state), -zoom(camera_state))    # [pix -> m]
+    rotate(ctx, rotation(camera_state))
+    x, y = position(camera_state)
+    translate(ctx, -x, -y) # translate to camera location
 
     # execute all instructions
     for tup in rendermodel.instruction_set
@@ -146,4 +114,115 @@ function render_to_canvas(rendermodel::RenderModel, ctx::CairoContext, canvas_wi
     end
 
     ctx
+end
+function render_to_canvas(rendermodel::RenderModel, camera::Camera, ctx::CairoContext)
+    render_to_canvas(rendermodel, camera.state, ctx)
+end
+
+
+"""
+Helper function that determines camera parameters such that all rendered content fits on the canvas.
+The camera rotation will always be set to 0. An additional border can be added around the content using the keyword argument `percent_border` (default 0.1)
+"""
+function camera_fit_to_content(
+    rendermodel::RenderModel, ctx::CairoContext,
+    canvas_width::Integer = DEFAULT_CANVAS_WIDTH,
+    canvas_height::Integer = DEFAULT_CANVAS_HEIGHT;
+    percent_border::Real = 0.1
+)
+
+    xmax, xmin, ymax, ymin = -Inf, Inf, -Inf, Inf
+
+    for tup in rendermodel.instruction_set
+        f = tup[1]
+        in_camera_frame = tup[3]
+        if !in_camera_frame
+            continue
+        end
+
+        (x,y,flag) = (0,0,false)
+        if f == render_circle || f == render_round_rect
+            (x,y,flag) = (tup[2][1],tup[2][2],true)
+        elseif f == render_text
+            (x,y,flag) = (tup[2][2],tup[2][3],true)
+        elseif f == render_point_trail || f == render_line ||
+               f == render_dashed_line || f == render_fill_region
+
+            pts = tup[2][1]
+            if isa(pts, AbstractArray{Float64})
+                for i in 1 : size(pts, 2)
+                    xmax = max(xmax, pts[1,i])
+                    xmin = min(xmin, pts[1,i])
+                    ymax = max(ymax, pts[2,i])
+                    ymin = min(ymin, pts[2,i])
+                end
+            elseif isa(pts, AbstractVector{VecE2{T}} where T<:Real)
+                for P in pts
+                    xmax = max(xmax, P.x)
+                    xmin = min(xmin, P.x)
+                    ymax = max(ymax, P.y)
+                    ymin = min(ymin, P.y)
+                end
+            end
+
+        # vehicles - center + sqrt((width/2)^2 + (height/2)^2)
+        elseif f == render_vehicle
+            x = tup[2][1]
+            y = tup[2][2]
+            width = tup[2][5]
+            height = tup[2][4]
+            bounding_radius = sqrt((width/2)^2 + (height/2)^2)
+            xmax = max(xmax, x + bounding_radius)
+            xmin = min(xmin, x - bounding_radius)
+            ymax = max(ymax, y + bounding_radius)
+            ymin = min(ymin, y - bounding_radius)
+        end
+
+        if flag
+            xmax = max(xmax, x)
+            xmin = min(xmin, x)
+            ymax = max(ymax, y)
+            ymin = min(ymin, y)
+        end
+    end
+
+    if isinf(xmin) || isinf(ymin)
+        return
+    end
+
+    if xmax < xmin
+        xmax = xmin + 1.0
+    end
+    if ymax < ymin
+        ymax = ymin + 1.0
+    end
+
+    # compute zoom to fit
+    world_width = xmax - xmin
+    world_height = ymax - ymin
+    canvas_aspect = canvas_width / canvas_height
+    world_aspect = world_width / world_height
+
+    if world_aspect > canvas_aspect
+        # expand height to fit
+        half_diff =  (world_width * canvas_aspect - world_height) / 2
+        world_height = world_width * canvas_aspect # [m]
+        ymax += half_diff
+        ymin -= half_diff
+    else
+        # expand width to fit
+        half_diff = (canvas_aspect * world_height - world_width) / 2
+        world_width = canvas_aspect * world_height
+        xmax += half_diff
+        xmin -= half_diff
+    end
+
+    camera_state = CameraState(
+        position = VecE2(xmin + world_width/2, ymin + world_height/2), # [m]
+        zoom     = (canvas_width*(1-percent_border)) / world_width,    # [pix/m]
+        rotation = 0.,                                                 # [rad]
+        canvas_width = canvas_width,                                   # [px]
+        canvas_height = canvas_height                                  # [px]
+    )
+    return camera_state
 end
