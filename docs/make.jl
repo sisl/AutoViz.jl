@@ -1,7 +1,7 @@
 using Documenter, AutoViz
 
 makedocs(modules = [AutoViz],
-         format = :html,
+         format = Documenter.HTML(),
          sitename="AutoViz.jl")
 
 deploydocs(
