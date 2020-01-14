@@ -200,3 +200,5 @@ function render(
     return surface
 end
 
+# render nothing by not doing anything
+add_renderable!(rm::RenderModel, ::Nothing) = rm
