@@ -38,20 +38,34 @@ export
     LIGHTTHEME,
     set_color_theme
 
+# Cameras
+include("cameras.jl")
+export
+    CameraState,
+    Camera,
+    update_camera!,
+    StaticCamera,
+    TargetFollowCamera,
+    ZoomingCamera,
+    ComposedCamera,
+    SceneFollowCamera,
+    FitToContentCamera,
+    set_camera!,
+    camera_fit_to_content!,
+    camera_move!,
+    camera_move_pix!,
+    camera_rotate!,
+    camera_zoom!,
+    reset_camera!
+
+
 include("rendermodels.jl")
 export
         RenderModel,
         render_to_canvas,
         add_instruction!,
-        camera_fit_to_content!,
-        camera_move!,
-        camera_move_pix!,
-        camera_rotate!,
-        camera_zoom!,
-        reset_camera!,
         reset_instructions!,
         reset_model!,
-        set_camera!,
         set_background_color!
 
 # Cairo drawing utilities
@@ -79,19 +93,6 @@ export
 
 include("fancy_render.jl")
 
-# Cameras
-include("cameras.jl")
-export
-    Camera,
-    update_camera!,
-    StaticCamera,
-    TargetFollowCamera,
-    ZoomingCamera,
-    ComposedCamera,
-    SceneFollowCamera,
-    FitToContentCamera
-
-
 # renderable interface
 include("renderable.jl")
 include("text.jl")
@@ -106,7 +107,8 @@ export
     ArrowCar,
     EntityRectangle,
     VelocityArrow,
-    FancyCar
+    FancyCar,
+    FancyPedestrian
 
 
 # Overlays

@@ -19,6 +19,7 @@ Vec = "44eeaf0b-fee4-471f-9310-ed6585cb3142"
 
 [compat]
 AutomotiveDrivingModels = ">=0.7.10"
+Colors = "=0.9.6"
 
 [extras]
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
