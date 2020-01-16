@@ -1,8 +1,11 @@
-using Documenter, AutoViz
+using Documenter
+using AutoViz
 
-makedocs(modules = [AutoViz],
-         format = :html,
-         sitename="AutoViz.jl")
+makedocs(
+    modules = [AutoViz],
+    sitename="AutoViz.jl",
+    format = Documenter.HTML()
+)
 
 deploydocs(
     repo = "github.com/sisl/AutoViz.jl.git"
