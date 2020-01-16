@@ -95,7 +95,6 @@ include("fancy_render.jl")
 
 # renderable interface
 include("renderable.jl")
-include("text.jl")
 
 export
     Renderable,
