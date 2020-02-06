@@ -200,7 +200,7 @@ fields:
     on::Bool = false 
     right::Bool = true
     veh::Vehicle = Vehicle(VehicleState(), VehicleDef(), 0)
-    color::Colorant = colorant"0xFFEF00FF" # yellow 
+    color::Colorant = colorant"0xFFEF00" # yellow 
     size::Float64 = 0.3
 end
 
