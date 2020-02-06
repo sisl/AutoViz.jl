@@ -121,6 +121,7 @@ end
 
 
 """
+    camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.1)
 Helper function that determines camera parameters such that all rendered content fits on the canvas.
 The camera rotation will always be set to 0. An additional border can be added around the content using the keyword argument `percent_border` (default 0.1)
 """

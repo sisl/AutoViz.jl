@@ -1,14 +1,15 @@
 """
+    CameraState
 Representation of camera parameters such as position, rotation and zoom level.
 
- - `camera_center::VecE2`: position of camera in [N,E] relative to the mean point. meters
- - `camera_zoom::Float64`: camera zoom in [pix/m]
- - `camera_rotation::Float64`: camera rotation in [rad]
+ - `camera_center::VecE2{Real}`: position of camera in [N,E] relative to the mean point. meters
+ - `camera_zoom::Real`: camera zoom in [pix/m]
+ - `camera_rotation::Real`: camera rotation in [rad]
 """
 @with_kw mutable struct CameraState
     position  :: VecE2 = VecE2(0.,0.)
-    zoom      :: Float64 = 1.
-    rotation  :: Float64 = 0.
+    zoom      :: Real = 1.
+    rotation  :: Real = 0.
     canvas_width  :: Int64 = DEFAULT_CANVAS_WIDTH
     canvas_height :: Int64 = DEFAULT_CANVAS_HEIGHT
 end
@@ -51,7 +52,12 @@ canvas_width(c::Camera) = canvas_width(c.state)
 canvas_height(c::Camera) = canvas_height(c.state)
 
 """
-Static  camera, does nothing
+    StaticCamera <: Camera
+
+Fix the position and the zoom as specified in the constructor.
+
+# Constructor
+`StaticCamera(position::VecE2=(0,0), zoom::Real=4)`
 """
 struct StaticCamera <: Camera
     state::CameraState
@@ -60,12 +66,18 @@ StaticCamera(;kwargs...) = StaticCamera(CameraState(;kwargs...))
 update_camera!(::StaticCamera, ::Frame) = nothing
 
 """
+    TargetFollowCamera <: Camera
 Camera which follows the vehicle with ID `target_id`.
 By default, the target vehicle is tracked in x and y direction.
 Tracking in either direction can be disabled by setting the 
 `x` or `y` keys to a desired value.
+
+# Constructor
+
+`TargetFollowCamera(target_id; x=NaN, y=NaN, kwargs...)`
+
 """
-mutable struct TargetFollowCamera{I} <: Camera where I
+mutable struct TargetFollowCamera{I} <: Camera
     state::CameraState
     target_id::I
     x::Float64
@@ -84,6 +96,7 @@ function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{Entity{S,D,I
 end
 
 """
+    ZoomingCamera <: Camera
 Camera which gradually changes the zoom level of the scene to `zoom_target` with step size `dz`.
 """
 mutable struct ZoomingCamera <: Camera
@@ -105,7 +118,7 @@ function update_camera!(camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity
 end
 
 """
-    SceneFollowCamera{R<:Real}
+    SceneFollowCamera
 
 Camera centered over all vehicles.
 
@@ -155,6 +168,7 @@ end
 
 
 """
+    ComposedCamera <: Camera
 Composition of several cameras. The `update_camera` actions of the individual cameras are applied in the order in which they are saved in the `cameras` array.
 States of individual cameras are ignored, the state of the composed camera is the one that will be used for rendering.
 
