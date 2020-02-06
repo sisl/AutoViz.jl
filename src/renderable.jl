@@ -48,6 +48,11 @@ An arrow indicates the heading direction of the car.
 end
 ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
 ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
+ArrowCar(entity::Entity, color::Color) = ArrowCar(posg(entity.state).x, posg(entity.state).y, 
+                                                  posg(entity.state).θ, 
+                                                  length=length(entity.def),
+                                                  width=AutomotiveDrivingModels.width(entity.def),
+                                                  color=color)
 
 function add_renderable!(rm::RenderModel, c::ArrowCar)
     x = c.pos[1]
