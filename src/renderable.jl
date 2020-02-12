@@ -168,3 +168,6 @@ function add_renderable!(rendermodel::RenderModel, scene::Frame{E}) where {E<:En
     end
     return rendermodel
 end
+
+# render nothing by not doing anything
+add_renderable!(rm::RenderModel, ::Nothing) = rm

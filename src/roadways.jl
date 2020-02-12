@@ -178,7 +178,4 @@ function add_renderable!(rendermodel::RenderModel, roadway::Roadway;
     return rendermodel
 end
 
-# for case when there is no roadway
-add_renderable!(rendermodel::RenderModel, roadway::Nothing) = rendermodel
-
 Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))
