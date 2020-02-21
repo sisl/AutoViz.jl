@@ -24,8 +24,8 @@ mutable struct TextParams
         retval
     end
 end
-function drawtext(text::AbstractString, y::Int, rendermodel::RenderModel, t::TextParams; incameraframe::Bool=false)
-    add_instruction!(rendermodel, render_text, (text, t.x, y, t.size, t.color), incameraframe=incameraframe)
+function drawtext(text::AbstractString, y::Int, rendermodel::RenderModel, t::TextParams; coordinate_system::Symbol=:camera_pixels)
+    add_instruction!(rendermodel, render_text, (text, t.x, y, t.size, t.color), coordinate_system=coordinate_system)
     y + t.y_jump
 end
 
@@ -35,14 +35,14 @@ end
     font_size::Int = 10 # [pix]
     pos::VecE2 = VecE2(10, font_size)
     line_spacing::Float64 = 1.5 # multiple of font_size
-    incameraframe=false
+    coordinate_system::Symbol=:camera_pixels
 end
 function add_renderable!(rendermodel::RenderModel, overlay::TextOverlay)
     x = overlay.pos.x
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
     for line in overlay.text
-        add_instruction!(rendermodel, render_text, (line, x, y, overlay.font_size, overlay.color), incameraframe=overlay.incameraframe)
+        add_instruction!(rendermodel, render_text, (line, x, y, overlay.font_size, overlay.color), coordinate_system=overlay.coordinate_system)
         y += y_jump
     end
     rendermodel
@@ -54,7 +54,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::TextOverlay, scene)
     y = overlay.pos.y
     y_jump = overlay.line_spacing*overlay.font_size
     for line in overlay.text
-        add_instruction!(rendermodel, render_text, (line, x, y, overlay.font_size, overlay.color), incameraframe=overlay.incameraframe)
+        add_instruction!(rendermodel, render_text, (line, x, y, overlay.font_size, overlay.color), coordinate_system=overlay.coordinate_system)
         y += y_jump
     end
     rendermodel
@@ -77,7 +77,7 @@ The fill proportion is set using `val`, it should be a number between 0 and 1. I
 """
 @with_kw mutable struct HistogramOverlay <: SceneOverlay
     pos::VecE2{Float64} = VecE2(0.,0.)
-    incameraframe::Bool = true
+    coordinate_system::Symbol = :camera_pixels
     label::String = "histogram"
     val::Float64 = 0.5 # should be between 0 and 1
     width::Float64 = 2.
@@ -90,11 +90,11 @@ end
 
 function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::HistogramOverlay)
     # render value 
-    add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.val*overlay.height,overlay.fill_color, true, false), incameraframe=overlay.incameraframe)
+    add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.val*overlay.height,overlay.fill_color, true, false), coordinate_system=overlay.coordinate_system)
     # render histogram outline 
-    add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.height, overlay.line_color), incameraframe=overlay.incameraframe)
+    add_instruction!(rendermodel, render_rect, (overlay.pos.x, overlay.pos.y, overlay.width, overlay.height, overlay.line_color), coordinate_system=overlay.coordinate_system)
      # label 
-    add_instruction!(rendermodel, render_text, (overlay.label, overlay.label_pos.x, overlay.label_pos.y, overlay.font_size, overlay.line_color), incameraframe=overlay.incameraframe)
+    add_instruction!(rendermodel, render_text, (overlay.label, overlay.label_pos.x, overlay.label_pos.y, overlay.font_size, overlay.line_color), coordinate_system=overlay.coordinate_system)
 end
 
 """
@@ -114,7 +114,7 @@ end
 function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::IDOverlay, scene::Frame{Entity{S,D,I}}, env::E) where {S,D,I,E}
     font_size = overlay.font_size
     for veh in scene
-        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x + overlay.x_off, veh.state.posG.y + overlay.y_off, font_size, overlay.color), incameraframe=true)
+        add_instruction!(rendermodel, render_text, ("$(veh.id)", veh.state.posG.x + overlay.x_off, veh.state.posG.y + overlay.y_off, font_size, overlay.color), coordinate_system=:scene)
     end
     return rendermodel
 end
@@ -236,7 +236,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::CarFollowingStatsOve
     text_y = font_size
     text_y_jump = round(Int, font_size*1.2)
     fmt_txt = @sprintf("id %d", overlay.target_id)
-    add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+    add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
         text_y += text_y_jump
 
     veh_index = findfirst(overlay.target_id, scene)
@@ -244,13 +244,13 @@ function add_renderable!(rendermodel::RenderModel, overlay::CarFollowingStatsOve
         veh = scene[veh_index]
 
         if overlay.verbosity ≥ 2
-            add_instruction!( rendermodel, render_text, ("posG: " * string(veh.state.posG), 10, text_y, font_size, overlay.color), incameraframe=false)
+            add_instruction!( rendermodel, render_text, ("posG: " * string(veh.state.posG), 10, text_y, font_size, overlay.color), coordinate_system=:scene)
             text_y += text_y_jump
-            add_instruction!( rendermodel, render_text, ("posF: " * string(veh.state.posF), 10, text_y, font_size, overlay.color), incameraframe=false)
+            add_instruction!( rendermodel, render_text, ("posF: " * string(veh.state.posF), 10, text_y, font_size, overlay.color), coordinate_system=:scene)
             text_y += text_y_jump
         end
         fmt_txt = @sprintf("speed: %0.3f", veh.state.v)
-        add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+        add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
         text_y += text_y_jump
 
 
@@ -259,28 +259,28 @@ function add_renderable!(rendermodel::RenderModel, overlay::CarFollowingStatsOve
             v2 = scene[foreinfo.ind]
             rel_speed = v2.state.v - veh.state.v
             fmt_txt = @sprintf("Δv = %10.3f m/s", rel_speed)
-            add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+            add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
             text_y += text_y_jump
             fmt_txt = @sprintf("Δs = %10.3f m/s", foreinfo.Δs)
-            add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+            add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
             text_y += text_y_jump
 
             if overlay.verbosity ≥ 2
-                add_instruction!( rendermodel, render_text, ("posG: " * string(v2.state.posG), 10, text_y, font_size, overlay.color), incameraframe=false)
+                add_instruction!( rendermodel, render_text, ("posG: " * string(v2.state.posG), 10, text_y, font_size, overlay.color), coordinate_system=:scene)
                 text_y += text_y_jump
-                add_instruction!( rendermodel, render_text, ("posF: " * string(v2.state.posF), 10, text_y, font_size, overlay.color), incameraframe=false)
+                add_instruction!( rendermodel, render_text, ("posF: " * string(v2.state.posF), 10, text_y, font_size, overlay.color), coordinate_system=:scene)
                 text_y += text_y_jump
                 fmt_txt = @sprintf("speed: %.3f", v2.state.v)
-                add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+                add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
                 text_y += text_y_jump
             end
         else
             fmt_txt = @sprintf("no front vehicle")
-            add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+            add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
         end
     else
         fmt_txt = @sprintf("vehicle %d not found", overlay.target_id)
-        add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), incameraframe=false)
+        add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:scene)
     end
 
     rendermodel

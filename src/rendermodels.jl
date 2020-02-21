@@ -1,7 +1,7 @@
 """
 Model to keep track of rendering instructions and background color.
 
- - `instruction_set::AbstractVector{Tuple}`: set of render instructions (function, array of inputs sans ctx, incameraframe)
+ - `instruction_set::AbstractVector{Tuple}`: set of render instructions (function, array of inputs sans ctx, coordinate_system)
  - `background_color::RGB`: background color
 """
 @with_kw mutable struct RenderModel
@@ -15,14 +15,17 @@ Add an instruction to the rendermodel
 INPUT:
     rendermodel   - the RenderModel we are adding the instruction to
     f             - the function to be called, the first argument must be a CairoContext
-    arr           - tuple of input arguments to f, skipping the CairoContext
-    incameraframe - we render in the camera frame by default.
-                    To render in the canvas frame (common with text) set this to false
+    args          - tuple of input arguments to f, skipping the CairoContext
+    coordinate_system - in which coordinate system are the coordinates given (one of :scene, :camera_pixels, :camera_relative)
+      `:scene` - coordinates are physical coordinates in the world frame in unit [meters]
+      `:camera_pixels` - coordinates are in pixels and relative to the rectangle selected by the camera in unit [pixels]
+      `:camera_relative` - coordinates are in percentages in the range 0 to 1 of the rectangle selected by the camera
 
 ex: add_instruction!(rendermodel, render_text, ("hello world", 10, 20, 15, [1.0,1.0,1.0]))
 """
-function add_instruction!(rm::RenderModel, f::Function, arr::Tuple; incameraframe::Bool=true)
-    push!(rm.instruction_set, (f, arr, incameraframe))
+function add_instruction!(rm::RenderModel, f::Function, args::Tuple; coordinate_system::Symbol=:scene)
+    @assert coordinate_system in (:scene, :camera_pixels, :camera_relative) "Invalid coordinate_system"
+    push!(rm.instruction_set, (f, args, coordinate_system))
     rm
 end
 
@@ -55,45 +58,40 @@ end
 
 function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, ctx::CairoContext)
 
+    # render text if no other instructions
+    if isempty(rendermodel.instruction_set)
+        render_text(
+            ctx, "No rendering instructions found",
+            w/2, h/2, 40, colorant"red", true
+        )
+        return rendermodel  # terminate here
+    end
+
     # fill with background color
     set_source_rgba(ctx, rendermodel.background_color)
     paint(ctx)
 
     w, h = canvas_width(camera_state), canvas_height(camera_state)
 
-    # render text if no other instructions
-    if isempty(rendermodel.instruction_set)
-        text_color = RGB(1.0 - convert(Float64, red(rendermodel.background_color)),
-                         1.0 - convert(Float64, green(rendermodel.background_color)),
-                         1.0 - convert(Float64, blue(rendermodel.background_color)))
-        render_text(
-            ctx, "This screen left intentionally blank",
-            w/2, h/2, 40, text_color, true
-        )
-        return
-    end
-
     # reset the transform
     reset_transform(ctx)
     translate(ctx, w/2, h/2)  # translate to image center
-    Cairo.scale(ctx, zoom(camera_state), -zoom(camera_state))    # [pix -> m]
+    Cairo.scale(ctx, zoom(camera_state), -zoom(camera_state))    # [pix -> m], negative zoom flips up and down
     rotate(ctx, rotation(camera_state))
     x, y = position(camera_state)
     translate(ctx, -x, -y) # translate to camera location
 
     # execute all instructions
     for tup in rendermodel.instruction_set
-        func = tup[1]
-        content = tup[2]
-        incameraframe = tup[3]
+        func, content, coordinate_system = tup
 
-        if !incameraframe
+        if coordinate_system in (:camera_pixels, :camera_relative)
             save(ctx)
             reset_transform(ctx)
+            if (coordinate_system == :camera_relative) Cairo.scale(ctx, w, h) end
             func(ctx, content...)
             restore(ctx)
-        else
-
+        elseif coordinate_system == :scene
             if func == render_text
                 # deal with the inverted y-axis issue for text rendered
                 mat = get_matrix(ctx)
@@ -110,6 +108,8 @@ function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, c
                 # just use the function normally
                 func(ctx, content...)
             end
+        else
+            throw(ErrorException("Invalid coordinate system $(coordinate_system). Must be one of :scene, :camera_pixels, :camera_relative"))
         end
     end
 
