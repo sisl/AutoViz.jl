@@ -12,9 +12,6 @@ using Rsvg
 @reexport using Colors
 using Cairo
 
-import Reel
-Reel.set_output_type("gif")
-
 const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
 export DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
@@ -125,11 +122,6 @@ export  SceneOverlay,
         LineToFrontOverlay,
         BlinkerOverlay,
         RenderableOverlay
-
-export PNGFrames,
-       SVGFrames
-
-include("reel_drive.jl")
 
 # Convenient implementation for roadway and vehicle rendering
 include("roadways.jl")
