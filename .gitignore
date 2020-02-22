@@ -4,3 +4,5 @@
 docs/build/
 *.webm
 test/*.svg
+test/*.png
+test/*.pdf
