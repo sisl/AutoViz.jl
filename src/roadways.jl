@@ -177,5 +177,3 @@ function add_renderable!(rendermodel::RenderModel, roadway::Roadway;
 
     return rendermodel
 end
-
-Base.show(io::IO, ::MIME"image/png", roadway::Roadway) = show(io, MIME"image/png"(), render(roadway))
