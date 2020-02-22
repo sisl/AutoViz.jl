@@ -87,7 +87,7 @@ function TargetFollowCamera(target_id; x=NaN, y=NaN, kwargs...)
     TargetFollowCamera(CameraState(;kwargs...), target_id, x, y)
 end
 
-function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{Entity{S,D,I}}) where {S,D,I}
+function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{E}) where {I,E<:Entity}
     target = get_by_id(scene, camera.target_id)
     x, y = posg(target.state)[1:2]
     x = isnan(camera.x) ? x : camera.x

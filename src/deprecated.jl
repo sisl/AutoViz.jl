@@ -12,7 +12,7 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
     renderables = [roadway]
     for (i, veh) in enumerate(scene)
         c = car_colors[i]
-        if _rendermode == :fancy
+        if rendermode == :fancy
             r = (
                 class(veh.def) == AgentClass.PEDESTRIAN
                 ? FancyPedestrian(ped=veh, color=c)
@@ -35,14 +35,14 @@ end
 function render!(
     rendermodel::RenderModel,
     scene::EntityFrame{S,D,I};
-    car_color::Colorant=_colortheme["COLOR_CAR_OTHER"], # default color
+    car_color::Colorant=colortheme["COLOR_CAR_OTHER"], # default color
     car_colors::Dict{I,C}=Dict{I,Colorant}(), #  id -> color
 ) where {S,D,I,C<:Colorant}
     Base.depwarn(render_depwarn_msg, :render)
     renderables = []
     for (i, veh) in enumerate(scene)
         c = car_colors[i]
-        if _rendermode == :fancy
+        if rendermode == :fancy
             r = (
                 class(veh.def) == AgentClass.PEDESTRIAN
                 ? FancyPedestrian(ped=veh, color=c)
@@ -80,7 +80,7 @@ function render(ctx::CairoContext, scene::EntityFrame{S,D,I}, roadway::R;
     renderables = [roadway]
     for (i, veh) in enumerate(scene)
         c = car_colors[i]
-        if _rendermode == :fancy
+        if rendermode == :fancy
             r = (
                 class(veh.def) == AgentClass.PEDESTRIAN
                 ? FancyPedestrian(ped=veh, color=c)

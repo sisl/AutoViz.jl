@@ -41,7 +41,7 @@ end
 
 @testset "vehicle rendering" begin 
     AutoViz.set_render_mode(:basic)
-    @test AutoViz._rendermode == :basic
+    @test AutoViz.rendermode == :basic
 
     roadway = gen_stadium_roadway(4)
     vehstate = VehicleState(VecSE2(0.0, 0.0, 0.0), roadway, 0.0)
@@ -57,16 +57,19 @@ end
     render([roadway, veh1, veh2, veh3])
 
     AutoViz.set_render_mode(:fancy)
-    @test AutoViz._rendermode == :fancy
+    @test AutoViz.rendermode == :fancy
 
     render([roadway, veh1, veh2, veh3])
-    # render(Frame([veh1, veh2, veh3]), camera_zoom=15., camera_center=VecE2(1.,1.), camera_motion=TargetFollowCamera(1))  # TODO: multiple dispatch not working on update_camera!
+    scene = Frame([veh1])
+    cam = TargetFollowCamera(1)
+    update_camera!(cam, scene)
+    render([Frame([veh1, veh2, veh3])], camera = cam)  # TODO: multiple dispatch not working on update_camera!
     render([Frame([veh1, veh2, veh3])], camera=StaticCamera(zoom=10.))
 end
 
 @testset "color theme" begin
     AutoViz.set_color_theme(OFFICETHEME)
-    @test AutoViz._colortheme == OFFICETHEME
+    @test AutoViz.colortheme == OFFICETHEME
 
     roadway = gen_stadium_roadway(4)
     vehstate = VehicleState(VecSE2(0.0, 0.0, 0.0), roadway, 0.0)
@@ -82,10 +85,10 @@ end
     render([roadway, veh1, veh2, veh3])
 
     AutoViz.set_color_theme(LIGHTTHEME)
-    @test AutoViz._colortheme == LIGHTTHEME
+    @test AutoViz.colortheme == LIGHTTHEME
 
     render([roadway, veh1, veh2, veh3])
 
     AutoViz.set_color_theme(MONOKAY)
-    @test AutoViz._colortheme == MONOKAY
+    @test AutoViz.colortheme == MONOKAY
 end

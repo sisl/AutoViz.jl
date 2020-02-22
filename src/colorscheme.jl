@@ -43,22 +43,22 @@ const LIGHTTHEME = Dict(
             "color3"     => colorant"#ce0300", # red
     )
 
-global _colortheme = MONOKAY
+global colortheme = MONOKAY
 
 """ 
     set_color_theme(colortheme)
 Change the color theme of the package
 """
-function set_color_theme(colortheme)
-    global _colortheme
-    _colortheme = colortheme
+function set_color_theme(ct)
+    global colortheme
+    colortheme = ct
 end
 
-COLOR_ASPHALT       = _colortheme["COLOR_ASPHALT"]
-COLOR_LANE_MARKINGS_WHITE = _colortheme["COLOR_LANE_MARKINGS_WHITE"]
-COLOR_LANE_MARKINGS_YELLOW = _colortheme["COLOR_LANE_MARKINGS_YELLOW"]
-COLOR_CAR_EGO       = _colortheme["COLOR_CAR_EGO"]
-COLOR_CAR_OTHER     = _colortheme["COLOR_CAR_OTHER"]
+COLOR_ASPHALT       = colortheme["COLOR_ASPHALT"]
+COLOR_LANE_MARKINGS_WHITE = colortheme["COLOR_LANE_MARKINGS_WHITE"]
+COLOR_LANE_MARKINGS_YELLOW = colortheme["COLOR_LANE_MARKINGS_YELLOW"]
+COLOR_CAR_EGO       = colortheme["COLOR_CAR_EGO"]
+COLOR_CAR_OTHER     = colortheme["COLOR_CAR_OTHER"]
 
 
 function Vec.lerp(a::Colorant, b::Colorant, t::Real)

@@ -32,20 +32,20 @@ A basic drawable rectangle representing a car.
 An arrow indicates the heading direction of the car.
 
     ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
-    ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0)
-    ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0)
+    ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0)
+    ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0)
 """
 @with_kw struct ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
     pos::A         = SVector(0.0, 0.0)
     angle::Float64 = 0.0
     length::Float64 = 4.8
     width::Float64 = 1.8
-    color::C       = _colortheme["COLOR_CAR_OTHER"]
+    color::C       = colortheme["COLOR_CAR_OTHER"]
     text::String   = "" # some debugging text to print by the car
     id::Int        = 0
 end
-ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
-ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=_colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
+ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
+ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
 ArrowCar(entity::Entity, color::Color) = ArrowCar(posg(entity.state).x, posg(entity.state).y, 
                                                   posg(entity.state).θ, 
                                                   length=length(entity.def),
@@ -66,7 +66,7 @@ A drawable rectangle with rounded corners representing an `entity`.
 """
 @with_kw struct EntityRectangle{S,D,I, C<:Colorant} <: Renderable
     entity::Entity{S,D,I}
-    color::C = AutoViz._colortheme["COLOR_CAR_OTHER"]
+    color::C = AutoViz.colortheme["COLOR_CAR_OTHER"]
 end
 
 function render_entity_rectangle(ctx::CairoContext, er::EntityRectangle)
@@ -108,7 +108,7 @@ The color of the car can be specified using the `color` keyword.
 """
 @with_kw struct FancyCar{C<:Colorant, S, D, I} <: Renderable
     car::Entity{S, D, I}
-    color::C = AutoViz._colortheme["COLOR_CAR_OTHER"]
+    color::C = AutoViz.colortheme["COLOR_CAR_OTHER"]
 end
 
 function add_renderable!(rm::RenderModel, fc::FancyCar)
@@ -145,7 +145,7 @@ function add_renderable!(
     entity::E,
     color::Colorant=RGB(rand(), rand(), rand())
 ) where {E<:Entity}
-    if _rendermode == :fancy
+    if rendermode == :fancy
         fe = (class(entity.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
         add_renderable!(rendermodel, fe)
     else

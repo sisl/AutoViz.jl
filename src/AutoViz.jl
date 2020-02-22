@@ -19,11 +19,11 @@ const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
 export DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
 
-global _rendermode = :fancy
+global rendermode = :fancy
 
 function set_render_mode(m::Symbol)
-    global _rendermode
-    _rendermode = m
+    global rendermode
+    rendermode = m
 end
 
 include("colorscheme.jl")
