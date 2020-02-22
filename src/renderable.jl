@@ -13,19 +13,17 @@ isrenderable(t::Type) = hasmethod(add_renderable!, Tuple{RenderModel, t})
 
 isrenderable(t::Type{Roadway}) = true
 
+function Base.write(filename::String, c::CairoSurface)
+    write_to_png(c, filename)
+end
 
-"""
-    write_to_svg(surface::CairoSurface, filename::AbstractString)
-
-Write a cairo svg surface to a file. The surface object is destroyed after.
-"""
-function write_to_svg(surface::CairoSurface, filename::AbstractString)
+function Base.write(filename::String, surface::Cairo.CairoSurfaceIOStream)
     finish(surface)
     seek(surface.stream, 0)
     open(filename, "w") do io
         write(io, read(surface.stream, String))
     end
-    return 
+    return
 end
 
 

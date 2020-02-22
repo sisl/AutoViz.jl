@@ -21,11 +21,22 @@ end
     c = render([rw, car, car2], camera=SceneFollowCamera(zoom=10.))
 end
 
-@testset "write SVG" begin 
+@testset "write SVG, PDF, PNG" begin 
     roadway = gen_stadium_roadway(4)
     c = @test_deprecated render(roadway)
-    write_to_svg(c, "out.svg")
+    write("out.svg", c)
     @test isfile("out.svg")
+
+    # write pdf 
+    camera = StaticCamera(position=(50,30), zoom=6.)
+    c = render([roadway], camera=camera, 
+           surface=AutoViz.CairoPDFSurface(IOBuffer(), AutoViz.canvas_width(camera), AutoViz.canvas_height(camera)))
+    write("out.pdf", c)
+
+    # write png 
+    c = render([roadway], camera=camera, 
+           surface=AutoViz.CairoRGBSurface(AutoViz.canvas_width(camera), AutoViz.canvas_height(camera)))
+    write("out.png", c)
 end
 
 @testset "vehicle rendering" begin 
