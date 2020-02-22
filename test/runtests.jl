@@ -7,11 +7,7 @@ using Random
 using AutomotiveDrivingModels
 
 @testset "notebooks" begin
-    @warn "Notebook testset temporarily disabled - enable"
     @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "autoviz_tutorial.ipynb"))
-    # @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "tutorial.ipynb"))
-    # @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "overlay_tutorial.ipynb"))
-    # @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "AutoViz.ipynb"))
 end
 
 @testset "Renderable" begin 
