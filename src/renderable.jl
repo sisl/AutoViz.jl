@@ -176,13 +176,6 @@ add_renderable!(rm::RenderModel, ::Nothing) = rm
 Render function for text
 """
 function add_renderable!(rm::RenderModel, t::String)
-    font_size = 12
-    x = 10
-    y = 1.5*font_size
-    y_jump = 1.5 * font_size
-    for line in split(t, '\n')
-        add_instruction!(rm, render_text, (line, x, y, font_size, colorant"gray75"), coordinate_system=:camera_pixels)
-        y += y_jump
-    end
+    add_renderable!(rm, TextOverlay(text=split(t, '\n')))
     return rm
 end
