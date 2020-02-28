@@ -13,20 +13,6 @@ isrenderable(t::Type) = hasmethod(add_renderable!, Tuple{RenderModel, t})
 
 isrenderable(t::Type{Roadway}) = true
 
-function Base.write(filename::String, c::CairoSurface)
-    write_to_png(c, filename)
-end
-
-function Base.write(filename::String, surface::Cairo.CairoSurfaceIOStream)
-    finish(surface)
-    seek(surface.stream, 0)
-    open(filename, "w") do io
-        write(io, read(surface.stream, String))
-    end
-    return
-end
-
-
 """
 A basic drawable rectangle representing a car.
 An arrow indicates the heading direction of the car.

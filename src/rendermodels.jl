@@ -125,6 +125,19 @@ function render_to_canvas(rendermodel::RenderModel, camera::Camera, ctx::CairoCo
     render_to_canvas(rendermodel, camera.state, ctx)
 end
 
+function Base.write(filename::String, c::CairoSurface)
+    write_to_png(c, filename)
+end
+
+function Base.write(filename::String, surface::Cairo.CairoSurfaceIOStream)
+    finish(surface)
+    seek(surface.stream, 0)
+    open(filename, "w") do io
+        write(io, read(surface.stream, String))
+    end
+    return
+end
+
 
 """
     camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.1)

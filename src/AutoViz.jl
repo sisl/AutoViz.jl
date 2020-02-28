@@ -98,7 +98,6 @@ export
     render!,
     add_renderable!,
     isrenderable,
-    write_to_svg,
     ArrowCar,
     EntityRectangle,
     VelocityArrow,
