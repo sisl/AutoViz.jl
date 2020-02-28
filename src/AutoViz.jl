@@ -61,7 +61,6 @@ export
         render_to_canvas,
         add_instruction!,
         reset_instructions!,
-        reset_model!,
         set_background_color!
 
 # Cairo drawing utilities
