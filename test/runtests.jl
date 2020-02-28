@@ -91,4 +91,8 @@ end
 
     AutoViz.set_color_theme(MONOKAY)
     @test AutoViz.colortheme == MONOKAY
+
+    s = Frame([veh1])
+    d = get_pastel_car_colors(s)
+    @test length(d) == length(s)
 end

@@ -33,7 +33,8 @@ export
     MONOKAY,
     OFFICETHEME,
     LIGHTTHEME,
-    set_color_theme
+    set_color_theme,
+    get_pastel_car_colors
 
 # Cameras
 include("cameras.jl")
