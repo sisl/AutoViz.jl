@@ -19,15 +19,6 @@ In julia 1.1+, the preferred way is to add the SISL registry and install AutoViz
 ] add AutoViz
 ```
 
-You can also manually add all the dependencies:
-```julia
-using Pkg
-Pkg.add(PackageSpec(url="https://github.com/sisl/Vec.jl"))
-Pkg.add(PackageSpec(url="https://github.com/sisl/Records.jl"))
-Pkg.add(PackageSpec(url="https://github.com/sisl/AutomotiveDrivingModels.jl"))
-Pkg.add(PackageSpec(url="https://github.com/sisl/AutoViz.jl"))
-```
-
 ## Usage
 
 AutoViz works by adding rendering instructions to a `RenderModel`,
@@ -196,8 +187,7 @@ All keyword arguments are optional. Objects of type `Renderable` now no longer h
  - Many setter functions for the camera have been replaced by the `set_camera!()` function which takes keyword arguments for `x`, `y` and `zoom`.
  - The implementations of `TargetFollowCamera` (former `CarFollowCamera`) and `SceneFollowCamera` have been reviewed and simplified. Additionally, a `ZoomingCamera` type which gradually changes the zoom level has been introduced and for easy extensibility there is also a `ComposedCamera` type which takes a list of cameras and applies their effects sequentially to the `RenderModel`.
  - The new `render!` function no longer takes a camera as an input argument, but assumes that the camera settings have already been applied to the `RenderModel` via `update_camera!` prior to calling `render!`. User code should be adapted accordingly.
- - The `FitToContentCamera` is no longer available. To replace it, the method `camera_fit_to_content` is provided which computes camera parameters for which the entire content of the scene fits on the canvas. For most purposes, the `SceneFollowCamera` should be a good alternative.
- 
+
 #### Visualization of Entities
  - Controlling the appearance of vehicles by setting `set_render_mode(:basic|:fancy)` is no longer encouraged. Instead, we provide new renderable types such as `EntityRectangle`, `FancyCar`, `FancyPedestrian`, `VelocityArrow` in addition to the already implemented `ArrowCar` type which can all be used to conveniently display entities.
  - A convenience function for rendering scenes directly (i.e. without explicit conversion to a `Renderable` type) is still supported.

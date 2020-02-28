@@ -57,10 +57,14 @@ function render(renderables::AbstractVector;
     for renderable in renderables
         add_renderable!(rendermodel, renderable)
     end
+    if isa(camera, FitToContentCamera)
+        camera.state = camera_fit_to_content(rendermodel, ctx, 
+                                             canvas_width(camera), canvas_height(camera), 
+                                             percent_border = camera.percent_border)
+    end
     render_to_canvas(rendermodel, camera, ctx)
     return surface
 end
-
 
 function render_to_canvas(rendermodel::RenderModel, camera_state::CameraState, ctx::CairoContext)
 
@@ -139,10 +143,10 @@ function Base.write(filename::String, surface::Cairo.CairoSurfaceIOStream)
 end
 
 
+
 """
     camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.1)
 Helper function that determines camera parameters such that all rendered content fits on the canvas.
-The camera rotation will always be set to 0. An additional border can be added around the content using the keyword argument `percent_border` (default 0.1)
 """
 function camera_fit_to_content(
     rendermodel::RenderModel, ctx::CairoContext,
@@ -156,7 +160,7 @@ function camera_fit_to_content(
     for tup in rendermodel.instruction_set
         f = tup[1]
         in_camera_frame = tup[3]
-        if !in_camera_frame
+        if in_camera_frame != :scene
             continue
         end
 

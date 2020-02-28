@@ -187,3 +187,19 @@ function update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entit
         update_camera!(camera.cs, cam, scene)
     end
 end
+
+"""
+    FitToContentCamera
+
+Move the camera such that all rendered content fits the canvas.
+The camera rotation will always be set to 0. An additional border can be added around the content using the argument `percent_border`.
+
+# Constructor 
+
+`FitToContentCamera(percent_border::Float64)`
+"""
+mutable struct FitToContentCamera <: Camera
+    state::CameraState
+    percent_border::Float64
+end
+FitToContentCamera(percent_border::Float64;kwargs...) = FitToContentCamera(CameraState(;kwargs...), percent_border)

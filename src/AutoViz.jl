@@ -47,7 +47,7 @@ export
     ZoomingCamera,
     ComposedCamera,
     SceneFollowCamera,
-    camera_fit_to_content,
+    FitToContentCamera,
     set_camera!,
     camera_move!,
     camera_move_pix!,
