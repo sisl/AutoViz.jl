@@ -48,8 +48,10 @@ You should call `update_camera!` before calling `render` to adapt the camera to 
 The instructions of the `rendermodel` are reset automatically at the beginning of this function.
 """
 function render(renderables::AbstractVector;
-    camera::Camera=StaticCamera(;zoom=4.),
-    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width(camera), canvas_height(camera))
+    camera::Union{Nothing, Camera} = nothing,
+    canvas_width::Int64 = (camera === nothing ? DEFAULT_CANVAS_WIDTH : canvas_width(camera)),
+    canvas_height::Int64 = (camera === nothing ? DEFAULT_CANVAS_HEIGHT : canvas_height(camera)),
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
 )
     rendermodel = RenderModel()
     reset_instructions!(rendermodel)
@@ -57,10 +59,8 @@ function render(renderables::AbstractVector;
     for renderable in renderables
         add_renderable!(rendermodel, renderable)
     end
-    if isa(camera, FitToContentCamera)
-        camera.state = camera_fit_to_content(rendermodel, ctx, 
-                                             canvas_width(camera), canvas_height(camera), 
-                                             percent_border = camera.percent_border)
+    if camera === nothing
+        camera = camera_fit_to_content(rendermodel, ctx)
     end
     render_to_canvas(rendermodel, camera, ctx)
     return surface
@@ -145,7 +145,7 @@ end
 
 
 """
-    camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.1)
+    camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.0)
 Helper function that determines camera parameters such that all rendered content fits on the canvas.
 """
 function camera_fit_to_content(
