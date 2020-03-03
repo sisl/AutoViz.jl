@@ -129,8 +129,18 @@ Helper function for directly rendering entities, takes care of wrapping them in 
 function add_renderable!(
     rendermodel::RenderModel,
     entity::E,
-    color::Colorant=RGB(rand(), rand(), rand())
+    color::Union{Nothing, Colorant}=nothing
 ) where {E<:Entity}
+    if color === nothing
+        # random color based on hash code of entity.id
+        # see https://stackoverflow.com/questions/11120840/hash-string-into-rgb-color
+        idhash = hash(entity.id)
+        color = RGB(
+            .3 + .7*((idhash & 0xFF0000) >> 16)/255,
+            .3 + .7*((idhash & 0x00FF00) >> 8)/255,
+            .3 + .7*((idhash & 0x0000FF))/255,
+        )
+    end
     if rendermode == :fancy
         fe = (class(entity.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
         add_renderable!(rendermodel, fe)
