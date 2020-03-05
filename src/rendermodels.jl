@@ -48,8 +48,10 @@ You should call `update_camera!` before calling `render` to adapt the camera to 
 The instructions of the `rendermodel` are reset automatically at the beginning of this function.
 """
 function render(renderables::AbstractVector;
-    camera::Camera=StaticCamera(;zoom=4.),
-    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width(camera), canvas_height(camera))
+    camera::Union{Nothing, Camera} = nothing,
+    canvas_width::Int64 = (camera === nothing ? DEFAULT_CANVAS_WIDTH : canvas_width(camera)),
+    canvas_height::Int64 = (camera === nothing ? DEFAULT_CANVAS_HEIGHT : canvas_height(camera)),
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
 )
     rendermodel = RenderModel()
     reset_instructions!(rendermodel)
@@ -57,10 +59,8 @@ function render(renderables::AbstractVector;
     for renderable in renderables
         add_renderable!(rendermodel, renderable)
     end
-    if isa(camera, FitToContentCamera)
-        camera.state = camera_fit_to_content(rendermodel, ctx, 
-                                             canvas_width(camera), canvas_height(camera), 
-                                             percent_border = camera.percent_border)
+    if camera === nothing
+        camera = camera_fit_to_content(rendermodel, ctx, canvas_width, canvas_height)
     end
     render_to_canvas(rendermodel, camera, ctx)
     return surface
@@ -152,7 +152,7 @@ end
 
 
 """
-    camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.1)
+    camera_fit_to_content(rendermodel::RenderModel, ctx::CairoContext, canvas_width::Integer = DEFAULT_CANVAS_WIDTH, canvas_height::Integer = DEFAULT_CANVAS_HEIGHT; percent_border::Real = 0.0)
 Helper function that determines camera parameters such that all rendered content fits on the canvas.
 """
 function camera_fit_to_content(
@@ -218,42 +218,51 @@ function camera_fit_to_content(
     end
 
     if isinf(xmin) || isinf(ymin)
-        return
-    end
-
-    if xmax < xmin
-        xmax = xmin + 1.0
-    end
-    if ymax < ymin
-        ymax = ymin + 1.0
-    end
-
-    # compute zoom to fit
-    world_width = xmax - xmin
-    world_height = ymax - ymin
-    canvas_aspect = canvas_width / canvas_height
-    world_aspect = world_width / world_height
-
-    if world_aspect > canvas_aspect
-        # expand height to fit
-        half_diff =  (world_width * canvas_aspect - world_height) / 2
-        world_height = world_width * canvas_aspect # [m]
-        ymax += half_diff
-        ymin -= half_diff
+        camera_state = CameraState(
+            position = VecE2(canvas_width/2, canvas_height/2), # [m]
+            zoom     = 1.,                                                 # [pix/m]
+            rotation = 0.,                                                 # [rad]
+            canvas_width = canvas_width,                                   # [px]
+            canvas_height = canvas_height                                  # [px]
+        )
+        @warn "no render instructions found"
     else
-        # expand width to fit
-        half_diff = (canvas_aspect * world_height - world_width) / 2
-        world_width = canvas_aspect * world_height
-        xmax += half_diff
-        xmin -= half_diff
-    end
 
-    camera_state = CameraState(
-        position = VecE2(xmin + world_width/2, ymin + world_height/2), # [m]
-        zoom     = (canvas_width*(1-percent_border)) / world_width,    # [pix/m]
-        rotation = 0.,                                                 # [rad]
-        canvas_width = canvas_width,                                   # [px]
-        canvas_height = canvas_height                                  # [px]
-    )
+        if xmax < xmin
+            xmax = xmin + 1.0
+        end
+        if ymax < ymin
+            ymax = ymin + 1.0
+        end
+
+        # compute zoom to fit
+        world_width = xmax - xmin
+        world_height = ymax - ymin
+        canvas_aspect = canvas_width / canvas_height
+        world_aspect = world_width / world_height
+
+        if world_aspect > canvas_aspect
+            # expand height to fit
+            half_diff =  (world_width * canvas_aspect - world_height) / 2
+            world_height = world_width * canvas_aspect # [m]
+            ymax += half_diff
+            ymin -= half_diff
+        else
+            # expand width to fit
+            half_diff = (canvas_aspect * world_height - world_width) / 2
+            world_width = canvas_aspect * world_height
+            xmax += half_diff
+            xmin -= half_diff
+        end
+
+        camera_state = CameraState(
+            position = VecE2(xmin + world_width/2, ymin + world_height/2), # [m]
+            zoom     = (canvas_width*(1-percent_border)) / world_width,    # [pix/m]
+            rotation = 0.,                                                 # [rad]
+            canvas_width = canvas_width,                                   # [px]
+            canvas_height = canvas_height                                  # [px]
+        )
+
+    end
     return camera_state
 end
