@@ -130,10 +130,17 @@ function render_to_canvas(rendermodel::RenderModel, camera::Camera, ctx::CairoCo
 end
 
 function Base.write(filename::String, c::CairoSurface)
-    write_to_png(c, filename)
+    ext = split(filename, ".")[end]
+    if ext == "png"
+        write_to_png(c, filename)
+    elseif ext == "svg" || ext == "pdf"
+        write_stream(filename, c)
+    else 
+        throw("AutoViz write error: this file extension is not supported, supported extensions are 'png', 'pdf', 'svg'.")
+    end
 end
 
-function Base.write(filename::String, surface::Cairo.CairoSurfaceIOStream)
+function write_stream(filename::String, surface::Cairo.CairoSurfaceIOStream)
     finish(surface)
     seek(surface.stream, 0)
     open(filename, "w") do io
