@@ -134,7 +134,17 @@ function Base.write(filename::String, c::CairoSurface)
     if ext == "png"
         write_to_png(c, filename)
     elseif ext == "svg" || ext == "pdf"
-        write_stream(filename, c)
+        typ = ccall((:cairo_surface_get_type, Cairo.libcairo), Cint, (Ptr{Nothing},), c.ptr)
+        if ( typ == Cairo.CAIRO_SURFACE_TYPE_PDF && ext == "pdf" ) ||
+            ( typ == Cairo.CAIRO_SURFACE_TYPE_SVG && ext == "svg" )
+            write_stream(filename, c)
+        else
+            surf_type = typ == Cairo.CAIRO_SURFACE_TYPE_PDF ? "CairoPDFSurface" : "CairoSVGSurface"
+            throw(ErrorException("""
+                  AutoViz WriteError: Surface type mismatch! You tried to write a $surf_type to a .$ext file.
+                  To solve this problem either change the file extension to match the surface type or change the surface type passed to the render function using the keyword `surface=`.
+                  """))
+        end
     else 
         throw("AutoViz write error: this file extension is not supported, supported extensions are 'png', 'pdf', 'svg'.")
     end

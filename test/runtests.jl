@@ -37,6 +37,19 @@ end
     c = render([roadway], camera=camera, 
            surface=AutoViz.CairoRGBSurface(AutoViz.canvas_width(camera), AutoViz.canvas_height(camera)))
     write("out.png", c)
+
+    # try to write svg surface to pdf 
+    c = render([roadway], camera=camera)
+    @test_throws ErrorException write("out.pdf", c)
+    
+    # try to write pdf surface to svg 
+    c = render([roadway], camera=camera, 
+           surface=AutoViz.CairoPDFSurface(IOBuffer(), AutoViz.canvas_width(camera), AutoViz.canvas_height(camera)))
+    @test_throws ErrorException write("out.svg", c)
+
+    # png should always work 
+    c = render([roadway], camera=camera)
+    write("out2.png", c)
 end
 
 @testset "vehicle rendering" begin 
