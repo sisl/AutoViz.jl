@@ -158,7 +158,7 @@ Helper function for directly rendering frames of renderable entities
 """
 function add_renderable!(rendermodel::RenderModel, scene::Frame{E}) where {E<:Entity}
     for entity in scene
-        add_renderable!(rendermodel, entity, colortheme["COLOR_CAR_OTHER"])
+        add_renderable!(rendermodel, entity)
     end
     return rendermodel
 end
