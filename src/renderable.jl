@@ -1,4 +1,3 @@
-#TODO: Renderable type
 abstract type Renderable end
 
 """
@@ -10,68 +9,167 @@ function isrenderable end
 
 isrenderable(object) = isrenderable(typeof(object))
 isrenderable(::Type{R}) where R <: Renderable = true
-isrenderable(t::Type) = hasmethod(render!, Tuple{RenderModel, t})
+isrenderable(t::Type) = hasmethod(add_renderable!, Tuple{RenderModel, t})
+
 isrenderable(t::Type{Roadway}) = true
 
 """
-    render(scene)
-    render(scene; kwargs...)
+A basic drawable rectangle representing a car.
+An arrow indicates the heading direction of the car.
 
-Render all the items in `scene` to a Cairo surface and return it.
-
-`scene` is simply an iterable object (e.g. a vector) of items that are either directly renderable or renderable by conversion. See the AutoViz README for more details.
+    ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
+    ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0)
+    ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0)
 """
-function render(scene; # iterable of renderable objects
-                overlays=[],
-                rendermodel::RenderModel=RenderModel(),
-                cam::Camera=FitToContentCamera(),
-                canvas_height::Int=DEFAULT_CANVAS_HEIGHT,
-                canvas_width::Int=DEFAULT_CANVAS_WIDTH,
-                surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-               )
+@with_kw struct ArrowCar{A<:AbstractArray{Float64}, C<:Colorant} <: Renderable
+    pos::A         = SVector(0.0, 0.0)
+    angle::Float64 = 0.0
+    length::Float64 = 4.8
+    width::Float64 = 1.8
+    color::C       = colortheme["COLOR_CAR_OTHER"]
+    text::String   = "" # some debugging text to print by the car
+    id::Int        = 0
+end
+ArrowCar(pos::AbstractArray, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(pos, angle, length, width, color, text, id)
+ArrowCar(x::Real, y::Real, angle::Float64=0.0; length = 4.8, width = 1.8,  color=colortheme["COLOR_CAR_OTHER"], text="", id=0) = ArrowCar(SVector(x, y), angle, length, width, color, text, id)
+ArrowCar(entity::Entity, color::Color) = ArrowCar(posg(entity.state).x, posg(entity.state).y, 
+                                                  posg(entity.state).θ, 
+                                                  length=length(entity.def),
+                                                  width=AutomotiveDrivingModels.width(entity.def),
+                                                  color=color)
 
-    ctx = creategc(surface)
-    clear_setup!(rendermodel)
-
-    for x in scene
-        if isrenderable(x)
-            render!(rendermodel, x)
-        else
-            render!(rendermodel, convert(Renderable, x))
-        end
-    end
-
-    for o in overlays
-        render!(rendermodel, o, scene)
-    end
-
-    camera_set!(rendermodel, cam, scene, canvas_width, canvas_height)
-
-    render(rendermodel, ctx, canvas_width, canvas_height)
-        
-    return surface
+function add_renderable!(rm::RenderModel, c::ArrowCar)
+    x = c.pos[1]
+    y = c.pos[2]
+    add_instruction!(rm, render_vehicle, (x, y, c.angle, c.length, c.width, c.color))
+    add_instruction!(rm, render_text, (c.text, x, y-c.width/2 - 2.0, 10, colorant"white"))
+    return rm
 end
 
-"""
-    write_to_svg(surface::CairoSurface, filename::AbstractString)
 
-Write a cairo svg surface to a file. The surface object is destroyed after.
 """
-function write_to_svg(surface::CairoSurface, filename::AbstractString)
-    finish(surface)
-    seek(surface.stream, 0)
-    open(filename, "w") do io
-        write(io, read(surface.stream, String))
-    end
-    return 
+A drawable rectangle with rounded corners representing an `entity`.
+"""
+@with_kw struct EntityRectangle{S,D,I, C<:Colorant} <: Renderable
+    entity::Entity{S,D,I}
+    color::C = AutoViz.colortheme["COLOR_CAR_OTHER"]
 end
 
-function Base.convert(::Type{Renderable}, x::AbstractVector{R}) where R <: Real
-    @assert length(x) >= 2
-    if length(x) == 2
-        ac = ArrowCar(SVector(x[1],x[2]))
+function render_entity_rectangle(ctx::CairoContext, er::EntityRectangle)
+    x, y, yaw = posg(er.entity.state)
+    w, h = length(er.entity.def), AutomotiveDrivingModels.width(er.entity.def)
+    cr = 0.5 # [m]
+    save(ctx); translate(ctx, x, y); rotate(ctx, yaw);
+    color_fill = er.color
+    color_line = weighted_color_mean(.4, colorant"black", color_fill)
+    render_round_rect(ctx, 0, 0, w, h, 1., cr, color_fill, true, true, color_line, .3)
+    restore(ctx)
+end
+add_renderable!(rm::RenderModel, er::EntityRectangle) = add_instruction!(rm, render_entity_rectangle, (er,))
+
+
+"""
+A drawable arrow representing the current velocity vector of an `entity`.
+The arrow points to the location where the vehicle will be one second in the future (assuming linear motion).
+"""
+@with_kw struct VelocityArrow{S,D,I, C<:Colorant} <: Renderable
+    entity::Entity{S,D,I}
+    color::C = colorant"white"
+end
+
+function render_velocity_arrow(ctx::CairoContext, va::VelocityArrow)
+    x, y, yaw = posg(va.entity.state)
+    vx, vy = velg(va.entity.state)
+    save(ctx); translate(ctx, x, y);
+    render_arrow(ctx, [[0.  vx];[0. vy]], va.color, .3, .8, ARROW_WIDTH_RATIO=1., ARROW_ALPHA=.12pi, ARROW_BETA=.6pi)
+    restore(ctx)
+end
+add_renderable!(rm::RenderModel, va::VelocityArrow) = add_instruction!(rm, render_velocity_arrow, (va,))
+
+
+"""
+A drawable 'fancy' svg image of a race car.
+The car is placed at the position of `entity` and the width and length are scaled accordingly.
+The color of the car can be specified using the `color` keyword.
+"""
+@with_kw struct FancyCar{C<:Colorant, S, D, I} <: Renderable
+    car::Entity{S, D, I}
+    color::C = AutoViz.colortheme["COLOR_CAR_OTHER"]
+end
+
+function add_renderable!(rm::RenderModel, fc::FancyCar)
+    x, y, yaw = posg(fc.car.state)
+    l, w = length(fc.car.def), AutomotiveDrivingModels.width(fc.car.def)
+    add_instruction!(rm, render_fancy_car, (x, y, yaw, l, w, fc.color))
+    return rm
+end
+
+
+"""
+A drawable 'fancy' svg image of a pedestrian.
+The pedestrian is placed at the position of `entity` and the width and length of the original image are scaled accordingly.
+The color of the pedestrian can be specified using the `color` keyword.
+"""
+@with_kw struct FancyPedestrian{C<:Colorant, S, D, I} <: Renderable
+    ped::Entity{S, D, I}
+    color::C = colorant"blue"
+end
+
+function add_renderable!(rm::RenderModel, fp::FancyPedestrian)
+    x, y, yaw = posg(fp.ped.state)
+    l, w = length(fp.ped.def), AutomotiveDrivingModels.width(fp.ped.def)
+    add_instruction!(rm, render_fancy_pedestrian, (x, y, yaw, l, w, fp.color))
+    return rm
+end
+
+
+"""
+Helper function for directly rendering entities, takes care of wrapping them in renderable objects
+"""
+function add_renderable!(
+    rendermodel::RenderModel,
+    entity::E,
+    color::Union{Nothing, Colorant}=nothing
+) where {E<:Entity}
+    if color === nothing
+        # random color based on hash code of entity.id
+        # see https://stackoverflow.com/questions/11120840/hash-string-into-rgb-color
+        idhash = hash(entity.id)
+        color = RGB(
+            .3 + .7*((idhash & 0xFF0000) >> 16)/255,
+            .3 + .7*((idhash & 0x00FF00) >> 8)/255,
+            .3 + .7*((idhash & 0x0000FF))/255,
+        )
+    end
+    if rendermode == :fancy
+        fe = (class(entity.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
+        add_renderable!(rendermodel, fe)
     else
-        ac = ArrowCar(SVector(x[1],x[2]), x[3])
+        er = EntityRectangle(entity=entity, color=color)
+        add_renderable!(rendermodel, er)
+        va = VelocityArrow(entity=entity, color=color)
+        add_renderable!(rendermodel, va)
     end
-    ac
+    return rendermodel
+end
+
+"""
+Helper function for directly rendering frames of renderable entities
+"""
+function add_renderable!(rendermodel::RenderModel, scene::Frame{E}) where {E<:Entity}
+    for entity in scene
+        add_renderable!(rendermodel, entity)
+    end
+    return rendermodel
+end
+
+# render nothing by not doing anything
+add_renderable!(rm::RenderModel, ::Nothing) = rm
+
+"""
+Render function for text
+"""
+function add_renderable!(rm::RenderModel, t::String)
+    add_renderable!(rm, TextOverlay(text=split(t, '\n')))
+    return rm
 end

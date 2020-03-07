@@ -1,160 +1,189 @@
-abstract type Camera end
-camera_set!(::RenderModel, cam::Camera, ::EntityFrame{S,D,I}, ::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = error("camera_set! not implemented for Camera $cam")
+"""
+    CameraState
+Representation of camera parameters such as position, rotation and zoom level.
 
-mutable struct StaticCamera <: Camera
-    pos::VecE2
-    zoom::Float64 # [pix/meter]
-    StaticCamera(pos::VecE2, zoom::Float64=3.0) = new(pos, zoom)
-    StaticCamera(x::Float64, y::Float64, zoom::Float64=3.0) = new(VecE2(x,y), zoom)
+ - `camera_center::VecE2{Real}`: position of camera in [N,E] relative to the mean point. meters
+ - `camera_zoom::Real`: camera zoom in [pix/m]
+ - `camera_rotation::Real`: camera rotation in [rad]
+"""
+@with_kw mutable struct CameraState
+    position  :: VecE2 = VecE2(0.,0.)
+    zoom      :: Real = 1.
+    rotation  :: Real = 0.
+    canvas_width  :: Int64 = DEFAULT_CANVAS_WIDTH
+    canvas_height :: Int64 = DEFAULT_CANVAS_HEIGHT
 end
-function camera_set!(rendermodel::RenderModel, cam::StaticCamera, canvas_width::Int, canvas_height::Int)
+position(cs::CameraState) = cs.position
+zoom(cs::CameraState) = cs.zoom
+rotation(cs::CameraState) = cs.rotation
+canvas_width(cs::CameraState) = cs.canvas_width
+canvas_height(cs::CameraState) = cs.canvas_height
 
-    camera_set_pos!(rendermodel, cam.pos)
-    camera_setzoom!(rendermodel, cam.zoom)
+camera_move!(cs::CameraState, dx::Real, dy::Real) = cs.position = cs.position + VecE2(dx, dy)
+camera_move!(cs::CameraState, Δ::VecE2) = cs.position = cs.position + Δ
+camera_move_pix!(cs::CameraState, dx::Real, dy::Real) = cs.position = cs.position + VecE2(dx/cs.zoom, dy/cs.zoom)
+camera_move_pix!(cs::CameraState, Δ::VecE2) = cs.position = cs.position + VecE2(Δ.x/cs.zoom, Δ.y/cs.zoom)
+camera_rotate!(cs::CameraState, θ::Real) = cs.rotation += θ # [radians]
+camera_zoom!(cs::CameraState, factor::Real) = cs.zoom *= factor
 
-    rendermodel
+function set_camera!(
+    cs::CameraState;
+    x::Real=cs.position.x,
+    y::Real=cs.position.y,
+    zoom::Real=cs.zoom,
+    rotation::Real=cs.rotation
+)
+    cs.position = VecE2(x,y)
+    cs.zoom = zoom
+    cs.rotation = rotation
+    return cs
 end
-camera_set!(rendermodel::RenderModel, cam::StaticCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
+reset_camera!(cs::CameraState) = set_camera!(cs, x=0., y=0., zoom=1., rotation=0.)
 
-# method for new interface
-camera_set!(rm::RenderModel, cam::StaticCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rm, cam, canvas_width, canvas_height)
-
-mutable struct FitToContentCamera <: Camera
-    percent_border::Float64
-    FitToContentCamera(percent_border::Float64=0.1) = new(percent_border)
-end
-function camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, canvas_width::Int, canvas_height::Int)
-    camera_fit_to_content!(rendermodel, canvas_width, canvas_height, percent_border=cam.percent_border)
-    rendermodel
-end
-camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S,D,I,R} = camera_set!(rendermodel, cam, canvas_width, canvas_height)
-
-# method for new interface
-camera_set!(rendermodel::RenderModel, cam::FitToContentCamera, scene, canvas_width::Int, canvas_height::Int) = camera_set!(rendermodel, cam, canvas_width, canvas_height)
 
 """
-Camera which follows the vehicle with ID `targetid`.
+Camera abstract type
+"""
+abstract type Camera end
+position(c::Camera) = position(c.state)
+zoom(c::Camera) = zoom(c.state)
+rotation(c::Camera) = rotation(c.state)
+canvas_width(c::Camera) = canvas_width(c.state)
+canvas_height(c::Camera) = canvas_height(c.state)
+
+"""
+    StaticCamera <: Camera
+
+Fix the position and the zoom as specified in the constructor.
+
+# Constructor
+`StaticCamera(position::VecE2=(0,0), zoom::Real=4)`
+"""
+struct StaticCamera <: Camera
+    state::CameraState
+end
+StaticCamera(;kwargs...) = StaticCamera(CameraState(;kwargs...))
+update_camera!(::StaticCamera, ::Frame) = nothing
+
+"""
+    TargetFollowCamera <: Camera
+Camera which follows the vehicle with ID `target_id`.
 By default, the target vehicle is tracked in x and y direction.
 Tracking in either direction can be disabled by setting the 
-`follow_x` and `follow_y` keywords to false, in which case the
-position defaults to `pos_default`.
-The `zoom` keyword specifies the zoom level in pixels per meter.
+`x` or `y` keys to a desired value.
+
+# Constructor
+
+`TargetFollowCamera(target_id; x=NaN, y=NaN, kwargs...)`
+
 """
-@with_kw mutable struct CarFollowCamera{I} <: Camera
-    targetid::I
-    zoom::Float64 = 3.0 # [pix/meter]
-    pos_default::VecE2 = VecE2(0.,0.)
-    follow_x::Bool = true
-    follow_y::Bool = true
+mutable struct TargetFollowCamera{I} <: Camera
+    state::CameraState
+    target_id::I
+    x::Float64
+    y::Float64
 end
-CarFollowCamera(targetid::I, zoom::Float64=3.0) where {I} = CarFollowCamera{I}(targetid=targetid, zoom=zoom)
-CarFollowCamera{I}(targetid::I, zoom::Float64=3.0) where {I} = CarFollowCamera{I}(targetid=targetid, zoom=zoom)
-
-function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
-
-    veh_index = findfirst(cam.targetid, scene)
-    if veh_index != nothing
-        if cam.follow_x
-            camera_set_pos!(rendermodel, VecE2(scene[veh_index].state.s, 0.0))
-        else
-            camera_set_pos!(rendermodel, VecE2(cam.pos_default.x, 0.0))
-        end
-        camera_setzoom!(rendermodel, cam.zoom)
-    else
-        add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find id $(cam.targetid)", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
-    end
-
-    rendermodel
-end
-function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera{I}, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
-
-    veh_index = findfirst(cam.targetid, scene)
-    if veh_index != nothing
-        target_pos = scene[veh_index].state.posG
-        camera_pos = VecSE2(
-            cam.follow_x ? target_pos.x : cam.pos_default.x,
-            cam.follow_y ? target_pos.y : cam.pos_default.y
-        )
-        camera_set_pos!(rendermodel, camera_pos)
-        camera_setzoom!(rendermodel, cam.zoom)
-    else
-        add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find id $(cam.targetid)", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
-    end
-
-    rendermodel
+function TargetFollowCamera(target_id; x=NaN, y=NaN, kwargs...)
+    TargetFollowCamera(CameraState(;kwargs...), target_id, x, y)
 end
 
-# method for new interface
-function camera_set!(rendermodel::RenderModel, cam::CarFollowCamera, scene, canvas_width::Int, canvas_height::Int)
-
-    inds = findall(x -> x isa ArrowCar && id(x) == cam.targetid, scene)
-    if isempty(inds)
-        ids = [c.id for c in scene if c isa ArrowCar]
-        add_instruction!( rendermodel, render_text, ("CarFollowCamera did not find an ArrowCar with id $(cam.targetid) (found ids: $ids)", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
-    else
-        veh_index = first(inds)
-        camera_set_pos!(rendermodel, pos(scene[veh_index])...)
-        camera_setzoom!(rendermodel, cam.zoom)
-    end
-
-    rendermodel
+function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{E}) where {I,E<:Entity}
+    target = get_by_id(scene, camera.target_id)
+    x, y = posg(target.state)[1:2]
+    x = isnan(camera.x) ? x : camera.x
+    y = isnan(camera.y) ? y : camera.y
+    set_camera!(camera.state, x=x, y=y)
 end
 
 """
-    SceneFollowCamera{R<:Real}
+    ZoomingCamera <: Camera
+Camera which gradually changes the zoom level of the scene to `zoom_target` with step size `dz`.
+"""
+mutable struct ZoomingCamera <: Camera
+    state::CameraState
+    zoom_target::Float64
+    dz::Float64
+end
+function ZoomingCamera(;zoom_target=20., dz=.5, kwargs...)
+    ZoomingCamera(CameraState(;kwargs...), zoom_target, dz)
+end
 
-Camera centered over all vehicles 
-The zoom can be adjusted. 
-# Fields 
-- `zoom::R`
+function update_camera!(camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
+    zt, zc = camera.zoom_target, zoom(camera)
+    if zt < zc  # zooming in 
+        set_camera!(camera.cs, zoom=max(zt, zc-camera.dz))
+    elseif zt > zc  # zooming out
+        set_camera!(camera.cs, zoom=min(zt, zc+camera.dz))
+    end
+end
 
 """
-@with_kw struct SceneFollowCamera{R<:Real} <: Camera
-    zoom::R = 3.0 # [pix/meter]
+    SceneFollowCamera
+
+Camera centered over all vehicles.
+
+By default, the scene is tracked in x and y direction and the zoom level 
+is adapted to fit all vehicles in the scene. Tracking in either direction
+can be disabled by setting the `x` or `y` keys to a desired value. The
+zoom level can be fixed by passing a value to `zoom`.
+The value of `padding` specifies the width of the additional border around
+the zoomed-in area.
+"""
+struct SceneFollowCamera <: Camera
+    state::CameraState
+    x::Float64
+    y::Float64
+    zoom::Float64
+    padding::Float64
+    min_width::Float64
+    min_height::Float64
+end
+SceneFollowCamera(; x=NaN, y=NaN, zoom=NaN, padding=4., kwargs...) = SceneFollowCamera(CameraState(;kwargs...), x, y, zoom, padding, 10, 10)
+function update_camera!(camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
+    if isnan(camera.zoom)
+        pos = [posg(veh.state) for veh in scene]
+        X = [p.x for p in pos]
+        Y = [p.y for p in pos]
+        p = camera.padding
+        x_min, x_max = minimum(X)-p, maximum(X)+p
+        y_min, y_max = minimum(Y)-p, maximum(Y)+p
+        width = max(x_max-x_min, camera.min_width)
+        height = max(y_max-y_min, camera.min_height)
+        x_zoom = canvas_width(camera) / width
+        y_zoom = canvas_height(camera) / height
+        x_zoom, y_zoom
+        x = isnan(camera.x) ? (x_min+x_max)/2 : camera.x
+        y = isnan(camera.y) ? (y_min+y_max)/2 : camera.y
+        zoom = min(x_zoom, y_zoom)
+    else
+        # TODO: is following the center of mass really the best thing to do?
+        C = sum([posg(veh.state)[1:2] for veh in scene])/length(scene)  # center of mass
+        x = isnan(camera.x) ? C[1] : camera.x
+        y = isnan(camera.y) ? C[2] : camera.y
+        zoom = camera.zoom
+    end
+    
+    set_camera!(camera.state, x=x, y=y, zoom=zoom)
 end
 
-function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:State1D,D,I,R}
 
+"""
+    ComposedCamera <: Camera
+Composition of several cameras. The `update_camera` actions of the individual cameras are applied in the order in which they are saved in the `cameras` array.
+States of individual cameras are ignored, the state of the composed camera is the one that will be used for rendering.
 
-    if length(scene) > 0
+Example Usage
 
-        # get camera center
-        C = 0.0
-        for veh in scene
-            C += veh.state.s
-        end
-        C = C / length(scene)
-
-        camera_set_pos!(rendermodel, VecE2(C, 0.0))
-        camera_setzoom!(rendermodel, cam.zoom)
-    else
-        add_instruction!( rendermodel, render_text, ("SceneFollowCamera did not find any vehicles", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
-    end
-
-    rendermodel
+    cam = ComposedCamera(cameras=[SceneFollowCamera(), ZoomingCamera()])
+"""
+mutable struct ComposedCamera <: Camera
+    state::CameraState
+    cameras::Array{Camera}
 end
-function camera_set!(rendermodel::RenderModel, cam::SceneFollowCamera, scene::EntityFrame{S,D,I}, roadway::R, canvas_width::Int, canvas_height::Int) where {S<:VehicleState,D,I,R}
+ComposedCamera(cameras; kwargs...) = ComposedCamera(CameraState(;kwargs...), cameras)
 
-
-    if length(scene) > 0
-
-        # get camera center
-        C = VecE2(0.0,0.0)
-        for veh in scene
-            C += convert(VecE2, veh.state.posG)
-        end
-        C = C / length(scene)
-
-        camera_set_pos!(rendermodel, C)
-        camera_setzoom!(rendermodel, cam.zoom)
-    else
-        add_instruction!( rendermodel, render_text, ("SceneFollowCamera did not find any vehicles", 10, 15, 15, colorant"white"), incameraframe=false)
-        camera_fit_to_content!(rendermodel, canvas_width, canvas_height)
+function update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
+    for cam in camera.cameras
+        update_camera!(camera.cs, cam, scene)
     end
-
-    rendermodel
 end
