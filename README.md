@@ -21,6 +21,8 @@ In julia 1.1+, the preferred way is to add the SISL registry and install AutoViz
 
 ## Usage
 
+**Warning: This part of the documentation is not up to date, the documentation website will be updated soon, the notebook tutorial is up to date with AutoViz v0.8 **
+
 AutoViz works by adding rendering instructions to a `RenderModel`,
 and finally applying those instructions to a canvas using the
 `render` function.
