@@ -1,7 +1,7 @@
 name = "AutoViz"
 uuid = "82aa6e0c-a491-5edf-8d4b-c16b98e4ea17"
 repo = "https://github.com/sisl/AutoViz.jl.git"
-version = "0.8.0"
+version = "0.7.10"
 
 
 [deps]
