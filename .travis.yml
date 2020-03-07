@@ -30,6 +30,8 @@ jobs:
       julia: 1.0
       os: linux
       script:
+        - git clone https://github.com/JuliaRegistries/General  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "General"))')  
+        - git clone https://github.com/SISL/Registry  $(julia -e 'import Pkg; println(joinpath(Pkg.depots1(), "registries", "SISL"))')  
         - julia --project=docs/ -e 'using Pkg; Pkg.add("Documenter");
                                                Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate()'
