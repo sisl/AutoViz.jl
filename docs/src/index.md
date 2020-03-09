@@ -1,6 +1,15 @@
 # About
 
-This the documentation for AutoViz.jl. For now it is just a list of functions. 
+This is the documentation for AutoViz.jl.
 
 ```@contents
+Pages = [
+    "api.md"
+]
 ```
+
+## Examples
+
+- [Intro](@ref)
+- [Cameras](@ref)
+- [Overlays](@ref)

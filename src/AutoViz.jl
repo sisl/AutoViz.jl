@@ -16,7 +16,7 @@ const DEFAULT_CANVAS_WIDTH = 1000
 const DEFAULT_CANVAS_HEIGHT = 600
 export DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
 
-global rendermode = :fancy
+global rendermode = :basic # :fancy
 
 function set_render_mode(m::Symbol)
     global rendermode

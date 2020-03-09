@@ -62,7 +62,7 @@ function render_entity_rectangle(ctx::CairoContext, er::EntityRectangle)
     save(ctx); translate(ctx, x, y); rotate(ctx, yaw);
     color_fill = er.color
     color_line = weighted_color_mean(.4, colorant"black", color_fill)
-    render_round_rect(ctx, 0, 0, w, h, 1., cr, color_fill, true, true, color_line, .3)
+    render_round_rect(ctx, 0, 0, w, h, 1., cr, color_fill, true, true, color_line, 1.)
     restore(ctx)
 end
 add_renderable!(rm::RenderModel, er::EntityRectangle) = add_instruction!(rm, render_entity_rectangle, (er,))
@@ -147,7 +147,7 @@ function add_renderable!(
     else
         er = EntityRectangle(entity=entity, color=color)
         add_renderable!(rendermodel, er)
-        va = VelocityArrow(entity=entity, color=color)
+        va = VelocityArrow(entity=entity, color=RGB(.8,.8,.8))
         add_renderable!(rendermodel, va)
     end
     return rendermodel
