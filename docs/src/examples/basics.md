@@ -188,14 +188,17 @@ write("roadway_animated.gif", animation)
 Alternatively, the scene can also be visualized interactively using `Interact`
 
 ```julia
-# TODO: adapt this to interact
 using Interact
+using Reel
+using Blink
 
-animation = roll(fps=1.0/timestep, duration=nticks*timestep) do t, dt
-    i = Int(floor(t/dt)) + 1
-    render([roadway, scenes[i]])
+w = Window()
+viz = @manipulate for step in 1 : length(scenes)
+    render([roadway, scenes[step]])
 end
+body!(w, viz)
 ```
 
 You can use Reactive to have them endlessly drive in real time in your browser.
+
 ### TODO: is this a thing? If yes, provide snippet
