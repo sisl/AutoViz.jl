@@ -88,3 +88,20 @@ function get_pastel_car_colors(scene::EntityFrame{S,D,I}; saturation::Float64=0.
     end
     return retval
 end
+
+
+"""
+    id_to_color(id)
+
+Random color based on hash code of the ID
+see https://stackoverflow.com/questions/11120840/hash-string-into-rgb-color
+"""
+function id_to_color(id)
+    idhash = hash(id)
+    color = RGB(
+        .3 + .7*((idhash & 0xFF0000) >> 16)/255,
+        .3 + .7*((idhash & 0x00FF00) >> 8)/255,
+        .3 + .7*((idhash & 0x0000FF))/255,
+    )
+    return color
+end

@@ -14,23 +14,6 @@ isrenderable(t::Type) = hasmethod(add_renderable!, Tuple{RenderModel, t})
 isrenderable(t::Type{Roadway}) = true
 
 """
-    id_to_color(id)
-
-Random color based on hash code of the ID
-see https://stackoverflow.com/questions/11120840/hash-string-into-rgb-color
-"""
-function id_to_color(id)
-    idhash = hash(id)
-    color = RGB(
-        .3 + .7*((idhash & 0xFF0000) >> 16)/255,
-        .3 + .7*((idhash & 0x00FF00) >> 8)/255,
-        .3 + .7*((idhash & 0x0000FF))/255,
-    )
-    return color
-end
-
-
-"""
 A basic drawable rectangle representing a car.
 An arrow indicates the heading direction of the car.
 
