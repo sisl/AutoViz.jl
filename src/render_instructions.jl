@@ -227,7 +227,8 @@ function render_round_rect(
 
     if fstroke
         set_source_rgba(ctx, color_stroke)
-        line_width = abs(user_to_device_distance!(ctx, [line_width,0.0])[1])
+        # from Cairo.user_to_device_distance! - this may be the bug
+        # line_width = abs(user_to_device_distance!(ctx, [line_width,0.0])[1])
         set_line_width(ctx, line_width)
         stroke(ctx)
     end

@@ -14,6 +14,23 @@ isrenderable(t::Type) = hasmethod(add_renderable!, Tuple{RenderModel, t})
 isrenderable(t::Type{Roadway}) = true
 
 """
+    id_to_color(id)
+
+Random color based on hash code of the ID
+see https://stackoverflow.com/questions/11120840/hash-string-into-rgb-color
+"""
+function id_to_color(id)
+    idhash = hash(id)
+    color = RGB(
+        .3 + .7*((idhash & 0xFF0000) >> 16)/255,
+        .3 + .7*((idhash & 0x00FF00) >> 8)/255,
+        .3 + .7*((idhash & 0x0000FF))/255,
+    )
+    return color
+end
+
+
+"""
 A basic drawable rectangle representing a car.
 An arrow indicates the heading direction of the car.
 
@@ -37,6 +54,7 @@ ArrowCar(entity::Entity, color::Color) = ArrowCar(posg(entity.state).x, posg(ent
                                                   length=length(entity.def),
                                                   width=AutomotiveDrivingModels.width(entity.def),
                                                   color=color)
+ArrowCar(;car::E, color=id_to_color(car.id), kwargs...) where {E<:Entity} = ArrowCar(posg(car.state)...; length=length(car.def), width=AutomotiveDrivingModels.width(car.def), kwargs...)
 
 function add_renderable!(rm::RenderModel, c::ArrowCar)
     x = c.pos[1]
@@ -52,7 +70,7 @@ A drawable rectangle with rounded corners representing an `entity`.
 """
 @with_kw struct EntityRectangle{S,D,I, C<:Colorant} <: Renderable
     entity::Entity{S,D,I}
-    color::C = AutoViz.colortheme["COLOR_CAR_OTHER"]
+    color::C = id_to_color(entity.id)
 end
 
 function render_entity_rectangle(ctx::CairoContext, er::EntityRectangle)
@@ -94,7 +112,7 @@ The color of the car can be specified using the `color` keyword.
 """
 @with_kw struct FancyCar{C<:Colorant, S, D, I} <: Renderable
     car::Entity{S, D, I}
-    color::C = AutoViz.colortheme["COLOR_CAR_OTHER"]
+    color::C = id_to_color(car.id)
 end
 
 function add_renderable!(rm::RenderModel, fc::FancyCar)
@@ -112,7 +130,7 @@ The color of the pedestrian can be specified using the `color` keyword.
 """
 @with_kw struct FancyPedestrian{C<:Colorant, S, D, I} <: Renderable
     ped::Entity{S, D, I}
-    color::C = colorant"blue"
+    color::C = id_to_color(ped.id)
 end
 
 function add_renderable!(rm::RenderModel, fp::FancyPedestrian)
@@ -132,14 +150,7 @@ function add_renderable!(
     color::Union{Nothing, Colorant}=nothing
 ) where {E<:Entity}
     if color === nothing
-        # random color based on hash code of entity.id
-        # see https://stackoverflow.com/questions/11120840/hash-string-into-rgb-color
-        idhash = hash(entity.id)
-        color = RGB(
-            .3 + .7*((idhash & 0xFF0000) >> 16)/255,
-            .3 + .7*((idhash & 0x00FF00) >> 8)/255,
-            .3 + .7*((idhash & 0x0000FF))/255,
-        )
+        color = id_to_color(entity.id)
     end
     if rendermode == :fancy
         fe = (class(entity.def) == AgentClass.PEDESTRIAN ? FancyPedestrian(ped=entity, color=color) : FancyCar(car=entity, color=color))
@@ -147,7 +158,7 @@ function add_renderable!(
     else
         er = EntityRectangle(entity=entity, color=color)
         add_renderable!(rendermodel, er)
-        va = VelocityArrow(entity=entity, color=RGB(.8,.8,.8))
+        va = VelocityArrow(entity=entity, color=colorant"white")
         add_renderable!(rendermodel, va)
     end
     return rendermodel
