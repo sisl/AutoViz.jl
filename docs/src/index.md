@@ -10,6 +10,6 @@ Pages = [
 
 ## Examples
 
-- [Intro](@ref)
+- [AutoViz Basics](@ref)
 - [Cameras](@ref)
 - [Overlays](@ref)
