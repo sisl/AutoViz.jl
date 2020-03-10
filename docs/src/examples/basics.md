@@ -170,9 +170,11 @@ We can simulate the scenario over time and visualize the results using `Reel`
 using Reel
 
 timestep = 0.1
-nticks = 100
+nticks = 50
 
-models = Dict((i => Tim2DDriver(timestep) for i in 1:4))
+models = Dict((i => Tim2DDriver(timestep) for i in 1:3))  # car models
+# TODO: use a different model for pedestrian
+models[42] = Tim2DDriver(timestep)  # pedestrian model
 
 scenes = simulate(scene, roadway, models, nticks, timestep)
 
