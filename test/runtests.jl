@@ -1,7 +1,6 @@
 using Test
 using Pkg
 using AutoViz
-using NBInclude
 using Colors
 using Random
 using AutomotiveDrivingModels
@@ -108,4 +107,16 @@ end
     s = Frame([veh1])
     d = get_pastel_car_colors(s)
     @test length(d) == length(s)
+end
+
+@testset "doc examples" begin
+    @testset "basics" begin
+        include("docs/src/examples/basics.jl")
+    end
+    # @testset "cameras" begin
+    #     include("docs/src/examples/cameras.jl")
+    # end
+    # @testset "overlays" begin
+    #     include("docs/src/examples/overlays.jl")
+    # end
 end

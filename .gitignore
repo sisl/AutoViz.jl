@@ -1,8 +1,10 @@
-*.jl.cov
-*.jl.mem
-**/.ipynb_checkpoints
-docs/build/
-*.webm
+# images generated during testing
 test/*.svg
 test/*.png
 test/*.pdf
+test/*.webm
+
+# auto-generated files
+docs/build/
+docs/src/tutorials
+docs/src/notebooks

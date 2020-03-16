@@ -90,8 +90,8 @@ The fill proportion is set using `val`, it should be a number between 0 and 1. I
 
 """
 @with_kw mutable struct HistogramOverlay <: SceneOverlay
-    pos::VecE2{Float64} = VecE2(0.,0.)
-    coordinate_system::Symbol = :scene
+    pos::VecE2{Float64} = VecE2(10.,10.)
+    coordinate_system::Symbol = :camera_pixels
     label::String = "histogram"
     val::Float64 = 0.5 # should be between 0 and 1
     width::Float64 = 2.
