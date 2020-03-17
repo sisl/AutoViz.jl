@@ -113,10 +113,10 @@ end
     @testset "basics" begin
         include("docs/src/examples/basics.jl")
     end
-    # @testset "cameras" begin
-    #     include("docs/src/examples/cameras.jl")
-    # end
-    # @testset "overlays" begin
-    #     include("docs/src/examples/overlays.jl")
-    # end
+    @testset "cameras" begin
+        include("docs/src/examples/cameras.jl")
+    end
+    @testset "overlays" begin
+        include("docs/src/examples/overlays.jl")
+    end
 end
