@@ -59,7 +59,7 @@ function animate(roadway, scenes, camera=nothing)
         update_camera!(camera, scenes[i])
         renderables = [
             roadway, scenes[i],
-            RenderableOverlay(IDOverlay(x_off=-2, y_off=1), scenes[i], roadway),
+            IDOverlay(scene=scenes[i], x_off=-2, y_off=1),
         ]
         render(renderables, camera=camera)
     end

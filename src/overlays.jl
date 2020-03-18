@@ -286,7 +286,6 @@ end
     NeighborsOverlay
 
 Draws a line between a vehicle and its neighbors. The neighbors are linked with different colors depending on their lanes.
-This overlay needs to be wrapped as a RenderableOverlay which needs a scene and a roadway to perform the calculation of the neighbors.
 
 # Fields
 
