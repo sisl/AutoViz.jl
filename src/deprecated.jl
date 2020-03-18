@@ -7,7 +7,7 @@ function render(scene::EntityFrame{S,D,I}, roadway::R, overlays::AbstractVector{
     cam::Camera=SceneFollowCamera(),
     car_colors::Dict{I,C}=Dict{I,Colorant}(),
     surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
-) where {S,D,I,O<:SceneOverlay,R,C<:Colorant}
+) where {S,D,I,O,R,C<:Colorant}
     Base.depwarn(render_depwarn_msg, :render)
     renderables = [roadway]
     for (i, veh) in enumerate(scene)

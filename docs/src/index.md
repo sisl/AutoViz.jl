@@ -15,7 +15,7 @@ features of the `AutoViz` package, such as
 # !!! note
 #     All AutoViz tutorials are available as
 #     [Jupyter notebooks](https://nbviewer.jupyter.org/)
-#     by clicking on the badge at the beginning of the notebook!
+#     by clicking on the badge at the beginning of the tutorial!
 
 The Manual section lists more details of the provided functions,
 which can also be accessed through the Julia REPL by typing `?function_name`.
