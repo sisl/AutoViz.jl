@@ -1,4 +1,4 @@
-# images generated during testing
+docs/build/
 test/*.svg
 test/*.png
 test/*.pdf
@@ -9,3 +9,4 @@ test/*.gif
 docs/build/
 docs/src/tutorials
 docs/src/notebooks
+docs/src/assets

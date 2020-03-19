@@ -173,7 +173,7 @@ struct MyRenderableCircle
 end
 
 function AutoViz.add_renderable!(rendermodel::RenderModel, circle::MyRenderableCircle)
-    # add the desired render instructions to the rendermodel
+    ## add the desired render instructions to the rendermodel
     add_instruction!(
         rendermodel, AutoViz.render_circle,
         (circle.pos.x, circle.pos.y, circle.radius, circle.color),
@@ -184,8 +184,7 @@ end
 
 circles = [MyRenderableCircle(VecE2(4i,3.0*(1+sin(i/4))), .5+rand(), rand(RGB)) for i in 1:20]
 snapshot = render([roadway, circles..., scene], canvas_height=120)
-#md
-write("custom_circles.svg", snapshot) # hide
+#md write("custom_circles.svg", snapshot) # hide
 
 #md # ![custom circles](custom_circles.svg)
 
