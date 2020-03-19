@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AutoViz Basics · AutoViz.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">AutoViz.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>AutoViz Basics</a><ul class="internal"><li><a class="tocitem" href="#Basic-rendering-1"><span>Basic rendering</span></a></li><li><a class="tocitem" href="#Vehicle-Shapes-1"><span>Vehicle Shapes</span></a></li><li><a class="tocitem" href="#Vehicle-Colors-1"><span>Vehicle Colors</span></a></li><li><a class="tocitem" href="#Custom-Renderable-Objects-1"><span>Custom Renderable Objects</span></a></li><li><a class="tocitem" href="#Simulation-and-Animations-1"><span>Simulation and Animations</span></a></li></ul></li><li><a class="tocitem" href="../cameras/">Cameras</a></li><li><a class="tocitem" href="../overlays/">Overlays</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../../api/">API</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>AutoViz Basics</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>AutoViz Basics</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/sisl/AutoViz.jl/blob/master/docs/lit/tutorials/basics.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="AutoViz-Basics-1"><a class="docs-heading-anchor" href="#AutoViz-Basics-1">AutoViz Basics</a><a class="docs-heading-anchor-permalink" href="#AutoViz-Basics-1" title="Permalink"></a></h1><p><a href="https://nbviewer.jupyter.org/github/sisl/AutoViz.jl/blob/gh-pages/dev/notebooks/basics.ipynb"><img src="https://img.shields.io/badge/show-nbviewer-579ACA.svg" alt/></a></p><p>To run these tutorials, you must be using <code>julia 1.1+</code> and have <code>AutoViz.jl</code> installed.</p><p>The core function of the <code>AutoViz.jl</code> package is <code>AutoViz.render()</code></p><article class="docstring"><header><a class="docstring-binding" id="AutoViz.render" href="#AutoViz.render"><code>AutoViz.render</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">render(
+    renderables::AbstractVector;
+    camera::Union{Nothing, Camera} = nothing,
+    canvas_width::Int64 = (camera === nothing ? DEFAULT_CANVAS_WIDTH : canvas_width(camera)),
+    canvas_height::Int64 = (camera === nothing ? DEFAULT_CANVAS_HEIGHT : canvas_height(camera)),
+    surface::CairoSurface = CairoSVGSurface(IOBuffer(), canvas_width, canvas_height)
+)</code></pre><p>Draw all <code>renderables</code> to a <code>surface</code> of dimensions <code>canvas_width</code> x <code>canvas_height</code>. All renderables must implement the <code>add_renderable!</code> function which adds rendering instructions to the render model.</p><p>The provided <code>camera</code> should be updated using the  <code>update_camera!()</code> function before calling <code>render</code>. If no <code>camera</code> is provided, the render function will default to fitting all renderable objects to the canvas.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/sisl/AutoViz.jl/blob/dc84cf3219f38bc914fb145f2e415cdd9050775c/src/rendermodels.jl#L41-L57">source</a></section></article><p>In its simplest form, the <code>render</code> function only takes one argument: an iterable collection of renderable objects, <code>renderables</code>. In order for an object to be renderable, it needs to implement the <code>add_renderable!()</code> function.</p><p>By default, the <code>render()</code> function will do its best to make all the contents of the scene fit to the canvas of dimensions <code>canvas_width</code> x <code>canvas_height</code>. More fine-grained control over camera positioning can be achieved by providing the <code>camera</code> keyword. In case a custom camera is used, it is important to call <code>update_camera!(camera, scene)</code> before rendering.</p><p>The Cairo surface to be used for plotting can be specified using the <code>surface</code> keyword. The <code>render()</code> function applies the rendering instructions to the <code>surface</code> and returns it. In the tutorials, we will denote the returned <code>surface</code> as a <code>snapshot</code> of the scene. Such snapshots can be saved to file using the command</p><pre><code class="language-julia">write(&quot;snapshot.svg&quot;, snapshot)</code></pre><h2 id="Basic-rendering-1"><a class="docs-heading-anchor" href="#Basic-rendering-1">Basic rendering</a><a class="docs-heading-anchor-permalink" href="#Basic-rendering-1" title="Permalink"></a></h2><p>We start our example by rendering an empty roadway</p><pre><code class="language-julia">using AutomotiveDrivingModels
+using AutoViz
+
+roadway = gen_straight_roadway(3, 100.0)
+
+snapshot = render([roadway], canvas_height=120)</code></pre><p><img src="../empty_roadway.svg" alt="empty roadway"/></p><p>We can change the background color and render again</p><pre><code class="language-julia">AutoViz.colortheme[&quot;background&quot;] = colorant&quot;white&quot;
+snapshot = render([roadway], canvas_height=120)</code></pre><p><img src="../empty_roadway_whitebg.svg" alt="empty roadway"/></p><p>Let&#39;s add some vehicles to the roadway</p><pre><code class="language-julia">car_len = 4.8
+car_width = 1.8
+def = VehicleDef(AgentClass.CAR, car_len, car_width)
+w = DEFAULT_LANE_WIDTH
+scene = Scene(4)  # allocate a scene for 4 agents</code></pre><pre><code class="language-none">Scene(with 0 cars)</code></pre><p>add three cars</p><pre><code class="language-julia">push!.(Ref(scene), [
+    Vehicle(VehicleState(VecSE2(10.0,   w, 0.0), roadway, 4.0 + 2.0randn()), def, 1),
+    Vehicle(VehicleState(VecSE2(40.0, 0.0, 0.0), roadway, 4.0 + 2.0randn()), def, 2),
+    Vehicle(VehicleState(VecSE2(70.0,   w, 0.0), roadway, 4.0 + 2.0randn()), def, 3),
+])</code></pre><pre><code class="language-none">3-element Array{Records.Frame{Records.Entity{AutomotiveDrivingModels.VehicleState,AutomotiveDrivingModels.VehicleDef,Int64}},1}:
+ Scene(with 3 cars)
+ Scene(with 3 cars)
+ Scene(with 3 cars)</code></pre><p>add a pedestrian</p><pre><code class="language-julia">push!(scene, Vehicle(
+    VehicleState(VecSE2(50.0, 2w, -π/2), roadway, 2.0),
+    VehicleDef(AgentClass.PEDESTRIAN, 1., 1.),
+    42
+))
+snapshot = render([roadway, scene], canvas_height=120)</code></pre><p><img src="../roadway_with_cars.svg" alt="roadway with cars"/></p><h2 id="Vehicle-Shapes-1"><a class="docs-heading-anchor" href="#Vehicle-Shapes-1">Vehicle Shapes</a><a class="docs-heading-anchor-permalink" href="#Vehicle-Shapes-1" title="Permalink"></a></h2><p>The <code>render</code> function provides some defaults for rendering basic building blocks such as entities or roadways. If the value of <code>AutoViz.rendermode</code> is set to <code>:basic</code>, entities are simply rendered as rectangles with arrows indicating their velocities. This can also be done explicitly via</p><pre><code class="language-julia">renderables = [
+    roadway,
+    (EntityRectangle(entity=x) for x in scene)...,
+    (VelocityArrow(entity=x) for x in scene)...,
+]
+snapshot = render(renderables, canvas_height=120)</code></pre><p><img src="../roadway_basic_manual.svg" alt="roadway basic manual"/></p><p>The result remains the same. The velocity arrows point to the location at which the vehicle would be 1 second in the future.</p><p>Setting <code>AutoViz.rendermode</code> to <code>:fancy</code>, the rectangles are replaced by SVG images of cars (or pedestrians).</p><pre><code class="language-julia">AutoViz.set_render_mode(:fancy)
+snapshot = render([roadway, scene], canvas_height=120)</code></pre><p><img src="../roadway_fancy.svg" alt="roadway fancy"/></p><p>Which is shorthand for</p><pre><code class="language-julia">renderables = [
+    roadway, (FancyCar(car=scene[i]) for i in 1:3)..., FancyPedestrian(ped=scene[4])
+]
+snapshot = render(renderables, canvas_height=120)</code></pre><p><img src="../roadway_fancy_manual.svg" alt="roadway fancy manual"/></p><p>A third visualization mode is available in the form of arrow cars, in which the arrow indicates the heading direction of the car but does not scale with speed.</p><pre><code class="language-julia">renderables = [
+    roadway, (ArrowCar(car=scene[i]) for i in 1:3)..., FancyPedestrian(ped=scene[4])
+]
+snapshot = render(renderables, canvas_height=120)</code></pre><p><img src="../roadway_arrow.svg" alt="roadway arrow"/></p><p>It is also possible to render single vehicles</p><pre><code class="language-julia">fancy_car = FancyCar(car=Vehicle(VehicleState(VecSE2(0.,0.), 0.), VehicleDef(), 1))
+snapshot = render([fancy_car], camera=StaticCamera(zoom=100.))</code></pre><p><img src="../fancy_car.svg" alt="fancy car"/></p><h2 id="Vehicle-Colors-1"><a class="docs-heading-anchor" href="#Vehicle-Colors-1">Vehicle Colors</a><a class="docs-heading-anchor-permalink" href="#Vehicle-Colors-1" title="Permalink"></a></h2><p>By default, the <code>render</code> function generates a random color for each entity based on its ID using the <code>id_to_color()</code> function. However, vehicle colors can also be assigned explicitly:</p><pre><code class="language-julia">colors = [colorant&quot;red&quot;, colorant&quot;blue&quot;, colorant&quot;green&quot;]
+renderables = [
+    roadway,
+    (FancyCar(car=scene[i], color=colors[i]) for i in 1:3)...,
+    FancyPedestrian(ped=scene[4], color=colorant&quot;yellow&quot;)
+]
+snapshot = render(renderables, canvas_height=120)</code></pre><p><img src="../scene_custom_colors.svg" alt="cars with custom colors"/></p><h2 id="Custom-Renderable-Objects-1"><a class="docs-heading-anchor" href="#Custom-Renderable-Objects-1">Custom Renderable Objects</a><a class="docs-heading-anchor-permalink" href="#Custom-Renderable-Objects-1" title="Permalink"></a></h2><pre><code class="language-">using Colors
+
+struct MyRenderableCircle
+    pos::VecE2
+    radius::Float64
+    color::Colorant
+end
+
+function AutoViz.add_renderable!(rendermodel::RenderModel, circle::MyRenderableCircle)</code></pre><p>add the desired render instructions to the rendermodel</p><pre><code class="language-">    add_instruction!(
+        rendermodel, AutoViz.render_circle,
+        (circle.pos.x, circle.pos.y, circle.radius, circle.color),
+        coordinate_system=:scene
+    )
+    return rendermodel
+end
+
+circles = [MyRenderableCircle(VecE2(4i,3.0*(1+sin(i/4))), .5+rand(), rand(RGB)) for i in 1:20]
+snapshot = render([roadway, circles..., scene], canvas_height=120)
+#md
+write(&quot;custom_circles.svg&quot;, snapshot) # hide</code></pre><p><img src="custom_circles.svg" alt="custom circles"/></p><h2 id="Simulation-and-Animations-1"><a class="docs-heading-anchor" href="#Simulation-and-Animations-1">Simulation and Animations</a><a class="docs-heading-anchor-permalink" href="#Simulation-and-Animations-1" title="Permalink"></a></h2><p>We can simulate the scenario over time and visualize the results using <code>Reel</code> (based on <code>ffmpeg</code>).</p><pre><code class="language-">using Reel
+
+timestep = 0.1
+nticks = 50
+
+models = Dict((i =&gt; Tim2DDriver(timestep) for i in 1:3))  # car models
+models[42] = Tim2DDriver(timestep)  # TODO: better pedestrian model
+
+scenes = simulate(scene, roadway, models, nticks, timestep)
+
+animation = roll(fps=1.0/timestep, duration=nticks*timestep) do t, dt
+    i = Int(floor(t/dt)) + 1
+    render([roadway, scenes[i]], canvas_height=120)
+end
+
+write(&quot;roadway_animated.gif&quot;, animation)</code></pre><p><img src="roadway_animated.gif" alt="animated roadway"/></p><p>Alternatively, the scene can also be visualized interactively using <code>Interact</code></p><p>Another common visualization package is <code>Reactive</code>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../cameras/">Cameras »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 19 March 2020 01:32">Thursday 19 March 2020</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
