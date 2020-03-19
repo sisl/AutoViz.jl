@@ -1,16 +1,11 @@
 using Test
 using Pkg
 using AutoViz
-using NBInclude
 using Colors
 using Random
 using AutomotiveDrivingModels
 
-@testset "notebooks" begin
-    @nbinclude(joinpath(dirname(pathof(AutoViz)),"..", "notebooks", "autoviz_tutorial.ipynb"))
-end
-
-@testset "Renderable" begin 
+@testset "Renderable" begin
     rw = gen_straight_roadway(3, 100.0)
     car = ArrowCar(0.0, 0.0, 0.0, id=1)
     car2 = ArrowCar(1.0, 1.0, 1.0, color=colorant"green", text="text")
@@ -108,4 +103,16 @@ end
     s = Frame([veh1])
     d = get_pastel_car_colors(s)
     @test length(d) == length(s)
+end
+
+@testset "doc examples" begin
+    @testset "basics" begin
+        include("../docs/lit/tutorials/basics.jl")
+    end
+    @testset "cameras" begin
+        include("../docs/lit/tutorials/cameras.jl")
+    end
+    @testset "overlays" begin
+        include("../docs/lit/tutorials/overlays.jl")
+    end
 end

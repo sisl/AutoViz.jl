@@ -1,10 +1,20 @@
 """
-    CameraState
-Representation of camera parameters such as position, rotation and zoom level.
+    CameraState(;
+        position::VecE2      = VecE2(0.,0.),
+        zoom::Real           = 1.,
+        rotation::Real       = 0.,
+        canvas_width::Int64  = DEFAULT_CANVAS_WIDTH
+        canvas_height::Int64 = DEFAULT_CANVAS_HEIGHT
+    )
 
- - `camera_center::VecE2{Real}`: position of camera in [N,E] relative to the mean point. meters
- - `camera_zoom::Real`: camera zoom in [pix/m]
- - `camera_rotation::Real`: camera rotation in [rad]
+Representation of the internal camera state.
+
+ - `position::VecE2`: the (x,y) position of the camera in [metre].
+     The x-direction is measured to the east, y direction to the north.
+ - `zoom::Real`: the zoom level of the camera, expressed in [pixels / metre]
+ - `rotation::Real`: the rotation angle of the camera in [radian]
+ - `canvas_width::Int64`: the canvas width in [pixel]
+ - `canvas_height::Int64`: the canvas width in [pixel]
 """
 @with_kw mutable struct CameraState
     position  :: VecE2 = VecE2(0.,0.)
@@ -63,7 +73,7 @@ struct StaticCamera <: Camera
     state::CameraState
 end
 StaticCamera(;kwargs...) = StaticCamera(CameraState(;kwargs...))
-update_camera!(::StaticCamera, ::Frame) = nothing
+update_camera!(camera::StaticCamera, ::Frame) = camera.state
 
 """
     TargetFollowCamera <: Camera
@@ -93,6 +103,7 @@ function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{E}) where {I
     x = isnan(camera.x) ? x : camera.x
     y = isnan(camera.y) ? y : camera.y
     set_camera!(camera.state, x=x, y=y)
+    return camera.state
 end
 
 """
@@ -111,10 +122,11 @@ end
 function update_camera!(camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
     zt, zc = camera.zoom_target, zoom(camera)
     if zt < zc  # zooming in 
-        set_camera!(camera.cs, zoom=max(zt, zc-camera.dz))
+        set_camera!(camera.state, zoom=max(zt, zc-camera.dz))
     elseif zt > zc  # zooming out
-        set_camera!(camera.cs, zoom=min(zt, zc+camera.dz))
+        set_camera!(camera.state, zoom=min(zt, zc+camera.dz))
     end
+    return camera.state
 end
 
 """
@@ -164,6 +176,7 @@ function update_camera!(camera::SceneFollowCamera, scene::Frame{E}) where {E<:En
     end
     
     set_camera!(camera.state, x=x, y=y, zoom=zoom)
+    return camera.state
 end
 
 
@@ -182,8 +195,12 @@ mutable struct ComposedCamera <: Camera
 end
 ComposedCamera(cameras; kwargs...) = ComposedCamera(CameraState(;kwargs...), cameras)
 
-function update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
+function AutoViz.update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
     for cam in camera.cameras
-        update_camera!(camera.cs, cam, scene)
+        cam.state = camera.state
+        camera.state = update_camera!(cam, scene)
     end
+    return camera.state
 end
+
+update_camera!(::Nothing, ::Frame) = nothing
