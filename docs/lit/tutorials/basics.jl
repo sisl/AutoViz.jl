@@ -128,7 +128,9 @@ snapshot = render(renderables, canvas_height=120)
 # arrow indicates the heading direction of the car but does not scale with speed.
 
 renderables = [
-    roadway, (ArrowCar(car=scene[i]) for i in 1:3)..., FancyPedestrian(ped=scene[4])
+    roadway,
+    (ArrowCar(scene[i]) for i in 1:3)...,
+    FancyPedestrian(ped=scene[4])
 ]
 snapshot = render(renderables, canvas_height=120)
 #md write("roadway_arrow.svg", snapshot) # hide

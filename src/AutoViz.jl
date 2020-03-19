@@ -34,7 +34,8 @@ export
     OFFICETHEME,
     LIGHTTHEME,
     set_color_theme,
-    get_pastel_car_colors
+    get_pastel_car_colors,
+    id_to_color
 
 # Cameras
 include("cameras.jl")
