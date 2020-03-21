@@ -110,8 +110,8 @@ The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float6
 - `x_off::Float64 = 0.`
 - `y_off::Float64 = 0.`
 """
-@with_kw mutable struct IDOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct IDOverlay{F<:EntityFrame}
+    scene::F
     color::Colorant = colorant"white"
     font_size::Int = 15
     x_off::Float64 = 0.
@@ -127,8 +127,8 @@ function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::IDOverlay)
 end
 
 
-@with_kw mutable struct LineToCenterlineOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct LineToCenterlineOverlay{F<:EntityFrame}
+    scene::F
     target_id::Int # if -1 does it for all
     line_width::Float64 = 0.5
     color::Colorant = colorant"blue"
@@ -152,9 +152,9 @@ function add_renderable!(rendermodel::RenderModel, overlay::LineToCenterlineOver
 end
 
 
-@with_kw mutable struct LineToFrontOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
-    roadway::Roadway
+@with_kw mutable struct LineToFrontOverlay{F<:EntityFrame, R<:Roadway}
+    scene::F
+    roadway::R
     target_id::Int # if -1 does it for all
     line_width::Float64 = 0.5
     color::Colorant = colorant"blue"
@@ -190,10 +190,10 @@ fields:
 - color: the color of the blinker
 - size: the size of the blinker
 """
-@with_kw struct BlinkerOverlay
+@with_kw struct BlinkerOverlay{E<:Entity}
     on::Bool = false
     right::Bool = true
-    veh::Vehicle = Vehicle(VehicleState(), VehicleDef(), 0)
+    veh::E = Entity(VehicleState(), VehicleDef(), 0)
     color::Colorant = colorant"0xFFEF00" # yellow
     size::Float64 = 0.3
 end
@@ -219,8 +219,8 @@ Displays statistics about the front neighbor of the car of id `target_id`.
 
 `CarFollowingStatsOverlay(;target_id, verbosity=1, color=colorant"white", font_size=10)`
 """
-@with_kw mutable struct CarFollowingStatsOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct CarFollowingStatsOverlay{F<:EntityFrame}
+    scene::F
     roadway::Roadway
     target_id::Int
     verbosity::Int = 1
@@ -296,8 +296,8 @@ Draws a line between a vehicle and its neighbors. The neighbors are linked with 
 -  `line_width::Float64 = 0.5`
 -  `textparams::TextParams = TextParams()`
 """
-@with_kw mutable struct NeighborsOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct NeighborsOverlay{F<:EntityFrame}
+    scene::F
     roadway::Roadway
     target_id::Int
     color_L::Colorant = colorant"blue"
@@ -380,15 +380,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
     rendermodel
 end
 
-mutable struct MarkerDistOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct MarkerDistOverlay{F<:EntityFrame}
+    scene::F
     roadway::Roadway
     target_id::Int
-    textparams::TextParams
-    rec::SceneRecord
-    function MarkerDistOverlay(target_id::Int; textparams::TextParams=TextParams(),)
-        new(target_id, textparams, SceneRecord(1, 0.1))
-    end
+    textparams::TextParams = TextParams()
 end
 
 function add_renderable!(rendermodel::RenderModel, overlay::MarkerDistOverlay)
@@ -403,8 +399,8 @@ function add_renderable!(rendermodel::RenderModel, overlay::MarkerDistOverlay)
     if vehicle_index != nothing
         veh_ego = overlay.scene[vehicle_index]
         drawtext(@sprintf("lane offset:       %10.3f", veh_ego.state.posF.t), yₒ + 0*Δy, rendermodel, textparams)
-        drawtext(@sprintf("markerdist left:   %10.3f", convert(Float64, get(MARKERDIST_LEFT, overlay.rec, overlay.roadway, vehicle_index))), yₒ + 1*Δy, rendermodel, textparams)
-        drawtext(@sprintf("markerdist right:  %10.3f", convert(Float64, get(MARKERDIST_RIGHT, overlay.rec, overlay.roadway, vehicle_index))), yₒ + 2*Δy, rendermodel, textparams)
+        drawtext(@sprintf("markerdist left:   %10.3f", markerdist_left(overlay.roadway, overlay.scene, veh_ego)), yₒ + 1*Δy, rendermodel, textparams)
+        drawtext(@sprintf("markerdist right:  %10.3f", markerdist_right(overlay.roadway, overlay.scene, veh_ego)), yₒ + 2*Δy, rendermodel, textparams)
     end
 
     rendermodel

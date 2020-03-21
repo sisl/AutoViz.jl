@@ -18,7 +18,7 @@ end
 
 @testset "write SVG, PDF, PNG" begin 
     roadway = gen_stadium_roadway(4)
-    c = @test_deprecated render(roadway)
+    c = render([roadway])
     write("out.svg", c)
     @test isfile("out.svg")
 

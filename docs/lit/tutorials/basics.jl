@@ -66,13 +66,13 @@ scene = Scene(4)  # allocate a scene for 4 agents
 
 # add three cars
 push!.(Ref(scene), [
-    Vehicle(VehicleState(VecSE2(10.0,   w, 0.0), roadway, 4.0 + 2.0randn()), def, 1),
-    Vehicle(VehicleState(VecSE2(40.0, 0.0, 0.0), roadway, 4.0 + 2.0randn()), def, 2),
-    Vehicle(VehicleState(VecSE2(70.0,   w, 0.0), roadway, 4.0 + 2.0randn()), def, 3),
+    Entity(VehicleState(VecSE2(10.0,   w, 0.0), roadway, 4.0 + 2.0randn()), def, 1),
+    Entity(VehicleState(VecSE2(40.0, 0.0, 0.0), roadway, 4.0 + 2.0randn()), def, 2),
+    Entity(VehicleState(VecSE2(70.0,   w, 0.0), roadway, 4.0 + 2.0randn()), def, 3),
 ])
 
 # add a pedestrian
-push!(scene, Vehicle(
+push!(scene, Entity(
     VehicleState(VecSE2(50.0, 2w, -π/2), roadway, 2.0),
     VehicleDef(AgentClass.PEDESTRIAN, 1., 1.),
     42
@@ -139,7 +139,7 @@ snapshot = render(renderables, canvas_height=120)
 
 # It is also possible to render single vehicles
 
-fancy_car = FancyCar(car=Vehicle(VehicleState(VecSE2(0.,0.), 0.), VehicleDef(), 1))
+fancy_car = FancyCar(car=Entity(VehicleState(VecSE2(0.,0.), 0.), VehicleDef(), 1))
 snapshot = render([fancy_car], camera=StaticCamera(zoom=100.))
 #md write("fancy_car.svg", snapshot) # hide
 

@@ -48,7 +48,7 @@ we need to provide a function with the signature
 ```
 The basic example above works, because AutoViz implements the
 `add_renderable!` function for commonly used types such as
-`Roadway`, `Vehicle` or `Scene`.
+`Roadway`, `Entity` or `Scene`.
 In general, the `render(renderables)` function can take any collection
 of renderable objects.
 AutoViz provides a series of convenient wrapper objects such as
