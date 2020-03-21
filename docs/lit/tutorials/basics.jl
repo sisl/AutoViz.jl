@@ -128,7 +128,9 @@ snapshot = render(renderables, canvas_height=120)
 # arrow indicates the heading direction of the car but does not scale with speed.
 
 renderables = [
-    roadway, (ArrowCar(car=scene[i]) for i in 1:3)..., FancyPedestrian(ped=scene[4])
+    roadway,
+    (ArrowCar(scene[i]) for i in 1:3)...,
+    FancyPedestrian(ped=scene[4])
 ]
 snapshot = render(renderables, canvas_height=120)
 #md write("roadway_arrow.svg", snapshot) # hide
@@ -209,7 +211,7 @@ animation = roll(fps=1.0/timestep, duration=nticks*timestep) do t, dt
     render([roadway, scenes[i]], canvas_height=120)
 end
 
-#md write("roadway_animated.gif", animation)
+#md write("roadway_animated.gif", animation) #hide
 
 #md # ![animated roadway](roadway_animated.gif)
 
