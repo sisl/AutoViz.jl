@@ -107,8 +107,7 @@ export
 
 # Overlays
 include("overlays.jl")
-export  SceneOverlay,
-        TextOverlay,
+export  TextOverlay,
         Overwash,
         NeighborsOverlay,
         CarFollowingStatsOverlay,
@@ -119,8 +118,7 @@ export  SceneOverlay,
         drawtext,
         LineToCenterlineOverlay,
         LineToFrontOverlay,
-        BlinkerOverlay,
-        RenderableOverlay
+        BlinkerOverlay
 
 # Convenient implementation for roadway and vehicle rendering
 include("roadways.jl")

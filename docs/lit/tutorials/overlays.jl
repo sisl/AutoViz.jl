@@ -4,7 +4,6 @@
 
 # Overlays are useful to display additional information on top of a given driving scene.
 # For example, they can be used to display the ID of the vehicle, their speed, or other useful information.
-# The underlying type from which all overlays should inherit is `SceneOverlay`.
 
 # More generally, renderable objects that are passed to the render function
 # are rendered in the order they are passed in.
@@ -75,43 +74,45 @@ nothing # hide
 #     Since AutoViz 0.8, every renderable object must have the same interface.
 #     As a result, an overlay that requires the `roadway` or `scene` for rendering,
 #     must store those objects as internal variables.
-#     `RenderableOverlay` is an overlay that can be used as a wrapper around older overlays
-#     which rely on the `scene` and `roadway` objects. Those overlays are marked by the tag
-#     [legacy]
+#
+#     (`AutoViz.RenderableOverlay` is an overlay that can be used as a wrapper around older overlays
+#     which rely on the `scene` and `roadway` objects.
+#     However, it is recommended that overlays implement the new interface for `add_renderable!`
+#     since `AutoViz.RenderableOverlay` may be removed in future versions.)
 
 
-# ## IDOverlay [legacy]
+# ## IDOverlay
 
 # Show IDs for all vehicles in the scene
-overlays = [[RenderableOverlay(
-    IDOverlay(x_off=-2, y_off=1), scene, roadway
-)] for scene in scenes]
+overlays = [[
+    IDOverlay(scene=scene, x_off=-2, y_off=1)
+] for scene in scenes]
 animation = animate(roadway, scenes, overlays)
 #md write("stadium_id_overlay.gif", animation) # hide
 #md # ![stadium with ID overlay](stadium_id_overlay.gif)
 
 
-# ## CarFollowingStatsOverlay [legacy]
+# ## CarFollowingStatsOverlay
 
 # Diplays info about the front neighbor of a car
 # such as the difference in velocity and the relative distance.
 # Show statistics for vehicle 3:
 
 # ### TODO: overlay name is not very descriptive
-overlays = [[RenderableOverlay(CarFollowingStatsOverlay(
-    target_id=3, font_size=20, color=colorant"black"
-), scene, roadway)] for scene in scenes]
+overlays = [[CarFollowingStatsOverlay(
+    scene=scene, roadway=roadway, target_id=3, font_size=20, color=colorant"black"
+)] for scene in scenes]
 animation = animate(roadway, scenes, overlays)
 #md write("stadium_car_stats_overlay.gif", animation) # hide
 #md # ![stadium with car stats overlay](stadium_car_stats_overlay.gif)
 
 
-# ## LineToFrontOverlay [legacy]
+# ## LineToFrontOverlay
 
 # Show the line to the front vehicle for vehicle 3
-overlays = [[RenderableOverlay(
-    LineToFrontOverlay(target_id=3), scene, roadway
-)] for scene in scenes]
+overlays = [[
+    LineToFrontOverlay(scene=scene, roadway=roadway, target_id=3)
+] for scene in scenes]
 animation = animate(roadway, scenes, overlays)
 #md write("stadium_line_front_overlay.gif", animation) # hide
 #md # ![stadium with ID overlay](stadium_line_front_overlay.gif)
@@ -164,14 +165,14 @@ animation = animate(roadway, scenes, overlays)
 #md # ![stadium with moving text overlay](stadium_histogram_overlay.gif)
 
 
-# ## NeighborsOverlay [legacy]
+# ## NeighborsOverlay
 
 # Draws a line between a vehicle and its neighbors.
 
 overlays = [[
-    RenderableOverlay(
-        NeighborsOverlay(target_id=3, textparams=TextParams(color=colorant"black")),
-        scene, roadway,
+    NeighborsOverlay(
+        scene=scene, roadway=roadway, target_id=3,
+        textparams=TextParams(color=colorant"black")
     )
 ] for (i, scene) in enumerate(scenes)]
 animation = animate(roadway, scenes, overlays)
@@ -186,12 +187,11 @@ animation = animate(roadway, scenes, overlays)
 # Just like roadways and vehicles, overlays are renderable objects.
 # In order to make a custom overlay type renderable, one needs to implement
 # the `add_renderable!(::RenderModel, ::YourOverlay)` function.
-# Overlays should inherit from the `SceneOverlay` type.
 
 # To define an overlay which highlights a lane, let's start by defining a
 # custom type `LaneOverlay`
 
-struct LaneOverlay <: SceneOverlay
+struct LaneOverlay
     lane::Lane
     roadway::Roadway
     color::Colorant
@@ -218,7 +218,7 @@ snapshot = render([roadway, lane_overlay, scene], camera=camera)
 # We will create an overlay which draws concentric rectangles around
 # a vehicle with ID `target_id`
 
-struct ConcentricRectOverlay <: SceneOverlay
+struct ConcentricRectOverlay
     target_id
     scene::Frame
     n::Int64
