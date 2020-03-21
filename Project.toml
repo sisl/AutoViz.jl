@@ -15,7 +15,7 @@ Rsvg = "c4c386cf-5103-5370-be45-f3a111cca3b8"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-AutomotiveDrivingModels = ">=0.7.10"
+AutomotiveDrivingModels = "0.8"
 
 [extras]
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
