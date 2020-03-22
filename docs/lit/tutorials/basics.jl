@@ -62,7 +62,7 @@ car_len = 4.8
 car_width = 1.8
 def = VehicleDef(AgentClass.CAR, car_len, car_width)
 w = DEFAULT_LANE_WIDTH
-scene = Scene(4)  # allocate a scene for 4 agents
+scene = Scene(Entity{VehicleState,VehicleDef,Int64}, 4)  # allocate a scene for 4 agents
 
 # add three cars
 push!.(Ref(scene), [
@@ -201,8 +201,8 @@ using Reel
 timestep = 0.1
 nticks = 50
 
-models = Dict((i => Tim2DDriver(timestep) for i in 1:3))  # car models
-models[42] = Tim2DDriver(timestep)  # TODO: better pedestrian model
+models = Dict((i => Tim2DDriver() for i in 1:3))  # car models
+models[42] = Tim2DDriver()  # TODO: better pedestrian model
 
 scenes = simulate(scene, roadway, models, nticks, timestep)
 

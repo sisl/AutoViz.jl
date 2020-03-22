@@ -169,7 +169,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::LineToFrontOverlay)
 
     for ind in target_inds
         veh = overlay.scene[ind]
-        veh_ind_front = get_neighbor_fore_along_lane(overlay.scene, ind, overlay.roadway).ind
+        veh_ind_front = find_neighbor(overlay.scene, overlay.roadway, veh).ind
         if veh_ind_front != nothing
             v2 = overlay.scene[veh_ind_front]
             add_instruction!(rendermodel, render_line_segment,
@@ -250,8 +250,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::CarFollowingStatsOve
         add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:camera_pixels)
         text_y += text_y_jump
 
-
-        foreinfo = get_neighbor_fore_along_lane(overlay.scene, veh_index, overlay.roadway; max_distance_fore=Inf)
+        foreinfo = find_neighbor(overlay.scene, overlay.roadway, veh; max_distance=Inf)
         if foreinfo.ind != nothing
             v2 = overlay.scene[foreinfo.ind]
             rel_speed = v2.state.v - veh.state.v
@@ -322,7 +321,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
         v = veh_ego.state.v
         len_ego = veh_ego.def.length
 
-        fore_L = get_neighbor_fore_along_left_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_L = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               lane=leftlane(overlay.roadway, veh_ego), 
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
+
         if fore_L.ind != nothing
             veh_oth = overlay.scene[fore_L.ind]
             A = get_front(veh_ego)
@@ -331,7 +334,9 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d fore left:   %10.3f", fore_L.Δs), yₒ + 0*Δy, rendermodel, textparams)
         end
 
-        fore_M = get_neighbor_fore_along_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_M = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if fore_M.ind != nothing
             veh_oth = overlay.scene[fore_M.ind]
             A = get_front(veh_ego)
@@ -340,7 +345,10 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d fore middle: %10.3f", fore_M.Δs), yₒ + 1*Δy, rendermodel, textparams)
         end
 
-        fore_R = get_neighbor_fore_along_right_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_R = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               lane=rightlane(overlay.roadway, veh_ego), 
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if fore_R.ind != nothing
             veh_oth = overlay.scene[fore_R.ind]
             A = get_front(veh_ego)
@@ -349,7 +357,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d fore right:  %10.3f", fore_R.Δs), yₒ + 2*Δy, rendermodel, textparams)
         end
 
-        rear_L = get_neighbor_rear_along_left_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_L = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               lane=leftlane(overlay.roadway, veh_ego), 
+                               rear = true,
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if rear_L.ind != nothing
             veh_oth = overlay.scene[rear_L.ind]
             A = get_rear(veh_ego)
@@ -358,7 +370,10 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d rear left:   %10.3f", rear_L.Δs), yₒ + 3*Δy, rendermodel, textparams)
         end
 
-        rear_M = get_neighbor_rear_along_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_M = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               rear = true,
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if rear_M.ind != nothing
             veh_oth = overlay.scene[rear_M.ind]
             A = get_rear(veh_ego)
@@ -367,7 +382,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d rear middle: %10.3f", rear_M.Δs), yₒ + 4*Δy, rendermodel, textparams)
         end
 
-        rear_R = get_neighbor_rear_along_right_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_R = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               rear = true,
+                               lane = rightlane(overlay.roadway, veh_ego),
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if rear_R.ind != nothing
             veh_oth = overlay.scene[rear_R.ind]
             A = get_rear(veh_ego)
