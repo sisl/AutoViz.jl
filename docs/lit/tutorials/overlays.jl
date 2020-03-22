@@ -27,7 +27,7 @@ timestep = 0.1
 
 roadway = gen_stadium_roadway(nlanes)
 
-scene = Frame([
+scene = Scene([
     Entity(
         VehicleState(
             Frenet(roadway[LaneTag(1,rand(1:nlanes))], 10.0*i),  # position
@@ -220,7 +220,7 @@ snapshot = render([roadway, lane_overlay, scene], camera=camera)
 
 struct ConcentricRectOverlay
     target_id
-    scene::Frame
+    scene::Scene
     n::Int64
     color::Colorant
 end

@@ -73,7 +73,7 @@ struct StaticCamera <: Camera
     state::CameraState
 end
 StaticCamera(;kwargs...) = StaticCamera(CameraState(;kwargs...))
-update_camera!(camera::StaticCamera, ::Frame) = camera.state
+update_camera!(camera::StaticCamera, ::Scene) = camera.state
 
 """
     TargetFollowCamera <: Camera
@@ -97,7 +97,7 @@ function TargetFollowCamera(target_id; x=NaN, y=NaN, kwargs...)
     TargetFollowCamera(CameraState(;kwargs...), target_id, x, y)
 end
 
-function update_camera!(camera::TargetFollowCamera{I}, scene::Frame{E}) where {I,E<:Entity}
+function update_camera!(camera::TargetFollowCamera{I}, scene::Scene{E}) where {I,E<:Entity}
     target = get_by_id(scene, camera.target_id)
     x, y = posg(target.state)[1:2]
     x = isnan(camera.x) ? x : camera.x
@@ -119,7 +119,7 @@ function ZoomingCamera(;zoom_target=20., dz=.5, kwargs...)
     ZoomingCamera(CameraState(;kwargs...), zoom_target, dz)
 end
 
-function update_camera!(camera::ZoomingCamera, scene::Frame{E}) where {E<:Entity}
+function update_camera!(camera::ZoomingCamera, scene::Scene{E}) where {E<:Entity}
     zt, zc = camera.zoom_target, zoom(camera)
     if zt < zc  # zooming in 
         set_camera!(camera.state, zoom=max(zt, zc-camera.dz))
@@ -151,7 +151,7 @@ struct SceneFollowCamera <: Camera
     min_height::Float64
 end
 SceneFollowCamera(; x=NaN, y=NaN, zoom=NaN, padding=4., kwargs...) = SceneFollowCamera(CameraState(;kwargs...), x, y, zoom, padding, 10, 10)
-function update_camera!(camera::SceneFollowCamera, scene::Frame{E}) where {E<:Entity}
+function update_camera!(camera::SceneFollowCamera, scene::Scene{E}) where {E<:Entity}
     if isnan(camera.zoom)
         pos = [posg(veh.state) for veh in scene]
         X = [p.x for p in pos]
@@ -195,7 +195,7 @@ mutable struct ComposedCamera <: Camera
 end
 ComposedCamera(cameras; kwargs...) = ComposedCamera(CameraState(;kwargs...), cameras)
 
-function AutoViz.update_camera!(camera::ComposedCamera, scene::Frame{E}) where {E<:Entity}
+function AutoViz.update_camera!(camera::ComposedCamera, scene::Scene{E}) where {E<:Entity}
     for cam in camera.cameras
         cam.state = camera.state
         camera.state = update_camera!(cam, scene)
@@ -203,4 +203,4 @@ function AutoViz.update_camera!(camera::ComposedCamera, scene::Frame{E}) where {
     return camera.state
 end
 
-update_camera!(::Nothing, ::Frame) = nothing
+update_camera!(::Nothing, ::Scene) = nothing

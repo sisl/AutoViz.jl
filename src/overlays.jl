@@ -110,7 +110,7 @@ The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float6
 - `x_off::Float64 = 0.`
 - `y_off::Float64 = 0.`
 """
-@with_kw mutable struct IDOverlay{F<:EntityFrame}
+@with_kw mutable struct IDOverlay{F<:EntityScene}
     scene::F
     color::Colorant = colorant"white"
     font_size::Int = 15
@@ -127,7 +127,7 @@ function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::IDOverlay)
 end
 
 
-@with_kw mutable struct LineToCenterlineOverlay{F<:EntityFrame}
+@with_kw mutable struct LineToCenterlineOverlay{F<:EntityScene}
     scene::F
     target_id::Int # if -1 does it for all
     line_width::Float64 = 0.5
@@ -152,7 +152,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::LineToCenterlineOver
 end
 
 
-@with_kw mutable struct LineToFrontOverlay{F<:EntityFrame, R<:Roadway}
+@with_kw mutable struct LineToFrontOverlay{F<:EntityScene, R<:Roadway}
     scene::F
     roadway::R
     target_id::Int # if -1 does it for all
@@ -219,7 +219,7 @@ Displays statistics about the front neighbor of the car of id `target_id`.
 
 `CarFollowingStatsOverlay(;target_id, verbosity=1, color=colorant"white", font_size=10)`
 """
-@with_kw mutable struct CarFollowingStatsOverlay{F<:EntityFrame}
+@with_kw mutable struct CarFollowingStatsOverlay{F<:EntityScene}
     scene::F
     roadway::Roadway
     target_id::Int
@@ -296,7 +296,7 @@ Draws a line between a vehicle and its neighbors. The neighbors are linked with 
 -  `line_width::Float64 = 0.5`
 -  `textparams::TextParams = TextParams()`
 """
-@with_kw mutable struct NeighborsOverlay{F<:EntityFrame}
+@with_kw mutable struct NeighborsOverlay{F<:EntityScene}
     scene::F
     roadway::Roadway
     target_id::Int
@@ -380,7 +380,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
     rendermodel
 end
 
-@with_kw mutable struct MarkerDistOverlay{F<:EntityFrame}
+@with_kw mutable struct MarkerDistOverlay{F<:EntityScene}
     scene::F
     roadway::Roadway
     target_id::Int
@@ -416,11 +416,11 @@ Decorator which allows to use legacy overlay objects together with the method
 This is required primarily for allowing backward compatibility with overlays
 that use the old rendering interface.
 
-usage:  `RenderableOverlay(o::Overlay, scene::Frame, roadway::Roadway)`
+usage:  `RenderableOverlay(o::Overlay, scene::Scene, roadway::Roadway)`
 """
 struct RenderableOverlay{O,S,D,I} <: Renderable where {O,S,D,I}
     overlay::O
-    scene::Union{Nothing, Frame{Entity{S,D,I}}}
+    scene::Union{Nothing, Scene{Entity{S,D,I}}}
     roadway::Union{Nothing, Roadway}
 end
 RenderableOverlay(overlay) = RenderableOverlay(overlay, nothing, nothing)

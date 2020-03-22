@@ -32,7 +32,7 @@ timestep = 0.1
 
 roadway = gen_stadium_roadway(nlanes)
 
-scene = Frame([Entity(VehicleState(
+scene = Scene([Entity(VehicleState(
     Frenet(roadway[LaneTag(1,rand(1:nlanes))], 10.0*i), roadway, 4.0 + 2.0rand()
 ), VehicleDef(), i) for i in 1:nveh])
 
@@ -190,7 +190,7 @@ nothing # hide
 # In the `update_camera!()` function, we need to set the camera rotation to be the
 # same as the vehicle yaw angle
 
-function AutoViz.update_camera!(camera::TargetRotateCamera{I}, scene::Frame{E}) where {I,E<:Entity}
+function AutoViz.update_camera!(camera::TargetRotateCamera{I}, scene::Scene{E}) where {I,E<:Entity}
     target = get_by_id(scene, camera.target_id)
     yaw = posg(target.state)[3]
     set_camera!(camera.state, rotation=-yaw)

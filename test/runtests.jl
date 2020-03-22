@@ -68,11 +68,11 @@ end
     @test AutoViz.rendermode == :fancy
 
     render([roadway, veh1, veh2, veh3])
-    scene = Frame([veh1])
+    scene = Scene([veh1])
     cam = TargetFollowCamera(1)
     update_camera!(cam, scene)
-    render([Frame([veh1, veh2, veh3])], camera = cam)  # TODO: multiple dispatch not working on update_camera!
-    render([Frame([veh1, veh2, veh3])], camera=StaticCamera(zoom=10.))
+    render([Scene([veh1, veh2, veh3])], camera = cam)  # TODO: multiple dispatch not working on update_camera!
+    render([Scene([veh1, veh2, veh3])], camera=StaticCamera(zoom=10.))
 end
 
 @testset "color theme" begin
@@ -100,7 +100,7 @@ end
     AutoViz.set_color_theme(MONOKAY)
     @test AutoViz.colortheme == MONOKAY
 
-    s = Frame([veh1])
+    s = Scene([veh1])
     d = get_pastel_car_colors(s)
     @test length(d) == length(s)
 end
