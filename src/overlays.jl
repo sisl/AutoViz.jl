@@ -110,8 +110,8 @@ The position of the ID can be adjusted using `x_off::Float64` and `y_off::Float6
 - `x_off::Float64 = 0.`
 - `y_off::Float64 = 0.`
 """
-@with_kw mutable struct IDOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct IDOverlay{F<:EntityScene}
+    scene::F
     color::Colorant = colorant"white"
     font_size::Int = 15
     x_off::Float64 = 0.
@@ -127,8 +127,8 @@ function AutoViz.add_renderable!(rendermodel::RenderModel, overlay::IDOverlay)
 end
 
 
-@with_kw mutable struct LineToCenterlineOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct LineToCenterlineOverlay{F<:EntityScene}
+    scene::F
     target_id::Int # if -1 does it for all
     line_width::Float64 = 0.5
     color::Colorant = colorant"blue"
@@ -152,9 +152,9 @@ function add_renderable!(rendermodel::RenderModel, overlay::LineToCenterlineOver
 end
 
 
-@with_kw mutable struct LineToFrontOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
-    roadway::Roadway
+@with_kw mutable struct LineToFrontOverlay{F<:EntityScene, R<:Roadway}
+    scene::F
+    roadway::R
     target_id::Int # if -1 does it for all
     line_width::Float64 = 0.5
     color::Colorant = colorant"blue"
@@ -169,7 +169,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::LineToFrontOverlay)
 
     for ind in target_inds
         veh = overlay.scene[ind]
-        veh_ind_front = get_neighbor_fore_along_lane(overlay.scene, ind, overlay.roadway).ind
+        veh_ind_front = find_neighbor(overlay.scene, overlay.roadway, veh).ind
         if veh_ind_front != nothing
             v2 = overlay.scene[veh_ind_front]
             add_instruction!(rendermodel, render_line_segment,
@@ -190,10 +190,10 @@ fields:
 - color: the color of the blinker
 - size: the size of the blinker
 """
-@with_kw struct BlinkerOverlay
+@with_kw struct BlinkerOverlay{E<:Entity}
     on::Bool = false
     right::Bool = true
-    veh::Vehicle = Vehicle(VehicleState(), VehicleDef(), 0)
+    veh::E = Entity(VehicleState(), VehicleDef(), 0)
     color::Colorant = colorant"0xFFEF00" # yellow
     size::Float64 = 0.3
 end
@@ -219,8 +219,8 @@ Displays statistics about the front neighbor of the car of id `target_id`.
 
 `CarFollowingStatsOverlay(;target_id, verbosity=1, color=colorant"white", font_size=10)`
 """
-@with_kw mutable struct CarFollowingStatsOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct CarFollowingStatsOverlay{F<:EntityScene}
+    scene::F
     roadway::Roadway
     target_id::Int
     verbosity::Int = 1
@@ -250,8 +250,7 @@ function add_renderable!(rendermodel::RenderModel, overlay::CarFollowingStatsOve
         add_instruction!( rendermodel, render_text, (fmt_txt, 10, text_y, font_size, overlay.color), coordinate_system=:camera_pixels)
         text_y += text_y_jump
 
-
-        foreinfo = get_neighbor_fore_along_lane(overlay.scene, veh_index, overlay.roadway; max_distance_fore=Inf)
+        foreinfo = find_neighbor(overlay.scene, overlay.roadway, veh; max_distance=Inf)
         if foreinfo.ind != nothing
             v2 = overlay.scene[foreinfo.ind]
             rel_speed = v2.state.v - veh.state.v
@@ -296,8 +295,8 @@ Draws a line between a vehicle and its neighbors. The neighbors are linked with 
 -  `line_width::Float64 = 0.5`
 -  `textparams::TextParams = TextParams()`
 """
-@with_kw mutable struct NeighborsOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct NeighborsOverlay{F<:EntityScene}
+    scene::F
     roadway::Roadway
     target_id::Int
     color_L::Colorant = colorant"blue"
@@ -322,7 +321,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
         v = veh_ego.state.v
         len_ego = veh_ego.def.length
 
-        fore_L = get_neighbor_fore_along_left_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_L = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               lane=leftlane(overlay.roadway, veh_ego), 
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
+
         if fore_L.ind != nothing
             veh_oth = overlay.scene[fore_L.ind]
             A = get_front(veh_ego)
@@ -331,7 +334,9 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d fore left:   %10.3f", fore_L.Δs), yₒ + 0*Δy, rendermodel, textparams)
         end
 
-        fore_M = get_neighbor_fore_along_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_M = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if fore_M.ind != nothing
             veh_oth = overlay.scene[fore_M.ind]
             A = get_front(veh_ego)
@@ -340,7 +345,10 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d fore middle: %10.3f", fore_M.Δs), yₒ + 1*Δy, rendermodel, textparams)
         end
 
-        fore_R = get_neighbor_fore_along_right_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointFront(), VehicleTargetPointRear(), VehicleTargetPointFront())
+        fore_R = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               lane=rightlane(overlay.roadway, veh_ego), 
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if fore_R.ind != nothing
             veh_oth = overlay.scene[fore_R.ind]
             A = get_front(veh_ego)
@@ -349,7 +357,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d fore right:  %10.3f", fore_R.Δs), yₒ + 2*Δy, rendermodel, textparams)
         end
 
-        rear_L = get_neighbor_rear_along_left_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_L = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               lane=leftlane(overlay.roadway, veh_ego), 
+                               rear = true,
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if rear_L.ind != nothing
             veh_oth = overlay.scene[rear_L.ind]
             A = get_rear(veh_ego)
@@ -358,7 +370,10 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d rear left:   %10.3f", rear_L.Δs), yₒ + 3*Δy, rendermodel, textparams)
         end
 
-        rear_M = get_neighbor_rear_along_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_M = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               rear = true,
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if rear_M.ind != nothing
             veh_oth = overlay.scene[rear_M.ind]
             A = get_rear(veh_ego)
@@ -367,7 +382,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
             drawtext(@sprintf("d rear middle: %10.3f", rear_M.Δs), yₒ + 4*Δy, rendermodel, textparams)
         end
 
-        rear_R = get_neighbor_rear_along_right_lane(overlay.scene, vehicle_index, overlay.roadway, VehicleTargetPointRear(), VehicleTargetPointFront(), VehicleTargetPointRear())
+        rear_R = find_neighbor(overlay.scene, overlay.roadway, veh_ego, 
+                               rear = true,
+                               lane = rightlane(overlay.roadway, veh_ego),
+                               targetpoint_ego=VehicleTargetPointFront(), 
+                               targetpoint_neighbor=VehicleTargetPointRear())
         if rear_R.ind != nothing
             veh_oth = overlay.scene[rear_R.ind]
             A = get_rear(veh_ego)
@@ -380,15 +399,11 @@ function add_renderable!(rendermodel::RenderModel, overlay::NeighborsOverlay)
     rendermodel
 end
 
-mutable struct MarkerDistOverlay
-    scene::Frame{Entity{S,D,I}} where {S,D,I}
+@with_kw mutable struct MarkerDistOverlay{F<:EntityScene}
+    scene::F
     roadway::Roadway
     target_id::Int
-    textparams::TextParams
-    rec::SceneRecord
-    function MarkerDistOverlay(target_id::Int; textparams::TextParams=TextParams(),)
-        new(target_id, textparams, SceneRecord(1, 0.1))
-    end
+    textparams::TextParams = TextParams()
 end
 
 function add_renderable!(rendermodel::RenderModel, overlay::MarkerDistOverlay)
@@ -403,8 +418,8 @@ function add_renderable!(rendermodel::RenderModel, overlay::MarkerDistOverlay)
     if vehicle_index != nothing
         veh_ego = overlay.scene[vehicle_index]
         drawtext(@sprintf("lane offset:       %10.3f", veh_ego.state.posF.t), yₒ + 0*Δy, rendermodel, textparams)
-        drawtext(@sprintf("markerdist left:   %10.3f", convert(Float64, get(MARKERDIST_LEFT, overlay.rec, overlay.roadway, vehicle_index))), yₒ + 1*Δy, rendermodel, textparams)
-        drawtext(@sprintf("markerdist right:  %10.3f", convert(Float64, get(MARKERDIST_RIGHT, overlay.rec, overlay.roadway, vehicle_index))), yₒ + 2*Δy, rendermodel, textparams)
+        drawtext(@sprintf("markerdist left:   %10.3f", markerdist_left(overlay.roadway, overlay.scene, veh_ego)), yₒ + 1*Δy, rendermodel, textparams)
+        drawtext(@sprintf("markerdist right:  %10.3f", markerdist_right(overlay.roadway, overlay.scene, veh_ego)), yₒ + 2*Δy, rendermodel, textparams)
     end
 
     rendermodel
@@ -420,11 +435,11 @@ Decorator which allows to use legacy overlay objects together with the method
 This is required primarily for allowing backward compatibility with overlays
 that use the old rendering interface.
 
-usage:  `RenderableOverlay(o::Overlay, scene::Frame, roadway::Roadway)`
+usage:  `RenderableOverlay(o::Overlay, scene::Scene, roadway::Roadway)`
 """
 struct RenderableOverlay{O,S,D,I} <: Renderable where {O,S,D,I}
     overlay::O
-    scene::Union{Nothing, Frame{Entity{S,D,I}}}
+    scene::Union{Nothing, Scene{Entity{S,D,I}}}
     roadway::Union{Nothing, Roadway}
 end
 RenderableOverlay(overlay) = RenderableOverlay(overlay, nothing, nothing)

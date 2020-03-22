@@ -48,7 +48,7 @@ we need to provide a function with the signature
 ```
 The basic example above works, because AutoViz implements the
 `add_renderable!` function for commonly used types such as
-`Roadway`, `Vehicle` or `Scene`.
+`Roadway`, `Entity` or `Scene`.
 In general, the `render(renderables)` function can take any collection
 of renderable objects.
 AutoViz provides a series of convenient wrapper objects such as
@@ -81,7 +81,7 @@ carA = Entity(VehicleState(Frenet(lane, 20.,  2., -.2), roadway, 5rand()), def, 
 carB = Entity(VehicleState(Frenet(lane, 40.,  -2., -.1), roadway, 5rand()), def, :carB)
 carC = Entity(VehicleState(Frenet(lane, 60.,  0., .4), roadway, 5rand()), def, :carC)
 carD = Entity(VehicleState(Frenet(lane, 80.,  3., .1), roadway, 5rand()), def, :carD)
-scene = Frame([ego, carA, carB, carC, carD])
+scene = Scene([ego, carA, carB, carC, carD])
 
 # define camera and adjust to scene
 camera = TargetFollowCamera(:ego; y=0., zoom=12.)
@@ -176,7 +176,7 @@ You can also define your own color theme using a dictionary. Look at the example
 render!(rendermodel::RenderModel, renderables::AbstractVector; canvas_width::Int, canvas_height::Int, surface::CairoSurface))
 ```
 All keyword arguments are optional. Objects of type `Renderable` now no longer have to implement the `render!` function (which is a misleading name). Instead one must implement the `add_renderable!` function which adds the rendering instructions to the `RenderModel`.
- - Implicit conversions of non-renderable objects (such as `obj::Frame{Entity{S,D,I}}`) via implementations of `Base.convert(Renderable, obj)` are now discouraged. Instead, one can overwrite the `add_renderable!` method for such types. This is done for some very common types.
+ - Implicit conversions of non-renderable objects (such as `obj::Scene{Entity{S,D,I}}`) via implementations of `Base.convert(Renderable, obj)` are now discouraged. Instead, one can overwrite the `add_renderable!` method for such types. This is done for some very common types.
  - The new `render!` function now only takes objects which are renderable, i.e. which implement the `add_renderable(rm::RenderModel, obj)` function. There is no longer a distinction between drawing roadways, scenes or overlays. They all need to satisfy the same interface, and they are drawn in the order in which they are passed to the `render!` function. This change decreases the number of available render functions from almost ten to one and should make the control flow more clear.
  - Additional arguments to `render!` such as `camera` and `car_colors` are no longer supported. Camera effects should be applied before calling `render!` (see section below) and rendering attributes such as colors should be passed in as part of a renderable object.
 

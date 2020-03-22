@@ -123,8 +123,4 @@ export  TextOverlay,
 # Convenient implementation for roadway and vehicle rendering
 include("roadways.jl")
 
-# old render methods that should be removed in future versions
-include("deprecated.jl")
-export render, render!
-
 end # module

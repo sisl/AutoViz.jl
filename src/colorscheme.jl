@@ -80,7 +80,7 @@ function Vec.lerp(a::Colorant, b::Colorant, t::Real)
     RGBA(r,g,b,a)
 end
 
-function get_pastel_car_colors(scene::EntityFrame{S,D,I}; saturation::Float64=0.85, value::Float64=0.85) where {S,D,I}
+function get_pastel_car_colors(scene::EntityScene{S,D,I}; saturation::Float64=0.85, value::Float64=0.85) where {S,D,I}
     retval = Dict{I,Colorant}()
     n = length(scene)
     for (i,veh) in enumerate(scene)
